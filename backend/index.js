@@ -38,7 +38,12 @@ app.post("/login", (req, res) => {
       const user = results[0];
       console.log(user); // Log user details for debugging
 
-      // Generate a JWT token
+      // Compare the provided password with the password stored in the database
+      if (password !== user.password) {
+        return res.status(401).json({ message: "Invalid password" });
+      }
+
+      // Generate a JWT token (optional step)
       // const token = jwt.sign(
       //   { id: user.id, email: user.email },
       //   process.env.JWT_SECRET,
@@ -51,7 +56,7 @@ app.post("/login", (req, res) => {
         success: true,
         message: "Login successful",
         user: { id: user.id, email: user.email, role: user.role },
-        //token,
+        // token,
       });
     }
   );
