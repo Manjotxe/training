@@ -1,0 +1,324 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7fa;
+}
+
+.header {
+  background: white;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.top-bar {
+  background: linear-gradient(to right, #ff69b4, #2c2626);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: white;
+}
+
+.left-links a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  margin-right: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.left-links a:hover {
+  color: white;
+}
+
+.active {
+  background: linear-gradient(45deg, #006d7e, #005666);
+  color: white !important;
+  padding: 6px 12px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(247, 148, 29, 0.3);
+}
+
+.deb-id {
+  background: linear-gradient(45deg, #006d7e, #005666);
+  color: white !important;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.right-contact {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.social-icons {
+  display: flex;
+  gap: 12px;
+}
+
+.social-icons a {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  transition: transform 0.3s ease;
+}
+
+.social-icons a:hover {
+  transform: translateY(-2px);
+}
+
+.facebook { background: #3b5998; }
+.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+.linkedin { background: #0077b5; }
+.youtube { background: #ff0000; }
+
+.main-nav {
+  padding: 15px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+}
+
+.logo img {
+  height: 55px;
+  transition: transform 0.3s ease;
+}
+
+.logo img:hover {
+  transform: scale(1.02);
+}
+
+.nav-links {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.nav-links a {
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  position: relative;
+  padding: 5px 0;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #006d7e;
+  transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+.apply-now {
+  background: linear-gradient(45deg, #006d7e, #005666);   color: white !important;
+  padding: 12px 25px !important;
+  border-radius: 25px;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 15px rgba(247, 148, 29, 0.3);
+  transition: transform 0.3s ease !important;
+}
+
+.apply-now:hover {
+  transform: translateY(-2px);
+}
+
+.apply-now::after {
+  display: none !important;
+}
+/* Main Content with Image Background */
+.main-content {
+  flex: 1;
+  min-height: 700px; /* Adjust the height of the section to ensure it’s taller */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the content vertically and horizontally */
+  padding: 80px 40px; /* Increased padding to make the section taller */
+  background-image: url('https://img.freepik.com/free-photo/cute-schoolgirl-reading-book-surrounded-by-wisdom-generated-by-ai_188544-20006.jpg');
+  background-size: cover; /* Ensure the image covers the section */
+  background-repeat: no-repeat;
+  background-position: center; /* Adjust the background position */
+}
+
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.text-content {
+  background: rgba(255, 255, 255, 0.8); /* Added slight transparency for better visibility */
+  padding: 50px;
+  max-width: 550px;
+  height: auto; /* Allow text-content height to adjust automatically */
+  border-radius: 15px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.text-content h2 {
+  color: #006d7e;
+  font-size: 26px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.text-content h1 {
+  color: #333;
+  font-size: 42px;
+  margin: 15px 0 25px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.login-btn {
+  background: linear-gradient(45deg, #006d7e, #005666);
+  color: white;
+  border: none;
+  padding: 15px 45px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,109,126,0.3);
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,109,126,0.4);
+}
+.footer {
+  background: #2c2626; /* Darker background for the footer */
+  padding: 60px 20px; /* Increased padding to provide more space */
+  box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.1); /* Soft shadow to give it depth */
+  color: white; /* Change text color to white for contrast */
+}
+
+.footer-icons {
+  display: flex;
+  justify-content: center; /* Center icons */
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto 60px;
+}
+
+.icon-box {
+  width: 80px;
+  height: 80px;
+  background: #f8f9fa;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.icon-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  background: #006d7e; /* Highlight background on hover */
+}
+
+.icon {
+  width: 40px; /* Adjust icon size */
+  height: 40px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: transform 0.3s ease;
+}
+
+.icon-box:hover .icon {
+  transform: scale(1.2); /* Slightly scale up on hover */
+}
+
+.direction { background-image: url('/icons/direction.png'); }
+.graph { background-image: url('/icons/graph.png'); }
+.stack { background-image: url('/icons/stack.png'); }
+.clock { background-image: url('/icons/clock.png'); }
+
+.footer-tabs {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping for smaller screens */
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.footer-column {
+  flex: 1;
+  margin: 0 20px;
+  min-width: 200px; /* Ensure that the column has a minimum width */
+}
+
+.footer-column h3 {
+  color: #f7941d; /* Highlight heading with a golden color */
+  font-size: 22px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f7941d; /* Border to separate heading */
+  font-weight: 600;
+}
+
+.footer-column ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-column ul li {
+  margin-bottom: 12px;
+}
+
+.footer-column ul li a {
+  color: #dcdcdc; /* Lighter color for links */
+  text-decoration: none;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  display: block;
+  padding: 3px 0;
+}
+
+.footer-column ul li a:hover {
+  color: #f7941d; /* Change link color to golden on hover */
+  transform: translateX(5px); /* Slight movement effect */
+}
+
+@media (max-width: 768px) {
+  .footer-tabs {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .footer-column {
+    margin-bottom: 30px; /* Add space between columns on smaller screens */
+  }
+
+  .footer-icons {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
