@@ -84,44 +84,105 @@ app.post("/api/admissions", (req, res) => {
   // Generate a 10-character random password
   const randomPassword = crypto.randomBytes(4).toString("hex").slice(0, 8);
 
-  const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, courseName, admissionDate, signature, photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  // First, get the course_id based on courseName
+  const getCourseIdQuery = `SELECT course_id FROM course WHERE name = ?`;
 
-  const values = [
-    name,
-    dob,
-    fatherName,
-    motherName,
-    profession,
-    nationality,
-    maritalStatus,
-    sex,
-    address,
-    city,
-    pinCode,
-    phoneNumber,
-    email,
-    randomPassword, // Add generated password here
-    schoolX,
-    schoolXII,
-    courseName,
-    admissionDate,
-    signature,
-    photo,
-  ];
-
-  db.query(query, values, (err, result) => {
+  db.query(getCourseIdQuery, [courseName], (err, result) => {
     if (err) {
-      console.error("Error inserting data:", err);
-      res.status(500).json({ error: "Failed to save admission data" });
+      console.error("Error fetching course_id:", err);
+      res.status(500).json({ error: "Failed to fetch course_id" });
       return;
     }
 
-    res.status(201).json({
-      message: "Admission Successful",
-      password: randomPassword, // Return the generated password for reference if needed
+    if (result.length === 0) {
+      res.status(404).json({ error: "Course not found" });
+      return;
+    }
+
+    const courseId = result[0].course_id;
+
+    // Now, proceed with the insertion into the admission_form table
+    const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, course_id, admissionDate, signature, photo) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    const values = [
+      name,
+      dob,
+      fatherName,
+      motherName,
+      profession,
+      nationality,
+      maritalStatus,
+      sex,
+      address,
+      city,
+      pinCode,
+      phoneNumber,
+      email,
+      randomPassword, // Add generated password here
+      schoolX,
+      schoolXII,
+      courseId, // Insert course_id instead of courseName
+      admissionDate,
+      signature,
+      photo,
+    ];
+
+    db.query(query, values, (err, result) => {
+      if (err) {
+        console.error("Error inserting data:", err);
+        res.status(500).json({ error: "Failed to save admission data" });
+        return;
+      }
+
+      res.status(201).json({
+        message: "Admission Successful",
+        password: randomPassword, // Return the generated password for reference if needed
+      });
     });
   });
 });
+
+
+
+app.get('/api/student/:id', (req, res) => {
+  const studentId = req.params.id;
+
+
+  const query = `
+    SELECT 
+      af.id AS student_id,
+      af.name AS student_name,
+      af.dob,
+      c.name,
+      c.duration,
+      c.languages
+    FROM admission_form af
+    JOIN course c ON af.course_id = c.course_id
+    WHERE af.id = ?;
+  `;
+
+  db.execute(query, [studentId], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+    res.json(results[0]);
+  });
+});
+app.get('/api/courses', (req, res) => {
+  const query = 'SELECT course_id, name FROM course';
+
+  db.execute(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(results);
+  });
+});
+
 
 // Start the server
 const PORT = process.env.PORT || 3000;
