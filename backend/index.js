@@ -102,8 +102,8 @@ app.post("/api/admissions", (req, res) => {
     const courseId = result[0].course_id;
 
     // Now, proceed with the insertion into the admission_form table
-    const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, course_id, admissionDate, signature, photo) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, course_id,courseName, admissionDate, signature, photo) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     const values = [
       name,
@@ -122,7 +122,8 @@ app.post("/api/admissions", (req, res) => {
       randomPassword, // Add generated password here
       schoolX,
       schoolXII,
-      courseId, // Insert course_id instead of courseName
+      courseId, 
+      courseName,
       admissionDate,
       signature,
       photo,
