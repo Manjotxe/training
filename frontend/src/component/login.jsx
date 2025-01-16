@@ -32,6 +32,7 @@ const Login = () => {
         setLogin(true);
         localStorage.setItem("token", resData.user.success);
         localStorage.setItem("role", resData.user.role); // Assuming the response contains `username`
+        localStorage.setItem("ID", resData.user.id); // Assuming the response contains `username`
       } else {
         Swal.fire({
           title: "Login Failed",
