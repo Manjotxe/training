@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 
 function Header({ isLoggedIn, onLogout }) {
   // Get the role from localStorage (or sessionStorage, or wherever it is stored)
-  const role = localStorage.getItem("role"); // Assuming you store the role in localStorage
+  const role = localStorage.getItem("role");
+  const userId = localStorage.getItem("ID"); // Assuming you store the role in localStorage
 
   return (
     <header className="header">
@@ -49,9 +50,13 @@ function Header({ isLoggedIn, onLogout }) {
             {role === "admin" ? <a href="/admission">Admissions</a> : null}{" "}
             {/* Show "Admissions" only for admin */}
             <a href="#">Programs</a>
-            <a href="#">Academics</a>
-            <a href="#">e-Connect</a>
             <a href="#">Placements</a>
+            <a href="#">e-Connect</a>
+            {isLoggedIn ? (
+            <a href={`/profile/${userId}`}>MyProfile</a>
+            ) : (
+              <a href="/login">MyProfile</a>
+            )}
             {/* Conditional rendering for login/logout */}
             {!isLoggedIn ? (
               <Link to="/login" className="apply-now">
