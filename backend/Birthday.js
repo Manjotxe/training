@@ -1,13 +1,13 @@
 // birthdayService.js
 
-const nodemailer = require('nodemailer');
-const schedule = require('node-schedule');
-const db = require('./connection');
+const nodemailer = require("nodemailer");
+const schedule = require("node-schedule");
+const db = require("./Connection");
 
 // Email template for birthday wishes
 const createBirthdayEmailTemplate = (name) => {
   return {
-    subject: '🎉 Happy Birthday from Our Institution!',
+    subject: "🎉 Happy Birthday from Our Institution!",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Happy Birthday, ${name}! 🎂</h2>
@@ -17,18 +17,18 @@ const createBirthdayEmailTemplate = (name) => {
         <p>Best wishes,</p>
         <p>Your Institution Name</p>
       </div>
-    `
+    `,
   };
 };
 
 // Function to send birthday email
 const sendBirthdayEmail = async (user) => {
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
       user: process.env.ADMIN_EMAIL,
       pass: process.env.EMAIL_PASS,
-    }
+    },
   });
 
   const emailTemplate = createBirthdayEmailTemplate(user.name);
@@ -38,7 +38,7 @@ const sendBirthdayEmail = async (user) => {
       from: process.env.EMAIL_USER,
       to: user.email,
       subject: emailTemplate.subject,
-      html: emailTemplate.html
+      html: emailTemplate.html,
     });
     console.log(`Birthday email sent to ${user.email}`);
   } catch (error) {
@@ -61,12 +61,12 @@ const checkBirthdays = () => {
 
   db.query(query, [month, day], (err, results) => {
     if (err) {
-      console.error('Error checking birthdays:', err);
+      console.error("Error checking birthdays:", err);
       return;
     }
 
     // Send emails to all users with birthdays today
-    results.forEach(user => {
+    results.forEach((user) => {
       sendBirthdayEmail(user);
     });
   });
@@ -74,14 +74,13 @@ const checkBirthdays = () => {
 
 // Schedule birthday check to run every day at 9:00 AM
 const scheduleBirthdayEmails = () => {
-  schedule.scheduleJob('0 9 * * *', () => {
-    console.log('Running scheduled birthday check...');
+  schedule.scheduleJob("0 9 * * *", () => {
+    console.log("Running scheduled birthday check...");
     checkBirthdays();
   });
 };
 
-
 module.exports = {
   scheduleBirthdayEmails,
-  checkBirthdays // Export for testing purposes
+  checkBirthdays, // Export for testing purposes
 };
