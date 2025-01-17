@@ -51,9 +51,9 @@ function Header({ isLoggedIn, onLogout }) {
             {/* Show "Admissions" only for admin */}
             <a href="#">Programs</a>
             <a href="#">Placements</a>
-            <a href="#">e-Connect</a>
+            <a href="/data">All Students</a>
             {isLoggedIn ? (
-            <a href={`/profile/${userId}`}>MyProfile</a>
+              <a href={`/profile/${userId}`}>MyProfile</a>
             ) : (
               <a href="/login">MyProfile</a>
             )}
