@@ -5,6 +5,7 @@ import Login from "./component/login.jsx";
 import Profile from "./component/Profile.jsx";
 import AdmissionForm from "./component/AdmissionForm.jsx";
 import Data from "./component/Data.jsx";
+import Courses from "./component/courses.jsx";
 import PrivateRoute from "./component/PrivateRoute.jsx";
 
 function App() {
@@ -34,6 +35,14 @@ function App() {
           element={
             <PrivateRoute>
               <Data />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/course"
+          element={
+            <PrivateRoute>
+              <Courses />
             </PrivateRoute>
           }
         />
