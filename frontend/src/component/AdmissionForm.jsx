@@ -395,7 +395,9 @@ function AdmissionForm() {
 
                 <div className="row">
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="courseName" className="form-label">Course Name</label>
+                    <label htmlFor="courseName" className="form-label">
+                      Course Name
+                    </label>
                     <select
                       className="form-control"
                       id="courseName"
@@ -405,11 +407,15 @@ function AdmissionForm() {
                       required
                     >
                       <option value="">Select a course</option>
-                      {Array.isArray(courses) && courses.map((course) => (
-                        <option key={course.course_id} value={course.name}>
-                          {course.name}
-                        </option>
-                      ))}
+                      {Array.isArray(courses) &&
+                        courses.map((course) => (
+                          <option
+                            key={course.course_id}
+                            value={course.courseName}
+                          >
+                            {course.courseName}
+                          </option>
+                        ))}
                     </select>
                   </div>
 
