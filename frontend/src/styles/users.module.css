@@ -1,0 +1,129 @@
+.container {
+  margin: 20px;
+  padding: 10px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  color: rgb(150, 93, 89);
+}
+
+.userTable {
+  width: 84%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  margin: auto;
+}
+
+.userTable th, .userTable td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.userTable th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.userTable tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.userTable tr:hover {
+  background-color: #f1f1f1;
+}
+
+.loading {
+  font-size: 18px;
+  color: #888;
+}/* Styling the form container for search and filter */
+.formContainers {
+  display: flex;
+  justify-content: space-around; /* Space out the search and filter inputs */
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Styling the search input field */
+.formInput {
+  width: 250px; /* Slightly smaller width */
+  padding: 12px;
+  font-size: 1rem;
+  border: 2px solid #ddd; 
+  border-radius: 5px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  
+}
+
+/* Focus styling for search input */
+.formInput:focus {
+  outline: none;
+  border-color: #ff69b4; /* Change border color on focus */
+  box-shadow: 0 0 10px rgba(255, 20, 147, 0.5); /* Brighter pink shadow */
+}
+
+/* Styling for year filter input */
+.formInputYear {
+  width: 150px; /* Smaller width for year input */
+  padding: 12px;
+  font-size: 1rem;
+  border: 2px solid #4caf50; /* Green border for year filter */
+  border-radius: 5px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.3); /* Soft green shadow */
+}
+
+/* Focus styling for year filter input */
+.formInputYear:focus {
+  outline: none;
+  border-color: #388e3c; /* Darker green for focus */
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5); /* Brighter green shadow */
+}
+
+/* Center the form inputs and apply some space between them */
+.formContainer form {
+  display: flex;
+  gap: 20px; /* Space between the search and year filter */
+}
+
+/* Pagination container */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Pagination buttons */
+.pagination button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 10px 15px;
+  margin: 0 5px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Active button (current page) */
+.pagination button:disabled {
+  background: linear-gradient(45deg, #006d7e, #005666);
+  cursor: not-allowed;
+  color:#f0f0f0
+}
+
+/* Hover effect for buttons */
+.pagination button:hover:not(:disabled) {
+  background: linear-gradient(45deg, #0b98ad, #038da5);
+  color: white;
+  transform: scale(1.05);
+}
+
+/* Focus effect for buttons */
+.pagination button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
