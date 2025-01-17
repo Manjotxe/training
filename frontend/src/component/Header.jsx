@@ -49,7 +49,7 @@ function Header({ isLoggedIn, onLogout }) {
             <a href="#">About</a>
             {role === "admin" ? <a href="/admission">Admissions</a> : null}{" "}
             {/* Show "Admissions" only for admin */}
-            <a href="#">Programs</a>
+            <a href="/course">Courses</a>
             <a href="#">Placements</a>
             <a href="/data">All Students</a>
             {isLoggedIn ? (

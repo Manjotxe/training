@@ -4,8 +4,13 @@ const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
-const db = require("./Connection"); // Import the database connection
+const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
+const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
+const {
+  sendAdmissionConfirmationEmail,
+  sendAdmissionDetailsToAdmin,
+} = require("./Sendemail"); // Import the email service module
 
 // Middleware setup
 app.use(bodyParser.json({ limit: "100mb" }));
@@ -22,7 +27,7 @@ app.use(
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  db.query(
+  pool.query(
     "SELECT * FROM admission_form WHERE email = ?",
     [email],
     (err, results) => {
@@ -43,25 +48,48 @@ app.post("/login", (req, res) => {
         return res.status(401).json({ message: "Invalid password" });
       }
 
-      // Generate a JWT token (optional step)
-      // const token = jwt.sign(
-      //   { id: user.id, email: user.email },
-      //   process.env.JWT_SECRET,
-      //   {
-      //     expiresIn: "1h",
-      //   }
-      // );
-
       return res.status(200).json({
         success: true,
         message: "Login successful",
         user: { id: user.id, email: user.email, role: user.role },
-        // token,
       });
     }
   );
 });
+app.post("/api/courses", (req, res) => {
+  const { courseName, duration, languages } = req.body;
 
+  if (!courseName || !duration || !languages) {
+    return res.status(400).send("All fields are required.");
+  }
+
+  const query =
+    "INSERT INTO course (courseName, duration, languages) VALUES (?, ?, ?)";
+  pool.query(query, [courseName, duration, languages], (err, result) => {
+    if (err) {
+      console.error("Error adding course:", err);
+      res.status(500).send("Failed to add course.");
+    } else {
+      const newCourse = {
+        id: result.insertId,
+        courseName,
+        duration,
+        languages,
+      };
+      res.status(201).json(newCourse);
+    }
+  });
+});
+app.get("/api/courses", (req, res) => {
+  const query = "SELECT course_id, courseName, duration, languages FROM course";
+
+  pool.execute(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.json(results);
+  });
+});
 // Route to handle admissions
 app.post("/api/admissions", (req, res) => {
   const {
@@ -90,9 +118,9 @@ app.post("/api/admissions", (req, res) => {
   const randomPassword = crypto.randomBytes(4).toString("hex").slice(0, 8);
 
   // First, get the course_id based on courseName
-  const getCourseIdQuery = `SELECT course_id FROM course WHERE name = ?`;
+  const getCourseIdQuery = `SELECT course_id FROM course WHERE courseName = ?`;
 
-  db.query(getCourseIdQuery, [courseName], (err, result) => {
+  pool.query(getCourseIdQuery, [courseName], (err, result) => {
     if (err) {
       console.error("Error fetching course_id:", err);
       res.status(500).json({ error: "Failed to fetch course_id" });
@@ -134,12 +162,44 @@ app.post("/api/admissions", (req, res) => {
       photo,
     ];
 
-    db.query(query, values, (err, result) => {
+    pool.query(query, values, (err, result) => {
       if (err) {
         console.error("Error inserting data:", err);
         res.status(500).json({ error: "Failed to save admission data" });
         return;
       }
+
+      // Send email to the user using the email service module
+      sendAdmissionConfirmationEmail(name, email, courseName, randomPassword)
+        .then(() => {
+          console.log("Email sent successfully to user.");
+        })
+        .catch((error) => {
+          console.error("Error sending email to user:", error);
+        });
+      // Send admission details to the admin
+      sendAdmissionDetailsToAdmin({
+        name,
+        dob,
+        fatherName,
+        motherName,
+        profession,
+        nationality,
+        maritalStatus,
+        sex,
+        address,
+        city,
+        pinCode,
+        phoneNumber,
+        email,
+        schoolX,
+        schoolXII,
+        courseName,
+        admissionDate,
+        signature,
+        photo,
+        password: randomPassword,
+      });
 
       res.status(201).json({
         message: "Admission Successful",
@@ -178,7 +238,7 @@ app.get("/users", (req, res) => {
   if (yearFilter) queryParams.push(yearFilter); // Add year filter if provided
   queryParams.push(perPage, offset); // Add pagination params
 
-  db.query(query, queryParams, (err, results) => {
+  pool.query(query, queryParams, (err, results) => {
     if (err) {
       console.error("Error fetching users:", err);
       return res.status(500).send("Error fetching users");
@@ -192,7 +252,7 @@ app.get("/users", (req, res) => {
     const countQueryParams = [`%${search}%`];
     if (yearFilter) countQueryParams.push(yearFilter); // Add year filter to count query if provided
 
-    db.query(countQuery, countQueryParams, (countErr, countResults) => {
+    pool.query(countQuery, countQueryParams, (countErr, countResults) => {
       if (countErr) {
         console.error("Error counting users:", countErr);
         return res.status(500).send("Error counting users");
@@ -228,7 +288,7 @@ app.get("/api/student/:id", (req, res) => {
     WHERE af.id = ?;
   `;
 
-  db.execute(query, [studentId], (err, results) => {
+  pool.execute(query, [studentId], (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Database error" });
     }
@@ -245,7 +305,7 @@ app.put("/api/student/:id/password", (req, res) => {
 
   // Fetch the current password of the student from the database
   const queryFetchPassword = "SELECT password FROM admission_form WHERE id = ?";
-  db.execute(queryFetchPassword, [id], (err, results) => {
+  pool.execute(queryFetchPassword, [id], (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Database error" });
     }
@@ -265,7 +325,7 @@ app.put("/api/student/:id/password", (req, res) => {
     // Update the password in the database
     const queryUpdatePassword =
       "UPDATE admission_form SET password = ? WHERE id = ?";
-    db.execute(queryUpdatePassword, [newPassword, id], (err, result) => {
+    pool.execute(queryUpdatePassword, [newPassword, id], (err, result) => {
       if (err) {
         return res.status(500).json({ error: "Failed to update password." });
       }
@@ -277,7 +337,7 @@ app.put("/api/student/:id/password", (req, res) => {
 app.get("/api/courses", (req, res) => {
   const query = "SELECT course_id, name FROM course";
 
-  db.execute(query, (err, results) => {
+  pool.execute(query, (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Database error" });
     }
