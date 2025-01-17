@@ -1,3 +1,4 @@
+/* General styles */
 .app {
   min-height: 100vh;
   display: flex;
@@ -13,22 +14,30 @@
   z-index: 100;
 }
 
+/* Top Bar Styles */
 .top-bar {
-  background: linear-gradient(to right, #ff69b4, #2c2626);
-  padding: 10px 20px;
   display: flex;
+  flex-wrap: wrap; /* Allow items to wrap on small screens */
   justify-content: space-between;
   align-items: center;
+  padding: 10px 20px;
+  background: linear-gradient(to right, #ff69b4, #2c2626);
   font-size: 14px;
   color: white;
+}
+
+.left-links {
+  display: flex;
+  flex-wrap: wrap; /* Wrap links on smaller screens */
+  gap: 10px; /* Add spacing between links */
 }
 
 .left-links a {
   color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  margin-right: 20px;
   font-size: 12px;
   font-weight: 500;
+  padding: 5px;
   transition: all 0.3s ease;
 }
 
@@ -36,30 +45,26 @@
   color: white;
 }
 
-.active {
+.active,
+.deb-id {
   background: linear-gradient(45deg, #006d7e, #005666);
-  color: white !important;
+  color: white;
   padding: 6px 12px;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(247, 148, 29, 0.3);
 }
 
-.deb-id {
-  background: linear-gradient(45deg, #006d7e, #005666);
-  color: white !important;
-  padding: 6px 12px;
-  border-radius: 4px;
-}
-
 .right-contact {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 15px;
+  margin-top: 10px; /* Ensure spacing for wrapping layout */
+  flex-wrap: wrap; /* Allow wrapping */
 }
 
 .social-icons {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .social-icons a {
@@ -72,6 +77,7 @@
   color: white;
   text-decoration: none;
   font-size: 14px;
+  background: rgba(255, 255, 255, 0.1);
   transition: transform 0.3s ease;
 }
 
@@ -84,6 +90,51 @@
 .linkedin { background: #0077b5; }
 .youtube { background: #ff0000; }
 
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .top-bar {
+    flex-direction: row; /* Stack content vertically on smaller screens */
+    align-items: flex-start;
+    padding: 10px;
+    font-size: 12px; /* Adjust font size for better fit */
+  }
+
+  .left-links {
+    justify-content: flex-start;
+    gap: 8px; /* Reduce gap between links */
+    margin-bottom: 10px; /* Add space below links */
+  }
+
+  .right-contact {
+    justify-content: flex-start;
+    gap: 10px; /* Adjust gap for smaller layout */
+  }
+
+  .social-icons a {
+    width: 24px;
+    height: 24px; /* Adjust icon size */
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-bar {
+    font-size: 10px; /* Further reduce font size */
+    padding: 4px; /* Adjust padding for very small devices */
+  }
+
+  .left-links {
+    gap: 5px; /* Reduce spacing further */
+  }
+
+  .social-icons a {
+    width: 20px;
+    height: 20px; /* Make icons smaller */
+    font-size: 10px;
+  }
+}
+
+/* Main Navigation */
 .main-nav {
   padding: 15px 40px;
   display: flex;
@@ -131,7 +182,8 @@
 }
 
 .apply-now {
-  background: linear-gradient(45deg, #006d7e, #005666);   color: white !important;
+  background: linear-gradient(45deg, #006d7e, #005666);   
+  color: white !important;
   padding: 12px 25px !important;
   border-radius: 25px;
   font-weight: 600 !important;
@@ -146,6 +198,7 @@
 .apply-now::after {
   display: none !important;
 }
+
 /* Main Content with Image Background */
 .main-content {
   flex: 1;
@@ -195,7 +248,7 @@
   background: linear-gradient(45deg, #006d7e, #005666);
   color: white;
   border: none;
-  padding: 15px 45px;
+  padding: 5px 35px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -208,6 +261,8 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0,109,126,0.4);
 }
+
+/* Footer */
 .footer {
   background: #2c2626; /* Darker background for the footer */
   padding: 60px 20px; /* Increased padding to provide more space */
@@ -260,6 +315,7 @@
 .stack { background-image: url('/icons/stack.png'); }
 .clock { background-image: url('/icons/clock.png'); }
 
+/* Footer Tabs */
 .footer-tabs {
   max-width: 1200px;
   margin: 0 auto;
@@ -307,6 +363,7 @@
   transform: translateX(5px); /* Slight movement effect */
 }
 
+/* Mobile styles */
 @media (max-width: 768px) {
   .footer-tabs {
     flex-direction: column;
@@ -322,3 +379,55 @@
     gap: 15px;
   }
 }
+/* Hide the hamburger icon by default */
+.menu-icon {
+  display: none;
+}
+
+/* Header links styling for small screens */
+@media (max-width: 768px) {
+  .menu-icon {
+    display: block;
+    font-size: 30px;
+    cursor: pointer;
+    z-index: 101; /* Ensure it stays above other content */
+  }
+
+  .nav-links {
+    display: none; /* Hide the navigation links by default */
+    flex-direction: column;
+    align-items: center;
+    position: relative; /* Change to relative to avoid overlap issues */
+    width: 100%; /* Ensure full width of the container */
+    background: white; /* Add a solid background */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Add shadow for better visibility */
+    padding: 10px 0;
+    z-index: 100; /* Ensure it appears above other content */
+  }
+
+  .nav-links.show {
+    display: flex; /* Show the navigation links when the menu is toggled */
+  }
+
+  .nav-links a {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 10px 20px;
+    width: 100%; /* Full-width links for better touch area */
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.3s ease;
+  }
+
+  .nav-links a:hover {
+    background: #f7f7f7; /* Add hover effect for better UX */
+  }
+
+  .apply-now {
+    margin-top: 10px;
+  }
+}
+
+
+

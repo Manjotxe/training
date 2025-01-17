@@ -6,6 +6,10 @@ const bodyParser = require("body-parser");
 const crypto = require("crypto");
 const db = require("./connection"); // Import the database connection
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const { scheduleBirthdayEmails,checkBirthdays } = require('./Birthday');
+const { sendAdmissionConfirmationEmail, sendAdmissionDetailsToAdmin } = require("./Sendemail"); // Import the email service module
+
 
 // Middleware setup
 app.use(bodyParser.json({ limit: "100mb" }));
@@ -17,6 +21,25 @@ app.use(
     credentials: true, // Allow credentials (cookies, authorization headers)
   })
 );
+app.post("/api/courses", (req, res) => {
+  const { courseName, duration, languages } = req.body;
+
+  if (!courseName || !duration || !languages) {
+    return res.status(400).send("All fields are required.");
+  }
+
+  const query = "INSERT INTO course (courseName, duration, languages) VALUES (?, ?, ?)";
+  db.query(query, [courseName, duration, languages], (err, result) => {
+    if (err) {
+      console.error("Error adding course:", err);
+      res.status(500).send("Failed to add course.");
+    } else {
+      const newCourse = { id: result.insertId, courseName, duration, languages };
+      res.status(201).json(newCourse);
+    }
+  });
+});
+
 
 // Route to handle login
 app.post("/login", (req, res) => {
@@ -56,7 +79,17 @@ app.post("/login", (req, res) => {
     }
   );
 });
-
+app.get("/api/courses", (req, res) => {
+  const query = "SELECT * FROM course";
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching courses:", err);
+      return res.status(500).send("Failed to fetch courses");
+    } else {
+      return res.json(results);
+    }
+  });
+});
 // Route to handle admissions
 app.post("/api/admissions", (req, res) => {
   const {
@@ -135,6 +168,38 @@ app.post("/api/admissions", (req, res) => {
         res.status(500).json({ error: "Failed to save admission data" });
         return;
       }
+      // Send email to the user using the email service module
+    sendAdmissionConfirmationEmail(name, email, courseName, randomPassword)
+    .then(() => {
+      console.log("Email sent successfully to user.");
+    })
+    .catch((error) => {
+      console.error("Error sending email to user:", error);
+    });
+      // Send admission details to the admin
+  sendAdmissionDetailsToAdmin({
+    name,
+    dob,
+    fatherName,
+    motherName,
+    profession,
+    nationality,
+    maritalStatus,
+    sex,
+    address,
+    city,
+    pinCode,
+    phoneNumber,
+    email,
+    schoolX,
+    schoolXII,
+    courseName,
+    admissionDate,
+    signature,
+    photo,
+    password: randomPassword,
+  })
+
 
       res.status(201).json({
         message: "Admission Successful",
@@ -183,8 +248,7 @@ app.get('/api/courses', (req, res) => {
     res.json(results);
   });
 });
-
-
+scheduleBirthdayEmails();
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

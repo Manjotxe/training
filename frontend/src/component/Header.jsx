@@ -1,24 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 function Header({ isLoggedIn, onLogout }) {
-  // Get the role from localStorage (or sessionStorage, or wherever it is stored)
+  const [menuVisible, setMenuVisible] = useState(false); // State to toggle menu visibility
   const role = localStorage.getItem("role");
-  const userId = localStorage.getItem("ID"); // Assuming you store the role in localStorage
+  const userId = localStorage.getItem("ID");
+
+  const toggleMenu = () => {
+    setMenuVisible(!menuVisible); // Toggle the menu visibility
+  };
 
   return (
     <header className="header">
       <nav>
         <div className="top-bar">
           <div className="left-links">
-            <a href="#">STUDY MATERIAL</a>
-            <a href="#">CAMPUS VISIT</a>
-            <a href="#">PUBLIC NOTICE</a>
-            <a href="#">RECOGNITIONS</a>
-            <a href="#" className="active">
-              ONLINE EDUCATION
+            <a href="#" className="">
+             About Us
             </a>
-            <a href="#" className="deb-id">
+            <a href="#" className="">
               DEB-ID
             </a>
             <a href="#">CONTACT US</a>
@@ -26,18 +26,10 @@ function Header({ isLoggedIn, onLogout }) {
           <div className="right-contact">
             <span>+91-1824-521350</span>
             <div className="social-icons">
-              <a href="#" className="facebook">
-                f
-              </a>
-              <a href="#" className="instagram">
-                i
-              </a>
-              <a href="#" className="linkedin">
-                in
-              </a>
-              <a href="#" className="youtube">
-                yt
-              </a>
+              <a href="#" className="facebook">f</a>
+              <a href="#" className="instagram">i</a>
+              <a href="#" className="linkedin">in</a>
+              <a href="#" className="youtube">yt</a>
             </div>
           </div>
         </div>
@@ -45,19 +37,19 @@ function Header({ isLoggedIn, onLogout }) {
           <div className="logo">
             <h2>Training</h2>
           </div>
-          <div className="nav-links">
-            <a href="#">About</a>
-            {role === "admin" ? <a href="/admission">Admissions</a> : null}{" "}
-            {/* Show "Admissions" only for admin */}
-            <a href="#">Programs</a>
+          <div className={`nav-links ${menuVisible ? 'show' : ''}`}>
+            <a href="/">Home</a>
+            {role === "admin" ? <a href="/admission">Admissions</a> : null}
+            <Link to="/courses"  >
+              Course
+            </Link>
             <a href="#">Placements</a>
             <a href="#">e-Connect</a>
             {isLoggedIn ? (
-            <a href={`/profile/${userId}`}>MyProfile</a>
+              <a href={`/profile/${userId}`}>MyProfile</a>
             ) : (
               <a href="/login">MyProfile</a>
             )}
-            {/* Conditional rendering for login/logout */}
             {!isLoggedIn ? (
               <Link to="/login" className="apply-now">
                 Login
@@ -67,6 +59,9 @@ function Header({ isLoggedIn, onLogout }) {
                 Logout
               </button>
             )}
+          </div>
+          <div className="menu-icon" onClick={toggleMenu}>
+            &#9776; {/* Hamburger icon */}
           </div>
         </div>
       </nav>
