@@ -248,7 +248,7 @@ app.get('/api/courses', (req, res) => {
     res.json(results);
   });
 });
-scheduleBirthdayEmails();
+
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
