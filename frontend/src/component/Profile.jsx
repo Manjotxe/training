@@ -19,7 +19,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const response = await axios.get(
-          `https://training-1qal.onrender.com/api/student/${id}`
+          `http://localhost:5000/api/student/${id}`
         );
         setProfile(response.data);
       } catch (err) {
@@ -36,7 +36,7 @@ const Profile = () => {
     }
     try {
       const response = await axios.put(
-        `https://training-1qal.onrender.com/api/student/${id}/password`,
+        `http://localhost:5000/api/student/${id}/password`,
         {
           oldPassword,
           newPassword,

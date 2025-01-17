@@ -33,7 +33,7 @@ function Data() {
     setLoading(true);
     // Send yearFilter along with searchTerm, currentPage, and perPage
     fetch(
-      `https://training-1qal.onrender.com/users?search=${searchTerm}&page=${currentPage}&perPage=5&year=${yearFilter}`
+      `http://localhost:5000/users?search=${searchTerm}&page=${currentPage}&perPage=5&year=${yearFilter}`
     )
       .then((response) => response.json())
       .then((data) => {
