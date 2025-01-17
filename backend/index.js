@@ -4,7 +4,7 @@ const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
-const db = require("./connection"); // Import the database connection
+const db = require("./Connection"); // Import the database connection
 const jwt = require("jsonwebtoken");
 
 // Middleware setup
@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
 app.use(
   cors({
     origin: "http://localhost:5173", // Allow only your frontend
-    methods: "GET,POST",
+    methods: "GET,POST,PUT",
     credentials: true, // Allow credentials (cookies, authorization headers)
   })
 );
@@ -127,7 +127,7 @@ app.post("/api/admissions", (req, res) => {
       randomPassword, // Add generated password here
       schoolX,
       schoolXII,
-      courseId, 
+      courseId,
       courseName,
       admissionDate,
       signature,
@@ -148,18 +148,78 @@ app.post("/api/admissions", (req, res) => {
     });
   });
 });
+//for display the users
+app.get("/users", (req, res) => {
+  const search = req.query.search || ""; // Default to an empty string if search is not provided
+  const page = parseInt(req.query.page) || 1; // Get current page, default to 1
+  const perPage = parseInt(req.query.perPage) || 5; // Get items per page, default to 5
+  const yearFilter = req.query.year; // Get year filter from query params
 
+  const offset = (page - 1) * perPage; // Calculate the offset for pagination
 
+  // Start the SQL query
+  let query = `
+    SELECT * FROM admission_form
+    WHERE name LIKE ? 
+  `;
 
-app.get('/api/student/:id', (req, res) => {
+  // If there's a year filter, add it to the query
+  if (yearFilter) {
+    query += ` AND YEAR(admissionDate) = ?`;
+  }
+
+  // Add sorting and pagination
+  query += `
+    ORDER BY admissionDate DESC
+    LIMIT ? OFFSET ?
+  `;
+
+  const queryParams = [`%${search}%`];
+  if (yearFilter) queryParams.push(yearFilter); // Add year filter if provided
+  queryParams.push(perPage, offset); // Add pagination params
+
+  db.query(query, queryParams, (err, results) => {
+    if (err) {
+      console.error("Error fetching users:", err);
+      return res.status(500).send("Error fetching users");
+    }
+
+    // Get total number of results for pagination
+    const countQuery = `
+      SELECT COUNT(*) AS total FROM admission_form WHERE name LIKE ? 
+      ${yearFilter ? "AND YEAR(admissionDate) = ?" : ""}
+    `;
+    const countQueryParams = [`%${search}%`];
+    if (yearFilter) countQueryParams.push(yearFilter); // Add year filter to count query if provided
+
+    db.query(countQuery, countQueryParams, (countErr, countResults) => {
+      if (countErr) {
+        console.error("Error counting users:", countErr);
+        return res.status(500).send("Error counting users");
+      }
+      const totalUsers = countResults[0].total;
+      const totalPages = Math.ceil(totalUsers / perPage);
+
+      res.json({
+        users: results,
+        totalPages: totalPages,
+      });
+    });
+  });
+});
+
+app.get("/api/student/:id", (req, res) => {
   const studentId = req.params.id;
-
 
   const query = `
     SELECT 
       af.id AS student_id,
       af.name AS student_name,
       af.dob,
+      af.fatherName,
+      af.email,
+      af.phoneNumber,
+      af.photo,
       c.name,
       c.duration,
       c.languages
@@ -170,25 +230,60 @@ app.get('/api/student/:id', (req, res) => {
 
   db.execute(query, [studentId], (err, results) => {
     if (err) {
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: "Database error" });
     }
     if (results.length === 0) {
-      return res.status(404).json({ error: 'Student not found' });
+      return res.status(404).json({ error: "Student not found" });
     }
     res.json(results[0]);
   });
 });
-app.get('/api/courses', (req, res) => {
-  const query = 'SELECT course_id, name FROM course';
+//changing the password
+app.put("/api/student/:id/password", (req, res) => {
+  const { id } = req.params; // Get the student ID from the URL
+  const { oldPassword, newPassword } = req.body; // Get old and new passwords from the request body
+
+  // Fetch the current password of the student from the database
+  const queryFetchPassword = "SELECT password FROM admission_form WHERE id = ?";
+  db.execute(queryFetchPassword, [id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Database error" });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Student not found." });
+    }
+
+    const currentPassword = results[0].password;
+
+    // Check if the old password matches the current password
+    if (currentPassword !== oldPassword) {
+      return res
+        .status(400)
+        .json({ error: "Old password is incorrect. Please try again." });
+    }
+
+    // Update the password in the database
+    const queryUpdatePassword =
+      "UPDATE admission_form SET password = ? WHERE id = ?";
+    db.execute(queryUpdatePassword, [newPassword, id], (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: "Failed to update password." });
+      }
+      res.json({ message: "Password changed successfully!" });
+    });
+  });
+});
+
+app.get("/api/courses", (req, res) => {
+  const query = "SELECT course_id, name FROM course";
 
   db.execute(query, (err, results) => {
     if (err) {
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: "Database error" });
     }
     res.json(results);
   });
 });
-
 
 // Start the server
 const PORT = process.env.PORT || 3000;
