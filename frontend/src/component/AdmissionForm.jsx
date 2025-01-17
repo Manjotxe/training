@@ -42,9 +42,7 @@ function AdmissionForm() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await fetch(
-          "https://training-1qal.onrender.com/api/courses"
-        );
+        const response = await fetch("http://localhost:5000/api/courses");
         const data = await response.json();
         setCourses(data);
       } catch (error) {
@@ -102,16 +100,13 @@ function AdmissionForm() {
     e.preventDefault();
 
     try {
-      const response = await fetch(
-        "https://training-1qal.onrender.com/api/admissions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ ...formData, signature, photo }),
-        }
-      );
+      const response = await fetch("http://localhost:5000/api/admissions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...formData, signature, photo }),
+      });
 
       const result = await response.json();
       if (response.ok) {

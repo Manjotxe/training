@@ -17,7 +17,7 @@ const Login = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://training-1qal.onrender.com/login",
+        "http://localhost:5000/login",
         loginData,
         {
           headers: {
