@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import styles from '../styles/users.module.css'; // Import the CSS module
-import Footer from '../component/Footer';
-import Header from '../component/Header';
+import React, { useState, useEffect } from "react";
+import styles from "../styles/users.module.css"; // Import the CSS module
+import Footer from "../component/Footer";
+import Header from "../component/Header";
 
 function Data() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [users, setUsers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [yearFilter, setYearFilter] = useState(''); // Add state for year filter
+  const [yearFilter, setYearFilter] = useState(""); // Add state for year filter
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       setIsLoggedIn(true);
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
     setIsLoggedIn(false);
   };
 
@@ -32,7 +32,9 @@ function Data() {
   const fetchUsers = () => {
     setLoading(true);
     // Send yearFilter along with searchTerm, currentPage, and perPage
-    fetch(`http://localhost:5000/users?search=${searchTerm}&page=${currentPage}&perPage=5&year=${yearFilter}`)
+    fetch(
+      `https://training-1qal.onrender.com/users?search=${searchTerm}&page=${currentPage}&perPage=5&year=${yearFilter}`
+    )
       .then((response) => response.json())
       .then((data) => {
         setUsers(data.users);
@@ -40,7 +42,7 @@ function Data() {
         setLoading(false);
       })
       .catch((error) => {
-        console.error('Error fetching users:', error);
+        console.error("Error fetching users:", error);
         setLoading(false);
       });
   };
@@ -70,22 +72,21 @@ function Data() {
   return (
     <>
       <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} />
-      
 
       <div className={styles.container}>
         <h1 className={styles.title}>Student List</h1>
         <div className={styles.formContainers}>
-            <input
-              type="text"
-              name="search"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              placeholder="Search By Name"
-              className={styles.formInput}
-            />
+          <input
+            type="text"
+            name="search"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="Search By Name"
+            className={styles.formInput}
+          />
 
-        {/* Add the input for year filter */}
-        <div className={styles.formContainer}>
+          {/* Add the input for year filter */}
+          <div className={styles.formContainer}>
             <input
               type="number"
               name="year"
@@ -94,8 +95,8 @@ function Data() {
               placeholder="Enter Year to Filter"
               className={styles.formInput}
             />
+          </div>
         </div>
-      </div>
         {loading ? (
           <p className={styles.loading}>Loading...</p>
         ) : (
@@ -118,10 +119,10 @@ function Data() {
                     <td>{user.id}</td>
                     <td>{user.name}</td>
                     <td>{user.email}</td>
-                    <td>{user.phoneNumber || 'No Name'}</td>
-                    <td>{user.courseName || 'null'}</td>
-                    <td>{user.duration || 'null'}</td>
-                    <td>{formatDate(user.admissionDate) || 'null'}</td>
+                    <td>{user.phoneNumber || "No Name"}</td>
+                    <td>{user.courseName || "null"}</td>
+                    <td>{user.duration || "null"}</td>
+                    <td>{formatDate(user.admissionDate) || "null"}</td>
                   </tr>
                 ))}
               </tbody>
