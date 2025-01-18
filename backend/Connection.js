@@ -17,10 +17,10 @@ const pool = mysql2.createPool({
 // Test the connection
 pool.getConnection((err, connection) => {
   if (err) {
-    console.error("Error connecting to the database:", err.message);
+    console.error("Error connecting to the database:", err.message, err);
   } else {
     console.log("Connected to the database successfully!");
-    connection.release(); // Release the connection back to the pool
+    connection.release();
   }
 });
 
