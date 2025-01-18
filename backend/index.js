@@ -285,6 +285,7 @@ app.get('/api/courses', (req, res) => {
   });
 });
 
+<<<<<<< HEAD
 // API to handle bill creation
 app.post('/api/bill', (req, res) => {
   const { name, email, courseName, rupees, date } = req.body;
@@ -316,6 +317,8 @@ app.post('/api/bill', (req, res) => {
 
 
 scheduleBirthdayEmails();
+=======
+>>>>>>> e22ca191d6c6fcb48401a8db76d0c9a154dca7e2
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
