@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-     "start": "node index.js"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +28,7 @@
     "node-schedule": "^2.1.1",
     "node-static": "^0.7.11",
     "nodemailer": "^6.9.16",
+    "path": "^0.12.7",
     "sweetalert2": "^11.15.10"
   }
 }

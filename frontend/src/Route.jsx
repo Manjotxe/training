@@ -6,6 +6,7 @@ import Profile from "./component/Profile.jsx";
 import AdmissionForm from "./component/AdmissionForm.jsx";
 import Data from "./component/Data.jsx";
 import Courses from "./component/courses.jsx";
+import Assignment from "./component/Admin.jsx";
 import PrivateRoute from "./component/PrivateRoute.jsx";
 
 function App() {
@@ -15,7 +16,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route
-          path="/Profile/:id"
+          path="/profile/:id"
           element={
             <PrivateRoute>
               <Profile />
@@ -43,6 +44,14 @@ function App() {
           element={
             <PrivateRoute>
               <Courses />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/assignment"
+          element={
+            <PrivateRoute>
+              <Assignment />
             </PrivateRoute>
           }
         />

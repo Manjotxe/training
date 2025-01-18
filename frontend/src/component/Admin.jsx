@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from "react";
-import styles from "../styles/users.module.css"; // Import the CSS module
-import Bill from "./Bills";
+import styles from "../styles/Admin.module.css"; // Import the CSS module
 import Footer from "../component/Footer";
 import Header from "../component/Header";
 
 function Data() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [yearFilter, setYearFilter] = useState(""); // Add state for year filter
+  const [yearFilter, setYearFilter] = useState("");
+  const [selectedStudents, setSelectedStudents] = useState([]);
+
+  const [message, setMessage] = useState("");
+  const [link, setLink] = useState("");
+  const [file, setFile] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for controlling modal visibility
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -21,13 +24,7 @@ function Data() {
       setIsLoggedIn(true);
     }
   }, []);
-  const handleBill = (user) => {
-    setSelectedUser(user);
-    setIsModalOpen(true);
-  };
-  const handleCloseBill = () => {
-    setIsModalOpen(false);
-  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
@@ -36,11 +33,10 @@ function Data() {
 
   useEffect(() => {
     fetchUsers();
-  }, [searchTerm, currentPage, yearFilter]); // Add yearFilter to dependencies
+  }, [searchTerm, currentPage, yearFilter]);
 
   const fetchUsers = () => {
     setLoading(true);
-    // Send yearFilter along with searchTerm, currentPage, and perPage
     fetch(
       `http://localhost:5000/users?search=${searchTerm}&page=${currentPage}&perPage=5&year=${yearFilter}`
     )
@@ -58,11 +54,15 @@ function Data() {
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to the first page when search changes
+    setCurrentPage(1);
   };
 
   const handleYearChange = (e) => {
-    setYearFilter(e.target.value); // Update the year filter
+    setYearFilter(e.target.value);
+  };
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
   };
 
   const handlePageChange = (newPage) => {
@@ -76,6 +76,35 @@ function Data() {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const handleCheckboxChange = (userId) => {
+    setSelectedStudents((prevSelected) => {
+      const updatedSelected = prevSelected.includes(userId)
+        ? prevSelected.filter((id) => id !== userId)
+        : [...prevSelected, userId];
+      return updatedSelected;
+    });
+  };
+
+  const handleSendAssignments = () => {
+    const formData = new FormData();
+    formData.append("students", JSON.stringify(selectedStudents));
+    formData.append("message", message);
+    formData.append("link", link);
+    formData.append("file", file);
+
+    fetch("http://localhost:5000/upload", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        alert(data.message);
+      })
+      .catch((error) => {
+        console.error("Error sending assignments:", error);
+      });
   };
 
   return (
@@ -93,19 +122,16 @@ function Data() {
             placeholder="Search By Name"
             className={styles.formInput}
           />
-
-          {/* Add the input for year filter */}
-          <div className={styles.formContainer}>
-            <input
-              type="number"
-              name="year"
-              value={yearFilter}
-              onChange={handleYearChange}
-              placeholder="Enter Year to Filter"
-              className={styles.formInput}
-            />
-          </div>
+          <input
+            type="number"
+            name="year"
+            value={yearFilter}
+            onChange={handleYearChange}
+            placeholder="Enter Year to Filter"
+            className={styles.formInput}
+          />
         </div>
+
         {loading ? (
           <p className={styles.loading}>Loading...</p>
         ) : (
@@ -113,6 +139,7 @@ function Data() {
             <table className={styles.userTable}>
               <thead>
                 <tr>
+                  <th>Select</th>
                   <th>ID</th>
                   <th>Name</th>
                   <th>Email</th>
@@ -120,12 +147,18 @@ function Data() {
                   <th>Course</th>
                   <th>Duration</th>
                   <th>Started At</th>
-                  <th>Generate Bill</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
                   <tr key={user.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedStudents.includes(user.id)}
+                        onChange={() => handleCheckboxChange(user.id)}
+                      />
+                    </td>
                     <td>{user.id}</td>
                     <td>{user.name}</td>
                     <td>{user.email}</td>
@@ -133,14 +166,6 @@ function Data() {
                     <td>{user.courseName || "null"}</td>
                     <td>{user.duration || "null"}</td>
                     <td>{formatDate(user.admissionDate) || "null"}</td>
-                    <td>
-                      <button
-                        className={styles.bill}
-                        onClick={() => handleBill(user)}
-                      >
-                        Bill
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -157,16 +182,56 @@ function Data() {
                 </button>
               ))}
             </div>
-            {isModalOpen && (
-              <Bill
-                isModalOpen={isModalOpen}
-                closeBill={handleCloseBill}
-                selectedUser={selectedUser}
-              />
-            )}
+
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className={styles.sendButton}
+            >
+              Send Assignment
+            </button>
           </>
         )}
       </div>
+
+      {isModalOpen && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <h2>Send Assignment</h2>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Enter your message here"
+              className={styles.formInput}
+            />
+            <input
+              type="url"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              placeholder="Enter a link"
+              className={styles.formInput}
+            />
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className={styles.formInput}
+            />
+            <div className={styles.modalActions}>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className={styles.cancelButton}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendAssignments}
+                className={styles.sendButton}
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer className={styles.footer} />
     </>
