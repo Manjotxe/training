@@ -10,18 +10,28 @@ function BillForm({ closeBill, isModalOpen, selectedUser }) {
   const [rupees, setRupees] = useState("");
   const [date, setDate] = useState("");
   const [prevdate, setPrevdate] = useState("");
+  const navigate = useNavigate(); // Initialize navigate
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return d.toLocaleDateString(); // Formats as MM/DD/YYYY or use your custom format
+  };
 
   const fetchCourses = async () => {
     try {
+      console.log(email);
       const response = await axios.get(
         "http://localhost:5000/api/fetchdetails",
-        { params: { email } }
+        {
+          params: { email }, // Send email as query parameter
+        }
       );
       const data = response.data;
+      console.log("Fetched Course Data:", data);
       setCourseName(data.courseName);
       setPrevdate(data.date);
     } catch (error) {
-      console.error("Error fetching course details:", error);
+      console.error("Error fetching courses:", error);
     }
   };
 
