@@ -7,6 +7,9 @@ const pool = mysql2.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  ssl: {
+    rejectUnauthorized: true,
+  },
   waitForConnections: true, // Makes sure that the pool waits for an available connection
   connectionLimit: 10, // Number of simultaneous connections allowed
   queueLimit: 0, // No limit to the number of queued requests
