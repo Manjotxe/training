@@ -2,7 +2,7 @@ const mysql2 = require("mysql2");
 
 // Create a connection pool to the MySQL database
 const pool = mysql2.createPool({
-  host: "auth-db1000.hstgr.io",
+  host: "srv1000.hstgr.io",
   user: "u638496691_ayorex",
   password: "Ayorex12345!@#$%",
   database: "u638496691_ayorex",
