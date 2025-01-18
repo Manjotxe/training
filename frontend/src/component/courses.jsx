@@ -37,9 +37,7 @@ const CourseManagement = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await axios.get(
-          "https://training-1qal.onrender.com/api/courses"
-        );
+        const response = await axios.get("http://localhost:5000/api/courses");
         setCourses(response.data);
       } catch (err) {
         console.error("Error fetching courses:", err);

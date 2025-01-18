@@ -46,12 +46,14 @@ function Header({ isLoggedIn, onLogout }) {
             <h2>Training</h2>
           </div>
           <div className="nav-links">
-            <a href="#">About</a>
+            <a href="/">Home</a>
             {role === "admin" ? <a href="/admission">Admissions</a> : null}{" "}
             {/* Show "Admissions" only for admin */}
             <a href="/course">Courses</a>
-            <a href="#">Placements</a>
-            <a href="/data">All Students</a>
+            {role === "admin" ? (
+              <a href="/assignment">Assignments</a>
+            ) : null}{" "}
+            {role === "admin" ? <a href="/data">All Students</a> : null}{" "}
             {isLoggedIn ? (
               <a href={`/profile/${userId}`}>MyProfile</a>
             ) : (

@@ -4,6 +4,8 @@ const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
+const multer = require("multer");
+const path = require("path");
 const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
@@ -280,7 +282,7 @@ app.get("/api/student/:id", (req, res) => {
       af.email,
       af.phoneNumber,
       af.photo,
-      c.name,
+      c.courseName,
       c.duration,
       c.languages
     FROM admission_form af
@@ -290,12 +292,88 @@ app.get("/api/student/:id", (req, res) => {
 
   pool.execute(query, [studentId], (err, results) => {
     if (err) {
+      console.error("Database error:", err); // Log the actual error
       return res.status(500).json({ error: "Database error" });
     }
     if (results.length === 0) {
       return res.status(404).json({ error: "Student not found" });
     }
     res.json(results[0]);
+  });
+});
+
+app.get("/api/fetchdetails", (req, res) => {
+  const { email } = req.query;
+  console.log("Fetching details for email:", email);
+
+  const query = "SELECT * FROM admission_form WHERE email = ?";
+  pool.query(query, [email], (err, admissionResults) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res
+        .status(500)
+        .json({ error: "Database query failed", details: err.message });
+    }
+
+    if (admissionResults.length === 0) {
+      return res.status(404).json({ error: "No data found for this email" });
+    }
+
+    const courseName = admissionResults[0].courseName;
+    const billQuery = "SELECT * FROM bills WHERE email = ?";
+
+    pool.query(billQuery, [email], (err, billResults) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res
+          .status(500)
+          .json({ error: "Database query failed", details: err.message });
+      }
+
+      if (billResults.length === 0) {
+        return res.json({
+          courseName,
+          message: "No bill found for this email",
+        });
+      }
+
+      const date = billResults[0].date;
+      return res.json({ courseName, date });
+    });
+  });
+});
+
+// API to handle bill creation
+app.post("/api/bill", (req, res) => {
+  const { name, email, courseName, rupees, date } = req.body;
+
+  console.log("Received Data:", req.body); // Log the request payload
+
+  const query =
+    "INSERT INTO bills (name, email, courseName, rupees, date) VALUES (?, ?, ?, ?, ?)";
+  pool.query(query, [name, email, courseName, rupees, date], (err, result) => {
+    if (err) {
+      console.error("Error inserting data:", err.message);
+      return res
+        .status(500)
+        .json({ error: "Failed to create bill", details: err.message });
+    }
+
+    console.log("Data inserted successfully:", result);
+
+    sendBillEmail(email, rupees, date)
+      .then((info) => {
+        res.status(200).json({
+          message: "Bill email sent successfully",
+          emailResponse: info.response,
+        });
+      })
+      .catch((err) => {
+        console.error("Error sending email:", err);
+        res
+          .status(500)
+          .json({ error: "Failed to send email", details: err.message });
+      });
   });
 });
 //changing the password
@@ -342,6 +420,187 @@ app.get("/api/courses", (req, res) => {
       return res.status(500).json({ error: "Database error" });
     }
     res.json(results);
+  });
+});
+
+//for file uploading ---->
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static("uploads"));
+// Multer setup for file upload
+const storage = multer.diskStorage({
+  destination: "./uploads/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Unique file name
+  },
+});
+
+const upload = multer({ storage });
+
+app.post("/upload", upload.single("file"), (req, res) => {
+  console.log("Request body:", req.body); // Debugging the body of the request
+
+  const { message, link, students } = req.body; // Get selected students, message, and link
+  let fileData = null;
+
+  // Handle file data if provided
+  if (req.file) {
+    const fileType = req.file.mimetype.includes("image") ? "image" : "pdf";
+    const filePath = `http://localhost:5000/${req.file.filename}`;
+    fileData = {
+      file_name: req.file.originalname,
+      file_path: filePath,
+      file_type: fileType,
+    };
+    console.log("File uploaded:", fileData); // Debugging file data
+  }
+
+  // Ensure students is an array if provided
+  let studentIds;
+  try {
+    studentIds = students ? JSON.parse(students) : [];
+    console.log("Parsed student IDs:", studentIds); // Debugging studentIds
+  } catch (error) {
+    console.log("Error parsing students:", error);
+    return res.status(400).send("Invalid student data");
+  }
+
+  // Fetch all students if no students are selected
+  const sql =
+    studentIds.length > 0
+      ? "SELECT * FROM admission_form WHERE id IN (?)"
+      : "SELECT * FROM admission_form";
+  const sqlParams = studentIds.length > 0 ? [studentIds] : [];
+
+  console.log("SQL Query:", sql); // Debugging SQL query
+
+  pool.query(sql, sqlParams, (err, studentsResults) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).send("Error fetching students");
+    }
+
+    console.log("Fetched students from DB:", studentsResults); // Debugging database result
+
+    // Check if no students are found
+    if (studentsResults.length === 0) {
+      console.log("No students found.");
+      return res.status(404).send("No students found");
+    }
+
+    // Send the assignment to all selected (or all) students
+    studentsResults.forEach((student) => {
+      console.log("Processing student:", student); // Debugging student data
+
+      if (!student.email) {
+        console.warn(
+          `Student ${student.name} does not have an email, skipping...`
+        );
+        return;
+      }
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER, // Your email
+        to: student.email, // Student's email
+        subject: "New Assignment",
+        text: `
+          Hi ${student.name},
+          ${message}
+          ${link}
+          ${fileData?.file_path}
+        `,
+      };
+
+      // Send email to each student
+      transporter.sendMail(mailOptions, (emailErr, info) => {
+        if (emailErr) {
+          console.error("Email sending error:", emailErr);
+        } else {
+          console.log(`Assignment sent to ${student.name}:`, info.response);
+        }
+      });
+    });
+
+    // Insert a notification for each selected student or a general notification
+    const notificationSql = `
+      INSERT INTO notifications (student_id, file_name, file_path, file_type, message, link) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+
+    if (studentIds.length > 0) {
+      // Insert notifications for specific students
+      studentIds.forEach((studentId) => {
+        pool.query(
+          notificationSql,
+          [
+            studentId || null,
+            fileData?.file_name || null,
+            fileData?.file_path || null,
+            fileData?.file_type || null,
+            message || null,
+            link || null,
+          ],
+          (err) => {
+            if (err) {
+              console.error(
+                `Error inserting notification for student ID ${studentId}:`,
+                err
+              );
+            } else {
+              console.log(
+                `Notification inserted successfully for student ID: ${studentId}`
+              );
+            }
+          }
+        );
+      });
+    } else {
+      // Insert a general notification (student_id = null)
+      pool.query(
+        notificationSql,
+        [
+          fileData?.file_name || null,
+          fileData?.file_path || null,
+          fileData?.file_type || null,
+          message || null,
+          link || null,
+        ],
+        (err) => {
+          if (err) {
+            console.error("Error inserting general notification:", err);
+          } else {
+            console.log("General notification inserted successfully.");
+          }
+        }
+      );
+    }
+
+    res.status(200).json({ message: "Assignment sent successfully." });
+  });
+});
+
+// Route to get notifications for a specific student
+app.get("/notifications", (req, res) => {
+  const { student_id } = req.query; // Get the student_id from query parameters
+
+  if (!student_id) {
+    return res.status(400).json({ message: "Student ID is required" });
+  }
+
+  const sql = `
+      SELECT * 
+      FROM notifications 
+      WHERE student_id = ? OR student_id IS NULL
+      ORDER BY created_at DESC
+  `;
+
+  pool.query(sql, [student_id], (err, results) => {
+    if (err) {
+      console.error("Error fetching notifications:", err);
+      return res.status(500).send("Error fetching notifications");
+    }
+    res.status(200).json(results);
   });
 });
 
