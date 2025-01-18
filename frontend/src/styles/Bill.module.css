@@ -1,0 +1,155 @@
+/* Bill.module.css */
+.receiptContainer {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #f5f5f5;
+    flex-direction: column;
+  }
+  
+  .downloadBtn {
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    background-color: #ff69b4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .downloadBtn:hover {
+    background-color: #ff4da6;
+  }
+  
+  .receipt {
+    background: white;
+    padding: 40px;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  h1 {
+    text-align: center;
+    margin-bottom: 5px;
+    font-size: 24px;
+    font-weight: normal;
+  }
+  
+  .pink {
+    color: #ff69b4;
+  }
+  
+  .subtitle {
+    text-align: center;
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+    text-transform: uppercase;
+  }
+  
+  .certification {
+    text-align: center;
+    margin: 0 0 15px 0;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .receiptHeader {
+    text-align: center;
+    background: #ff69b4;
+    color: white;
+    padding: 5px;
+    margin: 20px auto;
+    font-weight: bold;
+    width: 100px;
+  }
+  
+  .receiptDetails {
+    margin-top: 20px;
+  }
+  
+  .row {
+    display: flex;
+    margin: 15px 0;
+    position: relative;
+  }
+  
+  .row span {
+    display: flex;
+    align-items: center;
+  }
+  
+  .fieldLabel {
+    margin-right: 10px;
+  }
+  
+  /* Bill.module.css */
+.fieldValue {
+  position: relative;
+  padding: 0 5px;
+}
+
+.fieldValue::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  border-bottom: 1px solid #000;  /* Increase the size of the underline */
+}
+
+  
+.field-value.receipt-no {
+  width: 50px;
+  margin-right: 30px;
+}
+  
+  .fieldValue.date {
+    width: 300px;
+  }
+  
+  .fieldValue.name {
+    width: 500px;
+  }
+  
+  .fieldValue.medium {
+    width: 200px;
+    margin-right: 30px;
+  }
+  
+  .fieldValue.large {
+    width: 500px;
+  }
+  
+  .amountSection {
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .rs {
+    background: #ff69b4;
+    color: white;
+    padding: 5px 10px;
+    margin-right: 5px;
+  }
+  
+  .value {
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+  }
+  
+  .footer {
+    margin-top: 30px;
+    text-align: right;
+  }
+  
+  .companyName {
+    font-weight: bold;
+    font-size: 14px;
+  }
+  

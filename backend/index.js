@@ -8,6 +8,8 @@ const db = require("./connection"); // Import the database connection
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const { scheduleBirthdayEmails,checkBirthdays } = require('./Birthday');
+const { sendBillEmail } = require('./emailTemplates/SendBill');
+
 const { sendAdmissionConfirmationEmail, sendAdmissionDetailsToAdmin } = require("./Sendemail"); // Import the email service module
 
 
@@ -80,16 +82,50 @@ app.post("/login", (req, res) => {
   );
 });
 app.get("/api/courses", (req, res) => {
-  const query = "SELECT * FROM course";
-  db.query(query, (err, results) => {
+  const { email } = req.query; // Use query parameter instead of body for GET request
+
+  if (!email) {
+    return res.status(400).send("Email is required");
+  }
+
+  // Query to fetch the course name from the admission_form table
+  const query = "SELECT * FROM admission_form WHERE email = ?";
+  db.query(query, [email], (err, admissionResults) => {
     if (err) {
-      console.error("Error fetching courses:", err);
-      return res.status(500).send("Failed to fetch courses");
-    } else {
-      return res.json(results);
+      console.error("Error fetching admission data:", err);
+      return res.status(500).send("Failed to fetch admission data");
     }
+
+    if (admissionResults.length === 0) {
+      return res.status(404).send("No course found for the provided email");
+    }
+
+    const courseName = admissionResults[0].courseName;
+
+    // Query to fetch the latest bill date from the bills table
+    const billQuery = "SELECT * FROM bills WHERE email = ?";
+    db.query(billQuery, [email], (err, billResults) => {
+      if (err) {
+        console.error("Error fetching bill data:", err);
+        return res.status(500).send("Failed to fetch bill data");
+      }
+
+      if (billResults.length === 0) {
+        return res.json({
+          courseName,
+          message: "No previous record found with this email",
+        });
+      }
+
+      const date = billResults[0].date;
+
+      // Return both courseName and date in the response
+      return res.json({ courseName, date });
+    });
   });
 });
+
+
 // Route to handle admissions
 app.post("/api/admissions", (req, res) => {
   const {
@@ -118,7 +154,7 @@ app.post("/api/admissions", (req, res) => {
   const randomPassword = crypto.randomBytes(4).toString("hex").slice(0, 8);
 
   // First, get the course_id based on courseName
-  const getCourseIdQuery = `SELECT course_id FROM course WHERE name = ?`;
+  const getCourseIdQuery = `SELECT course_id FROM course WHERE courseName = ?`;
 
   db.query(getCourseIdQuery, [courseName], (err, result) => {
     if (err) {
@@ -220,7 +256,7 @@ app.get('/api/student/:id', (req, res) => {
       af.id AS student_id,
       af.name AS student_name,
       af.dob,
-      c.name,
+      c.courseName,
       c.duration,
       c.languages
     FROM admission_form af
@@ -248,6 +284,37 @@ app.get('/api/courses', (req, res) => {
     res.json(results);
   });
 });
+
+// API to handle bill creation
+app.post('/api/bill', (req, res) => {
+  const { name, email, courseName, rupees, date } = req.body;
+
+  console.log('Received Data:', req.body); // Log the request payload
+
+  const query = 'INSERT INTO bills (name, email, courseName, rupees, date) VALUES (?, ?, ?, ?, ?)';
+  db.query(query, [name, email, courseName, rupees, date], (err, result) => {
+    if (err) {
+      console.error('Error inserting data:', err.message);
+      return res.status(500).json({ error: 'Failed to create bill', details: err.message });
+    }
+
+    console.log('Data inserted successfully:', result);
+
+    sendBillEmail(email, rupees, date)
+      .then((info) => {
+        res.status(200).json({
+          message: 'Bill email sent successfully',
+          emailResponse: info.response,
+        });
+      })
+      .catch((err) => {
+        console.error('Error sending email:', err);
+        res.status(500).json({ error: 'Failed to send email', details: err.message });
+      });
+  });
+});
+
+
 scheduleBirthdayEmails();
 // Start the server
 const PORT = process.env.PORT || 3000;

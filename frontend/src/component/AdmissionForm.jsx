@@ -406,8 +406,8 @@ function AdmissionForm() {
                     >
                       <option value="">Select a course</option>
                       {Array.isArray(courses) && courses.map((course) => (
-                        <option key={course.course_id} value={course.name}>
-                          {course.name}
+                        <option key={course.course_id} value={course.courseName}>
+                          {course.courseName}
                         </option>
                       ))}
                     </select>

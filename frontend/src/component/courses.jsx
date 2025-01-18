@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Header from "./Header";
 import Footer from "./Footer";
-import styles from "../styles/course.module.css";
+import styles from "../styles/course.module.css?v=1.1";
 
 const CourseManagement = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -96,7 +96,7 @@ const CourseManagement = () => {
 
           <div className={styles.grid}>
             {courses.map((course) => (
-              <div key={course.id} className={styles.card}>
+              <div key={course.course_id} className={styles.card}>
                 <div className={styles.highlightLine}></div>
                 <div className="p-6">
                   <h3 className={styles.cardHeader}>{course.courseName}</h3>

@@ -5,6 +5,7 @@ function Header({ isLoggedIn, onLogout }) {
   const [menuVisible, setMenuVisible] = useState(false); // State to toggle menu visibility
   const role = localStorage.getItem("role");
   const userId = localStorage.getItem("ID");
+  
 
   const toggleMenu = () => {
     setMenuVisible(!menuVisible); // Toggle the menu visibility
@@ -43,7 +44,9 @@ function Header({ isLoggedIn, onLogout }) {
             <Link to="/courses"  >
               Course
             </Link>
-            <a href="#">Placements</a>
+            <Link to="/bill"  >
+              Bill
+            </Link>
             <a href="#">e-Connect</a>
             {isLoggedIn ? (
               <a href={`/profile/${userId}`}>MyProfile</a>

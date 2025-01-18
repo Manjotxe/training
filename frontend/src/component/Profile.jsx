@@ -35,7 +35,7 @@ const Profile = () => {
       <p><strong>Name:</strong> {profile.student_name}</p>
       <p><strong>Date of Birth:</strong> {profile.dob}</p>
       <h2>Course Details</h2>
-      <p><strong>Course Name:</strong> {profile.name}</p>
+      <p><strong>Course Name:</strong> {profile.courseName}</p>
       <p><strong>Duration:</strong> {profile.duration} months</p>
       <p><strong>Description:</strong> {profile.languages}</p>
     </div>
