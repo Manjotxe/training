@@ -46,11 +46,11 @@ function Header({ isLoggedIn, onLogout }) {
           </div>
           <div className="nav-links">
             <a href="#">About</a>
-            {role === "admin" ? <a href="/admission">Admissions</a> : null}{" "}
+            {role === "admin" ? <a href="/admission">Admission</a> : null}{" "}
             {/* Show "Admissions" only for admin */}
-            <a href="#">Programs</a>
-            <a href="#">Academics</a>
-            <a href="#">e-Connect</a>
+            {role === "admin" ? <a href="/data">Program</a> : null}{" "}
+            {role === "admin" ? <a href="/assignment">assignment</a> : null}{" "}
+            <a href="/asgnment">user assignment</a>
             <a href="#">Placements</a>
             {/* Conditional rendering for login/logout */}
             {!isLoggedIn ? (
