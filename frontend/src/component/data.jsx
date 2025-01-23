@@ -35,8 +35,13 @@ function Data() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, [searchTerm, currentPage, yearFilter]); // Add yearFilter to dependencies
+    setLoading(false);
+    if (searchTerm || yearFilter) {
+      fetchUsers();
+    } else {
+      setUsers([]); // Clear the user list if no search term or year filter
+    }
+  }, [searchTerm, yearFilter, currentPage]);
 
   const fetchUsers = () => {
     setLoading(true);
@@ -146,17 +151,21 @@ function Data() {
               </tbody>
             </table>
 
-            <div className={styles.pagination}>
-              {Array.from({ length: totalPages }, (_, index) => (
-                <button
-                  key={index + 1}
-                  onClick={() => handlePageChange(index + 1)}
-                  disabled={currentPage === index + 1}
-                >
-                  {index + 1}
-                </button>
-              ))}
-            </div>
+            {searchTerm || yearFilter ? (
+              <div className={styles.pagination}>
+                {Array.from({ length: totalPages }, (_, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => handlePageChange(index + 1)}
+                    disabled={currentPage === index + 1}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              ""
+            )}
             {isModalOpen && (
               <Bill
                 isModalOpen={isModalOpen}
