@@ -6,6 +6,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/AdmissionForm.css";
 
 function AdmissionForm() {
+  // Helper function to get today's date in 'YYYY-MM-DD' format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0]; // Format date to 'YYYY-MM-DD'
+  };
   const [formData, setFormData] = useState({
     name: "",
     dob: "",
@@ -23,7 +28,7 @@ function AdmissionForm() {
     schoolX: "",
     schoolXII: "",
     courseName: "",
-    admissionDate: "",
+    admissionDate: getTodayDate(),
   });
   const [courses, setCourses] = useState([]);
   const [signature, setSignature] = useState(null);

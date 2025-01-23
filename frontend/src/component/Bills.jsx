@@ -4,11 +4,16 @@ import styles from "../styles/Bills.module.css"; // Import the CSS module
 import { useNavigate } from "react-router-dom";
 
 function BillForm({ closeBill, isModalOpen, selectedUser }) {
+  // Helper function to get today's date in 'YYYY-MM-DD' format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0]; // Format date to 'YYYY-MM-DD'
+  };
   const [name, setName] = useState(selectedUser?.name || "");
   const [email, setEmail] = useState(selectedUser?.email || "");
   const [courseName, setCourseName] = useState("");
   const [rupees, setRupees] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(getTodayDate());
   const [prevdate, setPrevdate] = useState("");
   const navigate = useNavigate(); // Initialize navigate
 
@@ -54,7 +59,7 @@ function BillForm({ closeBill, isModalOpen, selectedUser }) {
         billData
       );
       alert("Bill created successfully!");
-      setIsModalOpen(false); // Close modal after successful submission
+      closeBill(); // Close modal after successful submission
       navigate("/"); // Navigate to home page
     } catch (error) {
       alert("Error creating bill");

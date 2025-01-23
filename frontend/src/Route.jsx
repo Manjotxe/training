@@ -1,12 +1,18 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Home from "./component/Index.jsx";
 import Login from "./component/login.jsx";
 import Profile from "./component/Profile.jsx";
 import AdmissionForm from "./component/AdmissionForm.jsx";
-import Data from "./component/Data.jsx";
+import Data from "./component/data.jsx";
 import Courses from "./component/courses.jsx";
 import Assignment from "./component/Admin.jsx";
+import User from "./component/user.jsx";
 import PrivateRoute from "./component/PrivateRoute.jsx";
 
 function App() {
@@ -16,11 +22,23 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route
+          path="/assignments/:id"
+          element={
+            localStorage.getItem("role") ? (
+              <User />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
           path="/profile/:id"
           element={
-            <PrivateRoute>
+            localStorage.getItem("role") ? (
               <Profile />
-            </PrivateRoute>
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route

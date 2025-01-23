@@ -3,12 +3,14 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const multer = require("multer");
 const path = require("path");
 const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
+const { sendBillEmail } = require("./emailTemplates/SendBill");
 const {
   sendAdmissionConfirmationEmail,
   sendAdmissionDetailsToAdmin,
@@ -24,7 +26,13 @@ app.use(
     credentials: true, // Allow credentials (cookies, authorization headers)
   })
 );
-
+const transporter = nodemailer.createTransport({
+  service: "gmail", // Using Gmail for sending emails
+  auth: {
+    user: process.env.ADMIN_EMAIL, // Your email from .env
+    pass: process.env.EMAIL_PASS, // Your app-specific password from .env
+  },
+});
 // Route to handle login
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
@@ -58,16 +66,26 @@ app.post("/login", (req, res) => {
     }
   );
 });
+app.get("/api/courses/main", (req, res) => {
+  const query = "select * from course";
+  pool.query(query, (err, result) => {
+    if (err) {
+      console.error("error to fetch data:", err.message);
+    }
+    console.log(result);
+    res.json(result);
+  });
+});
 app.post("/api/courses", (req, res) => {
-  const { courseName, duration, languages } = req.body;
+  const { courseName, duration, image, languages } = req.body;
 
   if (!courseName || !duration || !languages) {
     return res.status(400).send("All fields are required.");
   }
 
   const query =
-    "INSERT INTO course (courseName, duration, languages) VALUES (?, ?, ?)";
-  pool.query(query, [courseName, duration, languages], (err, result) => {
+    "INSERT INTO course (courseName, duration, image, languages) VALUES (?, ?, ?, ?)";
+  pool.query(query, [courseName, duration, image, languages], (err, result) => {
     if (err) {
       console.error("Error adding course:", err);
       res.status(500).send("Failed to add course.");
@@ -76,6 +94,7 @@ app.post("/api/courses", (req, res) => {
         id: result.insertId,
         courseName,
         duration,
+        image,
         languages,
       };
       res.status(201).json(newCourse);
@@ -501,7 +520,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
       }
 
       const mailOptions = {
-        from: process.env.EMAIL_USER, // Your email
+        from: process.env.ADMIN_EMAIL, // Your email
         to: student.email, // Student's email
         subject: "New Assignment",
         text: `

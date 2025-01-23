@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "../styles/Admin.module.css"; // Import the CSS module
 import Footer from "../component/Footer";
 import Header from "../component/Header";
 
 function Data() {
+  const navigate = useNavigate(); // UseNavigate hook to navigate between routes
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,6 +31,7 @@ function Data() {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     setIsLoggedIn(false);
+    navigate("/");
   };
 
   useEffect(() => {
