@@ -15,6 +15,7 @@ import Assignment from "./component/Admin.jsx";
 import User from "./component/user.jsx";
 import PrivateRoute from "./component/PrivateRoute.jsx";
 import Lectures from "./component/Lectures.jsx";
+import AddLecture from "./component/AddLecture.jsx";
 
 function App() {
   return (
@@ -67,6 +68,14 @@ function App() {
           }
         />
         <Route
+          path="/add-lecture"
+          element={
+            <PrivateRoute>
+              <AddLecture />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/assignment"
           element={
             <PrivateRoute>
@@ -77,9 +86,11 @@ function App() {
         <Route
           path="/lectures"
           element={
-            <PrivateRoute>
+            localStorage.getItem("role") ? (
               <Lectures />
-            </PrivateRoute>
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
       </Routes>

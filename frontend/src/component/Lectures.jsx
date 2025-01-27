@@ -23,14 +23,19 @@ export default function Lectures() {
   const fetchLectures = async () => {
     setLoading(true);
     try {
-      const formattedDate = date.toISOString().split("T")[0]; // Convert date to YYYY-MM-DD format
+      const formattedDate = date.toLocaleDateString("en-CA");
       const response = await fetch(
         `http://localhost:5000/api/lectures?date=${formattedDate}`
       );
+
       const data = await response.json();
 
-      // Ensure data.lectures exists and is an array
-      setLectures(Array.isArray(data.lectures) ? data.lectures : []);
+      // Confirm data.lectures is correct
+      if (Array.isArray(data)) {
+        setLectures(data); // Update state here
+      } else {
+        console.error("API response is not an array:", data);
+      }
     } catch (error) {
       console.error("Failed to fetch lectures:", error);
     } finally {
@@ -39,7 +44,55 @@ export default function Lectures() {
   };
 
   const handleFilterChange = (filter) => {
-    setSelectedFilters((filters) => filters.filter((f) => f !== filter));
+    setSelectedFilters((filters) => {
+      if (filters.includes(filter)) {
+        return filters.filter((f) => f !== filter); // Remove filter
+      } else {
+        return [...filters, filter]; // Add filter
+      }
+    });
+  };
+
+  const getLectureStatus = (startTime, endTime) => {
+    const now = new Date();
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    if (now < start) {
+      return "Upcoming"; // Lecture has not started yet
+    } else if (now >= start && now <= end) {
+      return "Ongoing"; // Lecture is currently ongoing
+    } else {
+      return "Completed"; // Lecture is over
+    }
+  };
+
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "Upcoming":
+        return "bg-primary"; // Blue for upcoming
+      case "Ongoing":
+        return "bg-success"; // Green for ongoing
+      case "Completed":
+        return "bg-secondary"; // Gray for completed
+      default:
+        return "";
+    }
+  };
+
+  const getLectureHours = (startTime, endTime) => {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const startHour = start.getHours();
+    const endHour = end.getHours();
+
+    const lectureHours = [];
+    for (let hour = startHour; hour < endHour; hour++) {
+      // Modify this to exclude the final hour
+      lectureHours.push(hour);
+    }
+
+    return lectureHours;
   };
 
   return (
@@ -70,7 +123,7 @@ export default function Lectures() {
       </div>
 
       <div className="text-center small mb-4">
-        Click on the class/meeting name in the below timetable
+        <h5>Here is the timetable for all the classes</h5>
       </div>
 
       <div className="row">
@@ -89,10 +142,12 @@ export default function Lectures() {
             <div className="card-body">
               <h5 className="card-title">Filters</h5>
               <div className="mb-3">
-                {selectedFilters.map((filter) => (
+                {["Upcoming", "Ongoing", "Completed"].map((filter) => (
                   <button
                     key={filter}
-                    className="btn btn-outline-secondary btn-sm me-2 mb-2"
+                    className={`btn btn-outline-secondary btn-sm me-2 mb-2 ${
+                      selectedFilters.includes(filter) ? "active" : ""
+                    }`}
                     onClick={() => handleFilterChange(filter)}
                   >
                     <span>×</span> {filter}
@@ -117,17 +172,6 @@ export default function Lectures() {
                   })}{" "}
                   (India Standard Time)
                 </h5>
-                <div className="btn-group">
-                  <button className="btn btn-outline-secondary btn-sm">
-                    Month
-                  </button>
-                  <button className="btn btn-outline-secondary btn-sm">
-                    Week
-                  </button>
-                  <button className="btn btn-outline-secondary btn-sm">
-                    Day
-                  </button>
-                </div>
               </div>
 
               {loading ? (
@@ -139,24 +183,44 @@ export default function Lectures() {
                       {/* Time Column */}
                       <div className="col-2 text-muted small">
                         {hour === 12
-                          ? "12pm"
+                          ? "12 PM"
                           : hour < 12
-                          ? `${hour}am`
-                          : `${hour - 12}pm`}
+                          ? `${hour} AM`
+                          : `${hour - 12} PM`}
                       </div>
                       {/* Lecture Display */}
                       <div className="col-10 border-top pt-2">
                         {lectures
                           .filter((lecture) => {
-                            const lectureHour = new Date(
+                            const startHour = new Date(
                               lecture.start_time
                             ).getHours();
-                            return lectureHour === hour;
+                            const endHour = new Date(
+                              lecture.end_time
+                            ).getHours();
+
+                            // Check if the current hour is within the lecture's duration
+                            return (
+                              hour === startHour ||
+                              (hour > startHour && hour < endHour)
+                            );
+                          })
+                          .filter((lecture) => {
+                            const status = getLectureStatus(
+                              lecture.start_time,
+                              lecture.end_time
+                            );
+                            return selectedFilters.includes(status);
                           })
                           .map((lecture) => (
                             <div
-                              key={lecture.title}
-                              className="lecture-item bg-secondary text-white p-2 small rounded mb-2"
+                              key={lecture.id}
+                              className={`lecture-item ${getStatusClass(
+                                getLectureStatus(
+                                  lecture.start_time,
+                                  lecture.end_time
+                                )
+                              )} text-white p-2 small rounded mb-2`}
                               onClick={() =>
                                 console.log("Lecture clicked:", lecture.title)
                               }
@@ -182,6 +246,15 @@ export default function Lectures() {
                               <div>{lecture.group}</div>
                             </div>
                           ))}
+                        {/* Handle empty slots */}
+                        {lectures.filter(
+                          (lecture) =>
+                            new Date(lecture.start_time).getHours() === hour
+                        ).length === 0 && (
+                          <div className="text-muted small">
+                            No lectures scheduled
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
