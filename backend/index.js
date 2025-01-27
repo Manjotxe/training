@@ -1,4 +1,10 @@
 require("dotenv").config();
+const {
+  getLecturesByDate,
+  addLecture,
+  updateLecture,
+  deleteLecture,
+} = require("./lectures"); // Import the functions
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -32,6 +38,77 @@ const transporter = nodemailer.createTransport({
     user: process.env.ADMIN_EMAIL, // Your email from .env
     pass: process.env.EMAIL_PASS, // Your app-specific password from .env
   },
+});
+// Fetch lectures for a specific date
+app.get("/api/lectures", (req, res) => {
+  const { date } = req.query; // Get the date from the query string
+  if (!date) {
+    return res.status(400).json({ message: "Date is required" });
+  }
+
+  getLecturesByDate(date, (err, lectures) => {
+    if (err) {
+      return res.status(500).json({ message: "Error fetching lectures" });
+    }
+    res.status(200).json(lectures);
+  });
+});
+
+// Add a new lecture
+app.post("/api/lectures", (req, res) => {
+  const { title, start_time, end_time, status, lecturer_name, group } =
+    req.body;
+  const lectureData = {
+    title,
+    start_time,
+    end_time,
+    status,
+    lecturer_name,
+    group,
+  };
+
+  addLecture(lectureData, (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: "Error adding lecture" });
+    }
+    res
+      .status(201)
+      .json({ message: "Lecture added successfully", id: result.insertId });
+  });
+});
+
+// Update a lecture
+app.put("/api/lectures/:id", (req, res) => {
+  const { id } = req.params;
+  const { title, start_time, end_time, status, lecturer_name, group } =
+    req.body;
+  const lectureData = {
+    title,
+    start_time,
+    end_time,
+    status,
+    lecturer_name,
+    group,
+  };
+
+  updateLecture(id, lectureData, (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: "Error updating lecture" });
+    }
+    res.status(200).json({ message: "Lecture updated successfully" });
+  });
+});
+
+// Delete a lecture
+app.delete("/api/lectures/:id", (req, res) => {
+  const { id } = req.params;
+
+  deleteLecture(id, (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: "Error deleting lecture" });
+    }
+    res.status(200).json({ message: "Lecture deleted successfully" });
+  });
 });
 // Route to handle login
 app.post("/login", (req, res) => {

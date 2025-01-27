@@ -14,6 +14,7 @@ import Courses from "./component/courses.jsx";
 import Assignment from "./component/Admin.jsx";
 import User from "./component/user.jsx";
 import PrivateRoute from "./component/PrivateRoute.jsx";
+import Lectures from "./component/Lectures.jsx";
 
 function App() {
   return (
@@ -70,6 +71,14 @@ function App() {
           element={
             <PrivateRoute>
               <Assignment />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/lectures"
+          element={
+            <PrivateRoute>
+              <Lectures />
             </PrivateRoute>
           }
         />
