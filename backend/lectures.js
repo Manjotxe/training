@@ -17,7 +17,22 @@ db.connect((err) => {
   }
   console.log("Connected to the database");
 });
+//get all lectures
+const getAllLectures = (callback) => {
+  const query = `
+        SELECT * FROM lectures
+        ORDER BY start_time ASC;
+    `;
 
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching lectures:", err);
+      callback(err, null);
+      return;
+    }
+    callback(null, results);
+  });
+};
 // Fetch lectures for a specific date
 const getLecturesByDate = (date, callback) => {
   const query = `
@@ -39,8 +54,8 @@ const getLecturesByDate = (date, callback) => {
 // Add a new lecture
 const addLecture = (lectureData, callback) => {
   const query = `
-        INSERT INTO lectures (title, start_time, end_time, status, lecturer_name, \`group\`)
-        VALUES (?, ?, ?, ?, ?, ?);
+        INSERT INTO lectures (title, start_time, end_time, status, lecturer_name)
+        VALUES (?, ?, ?, ?, ?);
     `;
 
   db.query(
@@ -51,7 +66,6 @@ const addLecture = (lectureData, callback) => {
       lectureData.end_time,
       lectureData.status,
       lectureData.lecturer_name,
-      lectureData.group,
     ],
     (err, results) => {
       if (err) {
@@ -116,4 +130,5 @@ module.exports = {
   addLecture,
   updateLecture,
   deleteLecture,
+  getAllLectures,
 };

@@ -57,6 +57,12 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
             ) : null}
             {role === "admin" && <a href="/data">All Students</a>}
             {isLoggedIn ? (
+              <a href="/lectures">TimeTable</a>
+            ) : (
+              <a href="/login">TimeTable</a>
+            )}
+            {role === "admin" && <a href="/add-lecture">Add Lecture</a>}
+            {isLoggedIn ? (
               <a href={`/profile/${userId}`}>MyProfile</a>
             ) : (
               <a href="/login">MyProfile</a>

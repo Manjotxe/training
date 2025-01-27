@@ -1,5 +1,6 @@
 require("dotenv").config();
 const {
+  getAllLectures,
   getLecturesByDate,
   addLecture,
   updateLecture,
@@ -28,7 +29,7 @@ app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
 app.use(
   cors({
     origin: "http://localhost:5173", // Allow only your frontend
-    methods: "GET,POST,PUT",
+    methods: "GET,POST,PUT,DELETE",
     credentials: true, // Allow credentials (cookies, authorization headers)
   })
 );
@@ -42,29 +43,40 @@ const transporter = nodemailer.createTransport({
 // Fetch lectures for a specific date
 app.get("/api/lectures", (req, res) => {
   const { date } = req.query; // Get the date from the query string
-  if (!date) {
-    return res.status(400).json({ message: "Date is required" });
-  }
 
-  getLecturesByDate(date, (err, lectures) => {
-    if (err) {
-      return res.status(500).json({ message: "Error fetching lectures" });
-    }
-    res.status(200).json(lectures);
-  });
+  if (date) {
+    // If date is provided, fetch lectures by date
+    getLecturesByDate(date, (err, lectures) => {
+      if (err) {
+        return res.status(500).json({ message: "Error fetching lectures" });
+      }
+      res.status(200).json(lectures);
+    });
+  } else {
+    // If no date is provided, fetch all lectures
+    getAllLectures((err, lectures) => {
+      if (err) {
+        return res.status(500).json({ message: "Error fetching lectures" });
+      }
+      res.status(200).json(lectures);
+    });
+  }
 });
+
 
 // Add a new lecture
 app.post("/api/lectures", (req, res) => {
-  const { title, start_time, end_time, status, lecturer_name, group } =
-    req.body;
+  const { title, start_time, end_time, status, lecturer_name } = req.body;
+
+  // Set status to "upcoming" if not provided
+  const lectureStatus = status || "upcoming"; // Default to "upcoming" if status is not present
+
   const lectureData = {
     title,
     start_time,
     end_time,
-    status,
+    status: lectureStatus, // Use the default status if no status provided
     lecturer_name,
-    group,
   };
 
   addLecture(lectureData, (err, result) => {
@@ -76,6 +88,7 @@ app.post("/api/lectures", (req, res) => {
       .json({ message: "Lecture added successfully", id: result.insertId });
   });
 });
+
 
 // Update a lecture
 app.put("/api/lectures/:id", (req, res) => {
