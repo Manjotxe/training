@@ -218,7 +218,16 @@ const AddLecture = () => {
                       <td>{new Date(lecture.start_time).toLocaleString()}</td>
                       <td>{new Date(lecture.end_time).toLocaleString()}</td>
                       <td>
-                        <a href={lecture.lecture_url}>{lecture.lecture_url}</a>
+                        <a
+                          href={
+                            lecture.lecture_url &&
+                            lecture.lecture_url.startsWith("http")
+                              ? lecture.lecture_url
+                              : `https://${lecture.lecture_url}` // Assuming this is a fallback URL
+                          }
+                        >
+                          {lecture.lecture_url}
+                        </a>
                       </td>
                       <td>
                         <button
