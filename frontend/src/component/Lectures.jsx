@@ -211,40 +211,85 @@ export default function Lectures() {
                             );
                             return selectedFilters.includes(status);
                           })
-                          .map((lecture) => (
-                            <div
-                              key={lecture.id}
-                              className={`lecture-item ${getStatusClass(
-                                getLectureStatus(
-                                  lecture.start_time,
-                                  lecture.end_time
-                                )
-                              )} text-white p-2 small rounded mb-2`}
-                              onClick={() =>
-                                console.log("Lecture clicked:", lecture.title)
-                              }
-                            >
-                              <div>{lecture.title}</div>
-                              <div className="text-muted small">
-                                {new Date(
-                                  lecture.start_time
-                                ).toLocaleTimeString("en-US", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}{" "}
-                                -{" "}
-                                {new Date(lecture.end_time).toLocaleTimeString(
-                                  "en-US",
-                                  {
+                          .map((lecture) =>
+                            // Conditionally render <a> tag or just a div
+                            lecture.lecture_url ? (
+                              <a
+                                key={lecture.id}
+                                href={lecture.lecture_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ textDecoration: "none" }}
+                              >
+                                <div
+                                  className={`lecture-item ${getStatusClass(
+                                    getLectureStatus(
+                                      lecture.start_time,
+                                      lecture.end_time
+                                    )
+                                  )} text-white p-2 small rounded mb-2`}
+                                  onClick={() =>
+                                    console.log(
+                                      "Lecture clicked:",
+                                      lecture.title
+                                    )
+                                  }
+                                >
+                                  <div>{lecture.title}</div>
+                                  <div className="text-muted small">
+                                    {new Date(
+                                      lecture.start_time
+                                    ).toLocaleTimeString("en-US", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}{" "}
+                                    -{" "}
+                                    {new Date(
+                                      lecture.end_time
+                                    ).toLocaleTimeString("en-US", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </div>
+                                  <div>{lecture.lecture_url}</div>
+                                  <div>{lecture.group}</div>
+                                </div>
+                              </a>
+                            ) : (
+                              <div
+                                key={lecture.id}
+                                className={`lecture-item ${getStatusClass(
+                                  getLectureStatus(
+                                    lecture.start_time,
+                                    lecture.end_time
+                                  )
+                                )} text-white p-2 small rounded mb-2`}
+                                onClick={() =>
+                                  console.log("Lecture clicked:", lecture.title)
+                                }
+                              >
+                                <div>{lecture.title}</div>
+                                <div className="text-muted small">
+                                  {new Date(
+                                    lecture.start_time
+                                  ).toLocaleTimeString("en-US", {
                                     hour: "2-digit",
                                     minute: "2-digit",
-                                  }
-                                )}
+                                  })}{" "}
+                                  -{" "}
+                                  {new Date(
+                                    lecture.end_time
+                                  ).toLocaleTimeString("en-US", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </div>
+                                <div>{lecture.lecture_url}</div>
+                                <div>{lecture.group}</div>
                               </div>
-                              <div>{lecture.lecture_url}</div>
-                              <div>{lecture.group}</div>
-                            </div>
-                          ))}
+                            )
+                          )}
+
                         {/* Handle empty slots */}
                         {lectures.filter(
                           (lecture) =>
