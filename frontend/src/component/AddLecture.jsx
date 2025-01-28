@@ -30,7 +30,7 @@ const AddLecture = () => {
         // If you're editing a lecture, update the form values
         if (editLecture) {
           setNewLecture({
-            lecturer: editLecture.lecturer_name, // assuming "lecturer" is the field name
+            lecturer: editLecture.lecture_url, // assuming "lecturer" is the field name
             title: editLecture.title,
             startTime: new Date(editLecture.start_time)
               .toISOString()
@@ -71,7 +71,7 @@ const AddLecture = () => {
           title: newLecture.title,
           start_time: newLecture.startTime,
           end_time: newLecture.endTime,
-          lecturer_name: newLecture.lecturer, // Correct field name
+          lecture_url: newLecture.lecturer, // Correct field name
           status: "upcoming", // Or set dynamically
         }),
       });
@@ -178,7 +178,7 @@ const AddLecture = () => {
                 </div>
                 <div className="mb-3">
                   <label htmlFor="lecturer" className="form-label">
-                    Lecturer Name
+                    Lecturer URL
                   </label>
                   <input
                     type="text"
@@ -187,7 +187,6 @@ const AddLecture = () => {
                     name="lecturer"
                     value={newLecture.lecturer}
                     onChange={handleInputChange}
-                    required
                   />
                 </div>
                 <button type="submit" className="btn btn-primary">
@@ -208,7 +207,7 @@ const AddLecture = () => {
                     <th>Title</th>
                     <th>Start Time</th>
                     <th>End Time</th>
-                    <th>Lecturer</th>
+                    <th>URL</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -218,7 +217,9 @@ const AddLecture = () => {
                       <td>{lecture.title}</td>
                       <td>{new Date(lecture.start_time).toLocaleString()}</td>
                       <td>{new Date(lecture.end_time).toLocaleString()}</td>
-                      <td>{lecture.lecturer_name}</td>
+                      <td>
+                        <a href={lecture.lecture_url}>{lecture.lecture_url}</a>
+                      </td>
                       <td>
                         <button
                           className="btn btn-sm btn-outline-primary me-2"

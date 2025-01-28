@@ -16,6 +16,7 @@ import User from "./component/user.jsx";
 import PrivateRoute from "./component/PrivateRoute.jsx";
 import Lectures from "./component/Lectures.jsx";
 import AddLecture from "./component/AddLecture.jsx";
+import CanvasComponent from "./component/CanvasComponent.jsx";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
             )
           }
         />
+        <Route path="/canvas" element={<CanvasComponent />} />
         <Route
           path="/admission"
           element={

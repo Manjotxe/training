@@ -154,7 +154,6 @@ export default function Lectures() {
                   </button>
                 ))}
               </div>
-              <button className="btn btn-secondary w-100">Apply</button>
             </div>
           </div>
         </div>
@@ -242,7 +241,7 @@ export default function Lectures() {
                                   }
                                 )}
                               </div>
-                              <div>{lecture.lecturer_name}</div>
+                              <div>{lecture.lecture_url}</div>
                               <div>{lecture.group}</div>
                             </div>
                           ))}

@@ -54,7 +54,7 @@ const getLecturesByDate = (date, callback) => {
 // Add a new lecture
 const addLecture = (lectureData, callback) => {
   const query = `
-        INSERT INTO lectures (title, start_time, end_time, status, lecturer_name)
+        INSERT INTO lectures (title, start_time, end_time, status, lecture_url)
         VALUES (?, ?, ?, ?, ?);
     `;
 
@@ -65,7 +65,7 @@ const addLecture = (lectureData, callback) => {
       lectureData.start_time,
       lectureData.end_time,
       lectureData.status,
-      lectureData.lecturer_name,
+      lectureData.lecture_url,
     ],
     (err, results) => {
       if (err) {
@@ -82,7 +82,7 @@ const addLecture = (lectureData, callback) => {
 const updateLecture = (id, lectureData, callback) => {
   const query = `
         UPDATE lectures
-        SET title = ?, start_time = ?, end_time = ?, status = ?, lecturer_name = ?, \`group\` = ?
+        SET title = ?, start_time = ?, end_time = ?, status = ?, lecture_url = ?, \`group\` = ?
         WHERE id = ?;
     `;
 
@@ -93,7 +93,7 @@ const updateLecture = (id, lectureData, callback) => {
       lectureData.start_time,
       lectureData.end_time,
       lectureData.status,
-      lectureData.lecturer_name,
+      lectureData.lecture_url,
       lectureData.group,
       id,
     ],

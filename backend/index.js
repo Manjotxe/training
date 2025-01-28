@@ -6,6 +6,7 @@ const {
   updateLecture,
   deleteLecture,
 } = require("./lectures"); // Import the functions
+const inquiryRoute = require("./inquiry");
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -40,6 +41,9 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS, // Your app-specific password from .env
   },
 });
+// Inquiry
+app.use("/api/inquiry", inquiryRoute);
+
 // Fetch lectures for a specific date
 app.get("/api/lectures", (req, res) => {
   const { date } = req.query; // Get the date from the query string
@@ -63,10 +67,9 @@ app.get("/api/lectures", (req, res) => {
   }
 });
 
-
 // Add a new lecture
 app.post("/api/lectures", (req, res) => {
-  const { title, start_time, end_time, status, lecturer_name } = req.body;
+  const { title, start_time, end_time, status, lecture_url } = req.body;
 
   // Set status to "upcoming" if not provided
   const lectureStatus = status || "upcoming"; // Default to "upcoming" if status is not present
@@ -76,7 +79,7 @@ app.post("/api/lectures", (req, res) => {
     start_time,
     end_time,
     status: lectureStatus, // Use the default status if no status provided
-    lecturer_name,
+    lecture_url,
   };
 
   addLecture(lectureData, (err, result) => {
@@ -89,18 +92,16 @@ app.post("/api/lectures", (req, res) => {
   });
 });
 
-
 // Update a lecture
 app.put("/api/lectures/:id", (req, res) => {
   const { id } = req.params;
-  const { title, start_time, end_time, status, lecturer_name, group } =
-    req.body;
+  const { title, start_time, end_time, status, lecture_url, group } = req.body;
   const lectureData = {
     title,
     start_time,
     end_time,
     status,
-    lecturer_name,
+    lecture_url,
     group,
   };
 
@@ -141,7 +142,6 @@ app.post("/login", (req, res) => {
       }
 
       const user = results[0];
-      console.log(user); // Log user details for debugging
 
       // Compare the provided password with the password stored in the database
       if (password !== user.password) {
@@ -162,7 +162,6 @@ app.get("/api/courses/main", (req, res) => {
     if (err) {
       console.error("error to fetch data:", err.message);
     }
-    console.log(result);
     res.json(result);
   });
 });
@@ -548,8 +547,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 app.post("/upload", upload.single("file"), (req, res) => {
-  console.log("Request body:", req.body); // Debugging the body of the request
-
   const { message, link, students } = req.body; // Get selected students, message, and link
   let fileData = null;
 
@@ -562,14 +559,12 @@ app.post("/upload", upload.single("file"), (req, res) => {
       file_path: filePath,
       file_type: fileType,
     };
-    console.log("File uploaded:", fileData); // Debugging file data
   }
 
   // Ensure students is an array if provided
   let studentIds;
   try {
     studentIds = students ? JSON.parse(students) : [];
-    console.log("Parsed student IDs:", studentIds); // Debugging studentIds
   } catch (error) {
     console.log("Error parsing students:", error);
     return res.status(400).send("Invalid student data");
@@ -582,15 +577,11 @@ app.post("/upload", upload.single("file"), (req, res) => {
       : "SELECT * FROM admission_form";
   const sqlParams = studentIds.length > 0 ? [studentIds] : [];
 
-  console.log("SQL Query:", sql); // Debugging SQL query
-
   pool.query(sql, sqlParams, (err, studentsResults) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).send("Error fetching students");
     }
-
-    console.log("Fetched students from DB:", studentsResults); // Debugging database result
 
     // Check if no students are found
     if (studentsResults.length === 0) {
@@ -600,8 +591,6 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
     // Send the assignment to all selected (or all) students
     studentsResults.forEach((student) => {
-      console.log("Processing student:", student); // Debugging student data
-
       if (!student.email) {
         console.warn(
           `Student ${student.name} does not have an email, skipping...`
