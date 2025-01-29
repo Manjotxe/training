@@ -29,7 +29,7 @@ app.use(bodyParser.json({ limit: "100mb" }));
 app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
 app.use(
   cors({
-    origin: "http://localhost:5173", // Allow only your frontend
+    origin: "http://localhost:5173",
     methods: "GET,POST,PUT,DELETE",
     credentials: true, // Allow credentials (cookies, authorization headers)
   })
@@ -37,8 +37,8 @@ app.use(
 const transporter = nodemailer.createTransport({
   service: "gmail", // Using Gmail for sending emails
   auth: {
-    user: process.env.ADMIN_EMAIL, // Your email from .env
-    pass: process.env.EMAIL_PASS, // Your app-specific password from .env
+    user: process.env.ADMIN_EMAIL,
+    pass: process.env.EMAIL_PASS,
   },
 });
 // Inquiry
