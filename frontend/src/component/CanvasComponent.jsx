@@ -1,5 +1,9 @@
 import React, { useRef, useEffect, useState } from "react";
 import io from "socket.io-client";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUndo } from "@fortawesome/free-solid-svg-icons";
+import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
 
 const CanvasComponent = () => {
   const canvasRef = useRef(null);
@@ -13,6 +17,7 @@ const CanvasComponent = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
+  // Connect to the WebSocket server
   useEffect(() => {
     socket.current = io("http://localhost:5001");
     socket.current.on("canvas-data", (data) => {
@@ -26,6 +31,35 @@ const CanvasComponent = () => {
     return () => socket.current.disconnect();
   }, []);
 
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!name || !email) {
+      alert("Please fill in both name and email fields");
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    const canvasData = canvas.toDataURL();
+
+    try {
+      await axios.post("http://localhost:5000/api/inquiry/submit", {
+        name,
+        email,
+        canvasData,
+      });
+
+      alert("Inquiry submitted successfully!");
+      // Clear form
+      setName("");
+      setEmail("");
+      handleClearCanvas();
+    } catch (error) {
+      console.error("Submission error:", error);
+      alert("Failed to submit inquiry. Please try again.");
+    }
+  };
   const getCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -341,6 +375,7 @@ const CanvasComponent = () => {
                 alignItems: "center",
               }}
             >
+              <FontAwesomeIcon icon={faUndo} />
               Undo
             </button>
             <button
@@ -357,6 +392,7 @@ const CanvasComponent = () => {
                 alignItems: "center",
               }}
             >
+              <FontAwesomeIcon icon={faTrashCan} />
               Clear Canvas
             </button>
           </div>
@@ -380,6 +416,7 @@ const CanvasComponent = () => {
           transition: "background-color 0.3s ease, transform 0.2s ease",
           boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
         }}
+        onClick={handleSubmit}
         onMouseOver={(e) => {
           e.target.style.backgroundColor = "#45a049";
           e.target.style.transform = "scale(1.02)";
