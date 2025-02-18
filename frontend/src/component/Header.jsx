@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
+<<<<<<< HEAD
 function Header({ isLoggedIn, onLogout }) {
   const [menuVisible, setMenuVisible] = useState(false); // State to toggle menu visibility
   const role = localStorage.getItem("role");
@@ -9,6 +10,15 @@ function Header({ isLoggedIn, onLogout }) {
 
   const toggleMenu = () => {
     setMenuVisible(!menuVisible); // Toggle the menu visibility
+=======
+function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // State to manage menu visibility
+  const role = localStorage.getItem("role");
+  const userId = localStorage.getItem("ID");
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen); // Toggle menu visibility
+>>>>>>> e3aa18398a4297d46afb1a985017045bb40030d0
   };
 
   return (
@@ -16,12 +26,17 @@ function Header({ isLoggedIn, onLogout }) {
       <nav>
         <div className="top-bar">
           <div className="left-links">
+<<<<<<< HEAD
             <a href="#" className="">
              About Us
             </a>
             <a href="#" className="">
               DEB-ID
             </a>
+=======
+            <a href="#">About Us</a>
+            <a href="#">DEB-ID</a>
+>>>>>>> e3aa18398a4297d46afb1a985017045bb40030d0
             <a href="#">CONTACT US</a>
           </div>
           <div className="right-contact">
@@ -38,6 +53,7 @@ function Header({ isLoggedIn, onLogout }) {
           <div className="logo">
             <h2>Training</h2>
           </div>
+<<<<<<< HEAD
           <div className={`nav-links ${menuVisible ? 'show' : ''}`}>
             <a href="/">Home</a>
             {role === "admin" ? <a href="/admission">Admissions</a> : null}
@@ -48,6 +64,23 @@ function Header({ isLoggedIn, onLogout }) {
               Bill
             </Link>
             <a href="#">e-Connect</a>
+=======
+          <button className="menu-toggle" onClick={toggleMenu}>
+            {/* Toggle button for smaller screens */}☰
+          </button>
+          <div className={`nav-links ${isMenuOpen ? "show" : ""}`}>
+            <a href="/">Home</a>
+            {role === "admin" && <a href="/admission">Admissions</a>}
+            <a href="/course" onClick={handleCoursesClick}>
+              Courses
+            </a>{" "}
+            {role === "admin" ? (
+              <a href="/assignment">Assignments</a>
+            ) : role === "user" ? (
+              <a href={`/assignments/${userId}`}>Assignments</a>
+            ) : null}
+            {role === "admin" && <a href="/data">All Students</a>}
+>>>>>>> e3aa18398a4297d46afb1a985017045bb40030d0
             {isLoggedIn ? (
               <a href={`/profile/${userId}`}>MyProfile</a>
             ) : (

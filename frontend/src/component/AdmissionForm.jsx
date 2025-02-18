@@ -6,6 +6,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/AdmissionForm.css";
 
 function AdmissionForm() {
+  // Helper function to get today's date in 'YYYY-MM-DD' format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0]; // Format date to 'YYYY-MM-DD'
+  };
   const [formData, setFormData] = useState({
     name: "",
     dob: "",
@@ -23,7 +28,7 @@ function AdmissionForm() {
     schoolX: "",
     schoolXII: "",
     courseName: "",
-    admissionDate: "",
+    admissionDate: getTodayDate(),
   });
   const [courses, setCourses] = useState([]);
   const [signature, setSignature] = useState(null);
@@ -395,7 +400,9 @@ function AdmissionForm() {
 
                 <div className="row">
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="courseName" className="form-label">Course Name</label>
+                    <label htmlFor="courseName" className="form-label">
+                      Course Name
+                    </label>
                     <select
                       className="form-control"
                       id="courseName"
@@ -405,11 +412,23 @@ function AdmissionForm() {
                       required
                     >
                       <option value="">Select a course</option>
+<<<<<<< HEAD
                       {Array.isArray(courses) && courses.map((course) => (
                         <option key={course.course_id} value={course.courseName}>
                           {course.courseName}
                         </option>
                       ))}
+=======
+                      {Array.isArray(courses) &&
+                        courses.map((course) => (
+                          <option
+                            key={course.course_id}
+                            value={course.courseName}
+                          >
+                            {course.courseName}
+                          </option>
+                        ))}
+>>>>>>> e3aa18398a4297d46afb1a985017045bb40030d0
                     </select>
                   </div>
 
