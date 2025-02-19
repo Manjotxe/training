@@ -16,6 +16,7 @@ import User from "./component/user.jsx";
 import PrivateRoute from "./component/PrivateRoute.jsx";
 import Lectures from "./component/Lectures.jsx";
 import AddLecture from "./component/AddLecture.jsx";
+import Chat from "./component/ChatApp.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
 
 function App() {
@@ -29,6 +30,16 @@ function App() {
           element={
             localStorage.getItem("role") ? (
               <User />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            localStorage.getItem("role") ? (
+              <Chat />
             ) : (
               <Navigate to="/" replace />
             )

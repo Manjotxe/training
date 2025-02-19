@@ -46,6 +46,11 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
           </button>
           <div className={`nav-links ${isMenuOpen ? "show" : ""}`}>
             <a href="/">Home</a>
+            {role === "admin" ? (
+              <a href="/chat">Chat</a>
+            ) : role === "user" ? (
+              <a href={`/chat`}>Chat</a>
+            ) : null}
             {role === "admin" && <a href="/admission">Admissions</a>}
             <a href="/course" onClick={handleCoursesClick}>
               Courses

@@ -7,6 +7,7 @@ const {
   deleteLecture,
 } = require("./lectures"); // Import the functions
 const inquiryRoute = require("./inquiry");
+require("./chat");
 const express = require("express");
 const app = express();
 const cors = require("cors");
