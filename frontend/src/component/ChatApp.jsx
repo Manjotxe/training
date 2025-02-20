@@ -10,22 +10,23 @@ const socket = io("http://localhost:5002");
 export default function ChatApp() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const userId = 3; // Replace with actual user ID logic
-  const receiverId = 12; // Replace with actual receiver ID logic
+  const [userId, setUserId] = useState(null);
+  const receiverId = 3; // Admin ID is fixed as 3
 
   // Fetch chat history on component mount
   useEffect(() => {
+    const storedUserId = localStorage.getItem("ID");
+    if (storedUserId) setUserId(parseInt(storedUserId));
     const fetchMessages = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5002/chat/${userId}/${receiverId}`
+          `http://localhost:5002/chat/${storedUserId}/${receiverId}`
         );
         setMessages(res.data);
       } catch (error) {
         console.error("Error fetching messages:", error);
       }
     };
-
     fetchMessages();
   }, []);
 
@@ -43,20 +44,12 @@ export default function ChatApp() {
     if (!input.trim()) return;
 
     const newMessage = {
-      text: input,
-      senderId: userId,
-      receiverId: receiverId,
+      message: input,
+      sender_id: userId,
+      receiver_id: receiverId,
     };
 
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
     socket.emit("send-message", newMessage);
-
-    // Save message to backend
-    try {
-      await axios.post("http://localhost:5002/send-message", newMessage);
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
 
     setInput("");
   };
@@ -68,7 +61,7 @@ export default function ChatApp() {
           Back to Home
         </Link>
         <h1 className={styles.chatHeader}>
-          <MessageCircle /> Real-Time Chat
+          <MessageCircle /> Chat with Teacher
         </h1>
       </div>
 
@@ -78,10 +71,10 @@ export default function ChatApp() {
             <div
               key={index}
               className={`${styles.message} ${
-                msg.senderId === userId ? styles.sent : styles.received
+                msg.sender_id === userId ? styles.userMessage : styles.message
               }`}
             >
-              {msg.text}
+              {msg.message}
             </div>
           ))}
         </div>

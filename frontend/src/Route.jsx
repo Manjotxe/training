@@ -17,6 +17,7 @@ import PrivateRoute from "./component/PrivateRoute.jsx";
 import Lectures from "./component/Lectures.jsx";
 import AddLecture from "./component/AddLecture.jsx";
 import Chat from "./component/ChatApp.jsx";
+import AdminChat from "./component/AdminChatApp.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
 
 function App() {
@@ -43,6 +44,14 @@ function App() {
             ) : (
               <Navigate to="/" replace />
             )
+          }
+        />
+        <Route
+          path="/chatadmin"
+          element={
+            <PrivateRoute>
+              <AdminChat />
+            </PrivateRoute>
           }
         />
         <Route

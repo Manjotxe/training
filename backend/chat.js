@@ -36,13 +36,14 @@ io.on("connection", (socket) => {
 
   socket.on("send-message", async (message) => {
     console.log("Message received:", message);
-    io.emit("receive-message", message);
+    io.emit("receive-message", message); // Broadcast to all clients
 
     // Save message to MySQL
-    const { senderId, receiverId, text } = message;
+    const { sender_id, receiver_id, message: msgText } = message;
     const sql =
       "INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)";
-    db.query(sql, [senderId, receiverId, text], (err, result) => {
+
+    db.query(sql, [sender_id, receiver_id, msgText], (err, result) => {
       if (err) {
         console.error("Error saving message:", err);
       } else {
@@ -74,23 +75,16 @@ app.get("/chat/:user1/:user2", (req, res) => {
     }
   });
 });
+// API to fetch students (users) from admission_form table
+app.get("/students", (req, res) => {
+  const sql = "SELECT id, name FROM admission_form WHERE role = 'user'";
 
-// API to send message (backup for socket)
-app.post("/send-message", (req, res) => {
-  console.log("Incoming request body:", req.body); // Log the request data
-
-  const { senderId, receiverId, text } = req.body;
-
-  const sql =
-    "INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)";
-
-  db.query(sql, [senderId, receiverId, text], (err, result) => {
+  db.query(sql, (err, results) => {
     if (err) {
-      console.error("Error inserting message:", err);
-      res.status(500).json({ error: "Failed to send message" });
+      console.error("Error fetching students:", err);
+      res.status(500).json({ error: "Failed to fetch students" });
     } else {
-      console.log("Message inserted successfully with ID:", result.insertId);
-      res.status(201).json({ id: result.insertId, senderId, receiverId, text });
+      res.json(results);
     }
   });
 });
