@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { MessageCircle, Send, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import styles from "../styles/AdminChatApp.module.css";
 
@@ -15,6 +16,7 @@ export default function AdminChat() {
 
   // Fetch students from backend
   useEffect(() => {
+    socket.emit("register-user", adminId);
     axios
       .get("http://localhost:5002/students")
       .then((res) => setStudents(res.data))
@@ -24,13 +26,20 @@ export default function AdminChat() {
   // Listen for incoming messages
   useEffect(() => {
     socket.on("receive-message", (message) => {
-      setMessages((prev) => [...prev, message]);
+      if (
+        (message.sender_id === selectedStudent &&
+          message.receiver_id === adminId) ||
+        (message.sender_id === adminId &&
+          message.receiver_id === selectedStudent)
+      ) {
+        setMessages((prev) => [...prev, message]);
+      }
     });
 
     return () => {
       socket.off("receive-message");
     };
-  }, []);
+  }, [selectedStudent]);
 
   // Fetch chat history when a student is selected
   useEffect(() => {
@@ -50,7 +59,7 @@ export default function AdminChat() {
       receiver_id: selectedStudent,
       message: input,
     };
-
+    setMessages((prev) => [...prev, messageData]);
     socket.emit("send-message", messageData); // Send message via Socket.io
     setInput(""); // Clear input field
   };
@@ -59,6 +68,9 @@ export default function AdminChat() {
     <div className={styles.chatContainer}>
       {/* Sidebar for student list */}
       <div className={styles.sidebar}>
+        <Link to="/" className="btn btn-outline-primary">
+          Back to Home
+        </Link>
         <h2 className={styles.sidebarTitle}>
           <Users /> Students
         </h2>

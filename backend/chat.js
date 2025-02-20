@@ -30,30 +30,53 @@ db.connect((err) => {
   }
 });
 
-// Handle new socket connections
+// Store connected users
+const onlineUsers = {};
+
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
-  socket.on("send-message", async (message) => {
+  // When a user logs in, store their socket ID
+  socket.on("register-user", (userId) => {
+    onlineUsers[userId] = socket.id;
+    console.log(`User ${userId} is online with socket ID: ${socket.id}`);
+  });
+
+  // Handle sending messages
+  socket.on("send-message", (message) => {
     console.log("Message received:", message);
-    io.emit("receive-message", message); // Broadcast to all clients
+
+    const { sender_id, receiver_id, message: msgText } = message;
 
     // Save message to MySQL
-    const { sender_id, receiver_id, message: msgText } = message;
     const sql =
       "INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)";
-
     db.query(sql, [sender_id, receiver_id, msgText], (err, result) => {
       if (err) {
         console.error("Error saving message:", err);
-      } else {
-        console.log("Message saved to database");
+        return;
+      }
+      console.log("Message saved to database");
+
+      // Check if receiver is online
+      const receiverSocketId = onlineUsers[receiver_id];
+
+      if (receiverSocketId) {
+        // Send message to the specific user only if they are online
+        io.to(receiverSocketId).emit("receive-message", message);
+        console.log(`Message sent to online user: ${receiver_id}`);
       }
     });
   });
 
+  // When user disconnects, remove them from online users
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+    Object.keys(onlineUsers).forEach((key) => {
+      if (onlineUsers[key] === socket.id) {
+        console.log(`User ${key} disconnected`);
+        delete onlineUsers[key];
+      }
+    });
   });
 });
 
@@ -75,6 +98,7 @@ app.get("/chat/:user1/:user2", (req, res) => {
     }
   });
 });
+
 // API to fetch students (users) from admission_form table
 app.get("/students", (req, res) => {
   const sql = "SELECT id, name FROM admission_form WHERE role = 'user'";

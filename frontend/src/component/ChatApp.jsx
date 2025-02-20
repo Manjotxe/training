@@ -16,7 +16,11 @@ export default function ChatApp() {
   // Fetch chat history on component mount
   useEffect(() => {
     const storedUserId = localStorage.getItem("ID");
-    if (storedUserId) setUserId(parseInt(storedUserId));
+    if (storedUserId) {
+      setUserId(parseInt(storedUserId));
+      socket.emit("register-user", storedUserId); // Send user ID to backend
+    }
+
     const fetchMessages = async () => {
       try {
         const res = await axios.get(
@@ -32,13 +36,16 @@ export default function ChatApp() {
 
   useEffect(() => {
     socket.on("receive-message", (newMessage) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      if (newMessage.receiver_id === userId) {
+        // Only update if message is meant for this user
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
+      }
     });
 
     return () => {
       socket.off("receive-message");
     };
-  }, []);
+  }, [userId]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -48,7 +55,7 @@ export default function ChatApp() {
       sender_id: userId,
       receiver_id: receiverId,
     };
-
+    setMessages((prev) => [...prev, newMessage]);
     socket.emit("send-message", newMessage);
 
     setInput("");
