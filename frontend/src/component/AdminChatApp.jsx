@@ -27,6 +27,7 @@ export default function AdminChat() {
   useEffect(() => {
     socket.on("receive-message", (message) => {
       if (
+        message.receiver_id === null || // Show broadcast messages to everyone
         (message.sender_id === selectedStudent &&
           message.receiver_id === adminId) ||
         (message.sender_id === adminId &&
@@ -52,16 +53,17 @@ export default function AdminChat() {
   }, [selectedStudent]);
 
   const sendMessage = async () => {
-    if (!input.trim() || !selectedStudent) return;
+    if (!input.trim()) return;
 
     const messageData = {
       sender_id: adminId,
-      receiver_id: selectedStudent,
+      receiver_id: selectedStudent === 0 ? null : selectedStudent, // Use null for broadcast
       message: input,
     };
+
     setMessages((prev) => [...prev, messageData]);
-    socket.emit("send-message", messageData); // Send message via Socket.io
-    setInput(""); // Clear input field
+    socket.emit("send-message", messageData);
+    setInput("");
   };
 
   return (
@@ -74,6 +76,15 @@ export default function AdminChat() {
         <h2 className={styles.sidebarTitle}>
           <Users /> Students
         </h2>
+        <button
+          className={`${styles.studentButton} ${
+            selectedStudent === 0 ? styles.selected : ""
+          }`}
+          onClick={() => setSelectedStudent(0)} // 0 represents broadcast mode
+        >
+          Send to All
+        </button>
+
         {students.map((student) => (
           <button
             key={student.id}
@@ -112,19 +123,21 @@ export default function AdminChat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={
-              selectedStudent
-                ? `Message ${
-                    students.find((s) => s.id === selectedStudent)?.name
-                  }`
+              selectedStudent !== null
+                ? selectedStudent === 0
+                  ? "Message All Students"
+                  : `Message ${
+                      students.find((s) => s.id === selectedStudent)?.name || ""
+                    }`
                 : "Select a student to message"
             }
             className={styles.inputField}
-            disabled={!selectedStudent}
+            disabled={selectedStudent === null} // Only disable when no selection is made
           />
           <button
             onClick={sendMessage}
             className={styles.sendButton}
-            disabled={!selectedStudent}
+            disabled={selectedStudent === null} // Allow for broadcast mode
           >
             <Send className={styles.sendIcon} />
           </button>

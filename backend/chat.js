@@ -48,25 +48,39 @@ io.on("connection", (socket) => {
 
     const { sender_id, receiver_id, message: msgText } = message;
 
-    // Save message to MySQL
+    // If it's a broadcast, set receiver_id to NULL (or use a fixed value)
+    const isBroadcast = receiver_id === null || receiver_id === 0;
     const sql =
       "INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)";
-    db.query(sql, [sender_id, receiver_id, msgText], (err, result) => {
-      if (err) {
-        console.error("Error saving message:", err);
-        return;
-      }
-      console.log("Message saved to database");
 
-      // Check if receiver is online
-      const receiverSocketId = onlineUsers[receiver_id];
+    db.query(
+      sql,
+      [sender_id, isBroadcast ? null : receiver_id, msgText],
+      (err, result) => {
+        if (err) {
+          console.error("Error saving message:", err);
+          return;
+        }
+        console.log("Message saved to database");
 
-      if (receiverSocketId) {
-        // Send message to the specific user only if they are online
-        io.to(receiverSocketId).emit("receive-message", message);
-        console.log(`Message sent to online user: ${receiver_id}`);
+        if (isBroadcast) {
+          // Send the message to all students
+          Object.keys(onlineUsers).forEach((studentId) => {
+            if (studentId != sender_id) {
+              io.to(onlineUsers[studentId]).emit("receive-message", message);
+            }
+          });
+          console.log("Broadcast message sent to all students");
+        } else {
+          // Send message to specific user if online
+          const receiverSocketId = onlineUsers[receiver_id];
+          if (receiverSocketId) {
+            io.to(receiverSocketId).emit("receive-message", message);
+            console.log(`Message sent to user ${receiver_id}`);
+          }
+        }
       }
-    });
+    );
   });
 
   // When user disconnects, remove them from online users
@@ -87,6 +101,7 @@ app.get("/chat/:user1/:user2", (req, res) => {
     SELECT * FROM messages 
     WHERE (sender_id = ? AND receiver_id = ?) 
     OR (sender_id = ? AND receiver_id = ?) 
+    OR receiver_id IS NULL 
     ORDER BY created_at ASC
   `;
 
