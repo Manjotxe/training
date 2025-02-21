@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
 const userConfirmationTemplate = require("./emailTemplates/userConfirmation");
 const adminAdmissionDetailsTemplate = require("./emailTemplates/adminAdmissionDetails");
+const inquiryTemplate = require("./emailTemplates/inquiryTemplate");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -10,6 +11,32 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Function to send inquiry confirmation email
+const sendInquiryConfirmationEmail = (name, email, canvasData) => {
+  const imageData = canvasData ? canvasData.split(",")[1] : null;
+
+  const htmlContent = inquiryTemplate(name);
+
+  const mailOptions = {
+    from: process.env.ADMIN_EMAIL,
+    to: email,
+    subject: "Inquiry Received - Thank You!",
+    html: htmlContent,
+    attachments: imageData
+      ? [
+          {
+            filename: "canvas.png",
+            content: Buffer.from(imageData, "base64"),
+            cid: "canvasImage", // Content-ID for inline image reference
+          },
+        ]
+      : [],
+  };
+
+  return transporter.sendMail(mailOptions);
+};
+
+//Mail to user after admission
 const sendAdmissionConfirmationEmail = (name, email, courseName, password) => {
   const htmlContent = userConfirmationTemplate(
     name,
@@ -27,6 +54,7 @@ const sendAdmissionConfirmationEmail = (name, email, courseName, password) => {
 
   return transporter.sendMail(mailOptionsForUser);
 };
+//Email confirmation to admin for addmision
 
 const sendAdmissionDetailsToAdmin = (admissionData) => {
   // Extract base64 content for attachments
@@ -72,4 +100,5 @@ const sendAdmissionDetailsToAdmin = (admissionData) => {
 module.exports = {
   sendAdmissionConfirmationEmail,
   sendAdmissionDetailsToAdmin,
+  sendInquiryConfirmationEmail,
 };

@@ -1,0 +1,81 @@
+body {
+    background-color: #f8f9fa;
+  }
+  
+  .lecture-management {
+    padding: 2rem 0;
+  }
+  
+  .add-lecture-card {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .add-lecture-card .card-title {
+    color: #006d7e;
+    font-weight: bold;
+  }
+  
+  .lecture-list-card {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .lecture-list-card .card-title {
+    color: #006d7e;
+    font-weight: bold;
+  }
+  
+  .btn-primary {
+    background-color: #ff69b4;
+    border-color: #ff69b4;
+  }
+  
+  .btn-primary:hover {
+    background-color: #ff4aa2;
+    border-color: #ff4aa2;
+  }
+  
+  .btn-outline-primary {
+    color: #ff69b4;
+    border-color: #ff69b4;
+  }
+  
+  .btn-outline-primary:hover {
+    background-color: #ff69b4;
+    color: #ffffff;
+  }
+  
+  .btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+  }
+  
+  .btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: #ffffff;
+  }
+  
+  .table {
+    color: #333333;
+  }
+  
+  .table thead th {
+    background-color: #006d7e;
+    color: #ffffff;
+  }
+  
+  .form-label {
+    color: #006d7e;
+  }
+  
+  .form-control:focus {
+    border-color: #ff69b4;
+    box-shadow: 0 0 0 0.2rem rgba(255, 105, 180, 0.25);
+  }
+  
+  

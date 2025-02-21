@@ -14,6 +14,11 @@ import Courses from "./component/courses.jsx";
 import Assignment from "./component/Admin.jsx";
 import User from "./component/user.jsx";
 import PrivateRoute from "./component/PrivateRoute.jsx";
+import Lectures from "./component/Lectures.jsx";
+import AddLecture from "./component/AddLecture.jsx";
+import Chat from "./component/ChatApp.jsx";
+import AdminChat from "./component/AdminChatApp.jsx";
+import CanvasComponent from "./component/CanvasComponent.jsx";
 
 function App() {
   return (
@@ -32,6 +37,24 @@ function App() {
           }
         />
         <Route
+          path="/chat"
+          element={
+            localStorage.getItem("role") ? (
+              <Chat />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="/chatadmin"
+          element={
+            <PrivateRoute>
+              <AdminChat />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/profile/:id"
           element={
             localStorage.getItem("role") ? (
@@ -41,6 +64,7 @@ function App() {
             )
           }
         />
+        <Route path="/canvas" element={<CanvasComponent />} />
         <Route
           path="/admission"
           element={
@@ -66,11 +90,29 @@ function App() {
           }
         />
         <Route
+          path="/add-lecture"
+          element={
+            <PrivateRoute>
+              <AddLecture />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/assignment"
           element={
             <PrivateRoute>
               <Assignment />
             </PrivateRoute>
+          }
+        />
+        <Route
+          path="/lectures"
+          element={
+            localStorage.getItem("role") ? (
+              <Lectures />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
       </Routes>
