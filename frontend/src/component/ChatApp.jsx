@@ -36,7 +36,10 @@ export default function ChatApp() {
 
   useEffect(() => {
     socket.on("receive-message", (newMessage) => {
-      if (newMessage.receiver_id === userId) {
+      if (
+        newMessage.receiver_id === userId ||
+        newMessage.receiver_id === null
+      ) {
         // Only update if message is meant for this user
         setMessages((prevMessages) => [...prevMessages, newMessage]);
       }
