@@ -80,7 +80,10 @@ export default function AdminChat() {
           className={`${styles.studentButton} ${
             selectedStudent === 0 ? styles.selected : ""
           }`}
-          onClick={() => setSelectedStudent(0)} // 0 represents broadcast mode
+          onClick={() => {
+            setSelectedStudent(0); // 0 represents broadcast mode
+            setMessages([]);
+          }}
         >
           Send to All
         </button>
