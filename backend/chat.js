@@ -65,9 +65,9 @@ io.on("connection", (socket) => {
 
         if (isBroadcast) {
           // Send the message to all students
-          Object.keys(onlineUsers).forEach((studentId) => {
-            if (studentId != sender_id) {
-              io.to(onlineUsers[studentId]).emit("receive-message", message);
+          Object.keys(onlineUsers).forEach((receiver_id) => {
+            if (receiver_id != sender_id) {
+              io.to(onlineUsers[receiver_id]).emit("receive-message", message);
             }
           });
           console.log("Broadcast message sent to all students");
