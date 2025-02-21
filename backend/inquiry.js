@@ -54,7 +54,10 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin:  [
+      "http://localhost:5173", // Local frontend
+      "https://75c2-2401-4900-1c34-8fff-00-3a-780b.ngrok-free.app", // Ngrok frontend
+    ],
     methods: ["GET", "POST"],
   },
 });

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { MessageCircle, Send } from "lucide-react";
 import { Link } from "react-router-dom";
 import { io } from "socket.io-client";
-import axios from "axios"; // Import axios for API requests
+import axios from "axios";
 import styles from "../styles/ChatApp.module.css";
 
 const socket = io("http://localhost:5002");
@@ -73,6 +73,10 @@ export default function ChatApp() {
         <h1 className={styles.chatHeader}>
           <MessageCircle /> Chat with Teacher
         </h1>
+          <Link to="/group-chat" className="btn btn-outline-primary">
+            Group Chat
+          </Link>
+          
       </div>
 
       <div className={styles.chatWindow}>

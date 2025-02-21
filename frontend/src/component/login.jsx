@@ -46,7 +46,7 @@ const Login = () => {
       console.error("Error during login:", error);
       Swal.fire({
         title: "Login Failed",
-        text: "Something went wrong. Please try again.",
+        text: error,
         icon: "error",
       });
     }
