@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import styles from "../styles/users.module.css"; // Import the CSS module
+import Bill from "./Bills";
 import Footer from "../component/Footer";
 import Header from "../component/Header";
 
 function Data() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -18,7 +21,13 @@ function Data() {
       setIsLoggedIn(true);
     }
   }, []);
-
+  const handleBill = (user) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
+  const handleCloseBill = () => {
+    setIsModalOpen(false);
+  };
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
@@ -26,8 +35,13 @@ function Data() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, [searchTerm, currentPage, yearFilter]); // Add yearFilter to dependencies
+    setLoading(false);
+    if (searchTerm || yearFilter) {
+      fetchUsers();
+    } else {
+      setUsers([]); // Clear the user list if no search term or year filter
+    }
+  }, [searchTerm, yearFilter, currentPage]);
 
   const fetchUsers = () => {
     setLoading(true);
@@ -111,6 +125,7 @@ function Data() {
                   <th>Course</th>
                   <th>Duration</th>
                   <th>Started At</th>
+                  <th>Generate Bill</th>
                 </tr>
               </thead>
               <tbody>
@@ -123,22 +138,41 @@ function Data() {
                     <td>{user.courseName || "null"}</td>
                     <td>{user.duration || "null"}</td>
                     <td>{formatDate(user.admissionDate) || "null"}</td>
+                    <td>
+                      <button
+                        className={styles.bill}
+                        onClick={() => handleBill(user)}
+                      >
+                        Bill
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            <div className={styles.pagination}>
-              {Array.from({ length: totalPages }, (_, index) => (
-                <button
-                  key={index + 1}
-                  onClick={() => handlePageChange(index + 1)}
-                  disabled={currentPage === index + 1}
-                >
-                  {index + 1}
-                </button>
-              ))}
-            </div>
+            {searchTerm || yearFilter ? (
+              <div className={styles.pagination}>
+                {Array.from({ length: totalPages }, (_, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => handlePageChange(index + 1)}
+                    disabled={currentPage === index + 1}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              ""
+            )}
+            {isModalOpen && (
+              <Bill
+                isModalOpen={isModalOpen}
+                closeBill={handleCloseBill}
+                selectedUser={selectedUser}
+              />
+            )}
           </>
         )}
       </div>
