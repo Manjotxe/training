@@ -13,6 +13,7 @@ import Data from "./component/data.jsx";
 import Courses from "./component/courses.jsx";
 import Assignment from "./component/Admin.jsx";
 import Attendance from "./component/Attendance.jsx";
+import AttendanceDetial from "./component/AttendanceDetail.jsx";
 import User from "./component/user.jsx";
 import PrivateRoute from "./component/PrivateRoute.jsx";
 import Lectures from "./component/Lectures.jsx";
@@ -28,6 +29,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/attendance" element={<Attendance />} /> {/* This is your attendance route */}
+        <Route path="/attendancedetial" element={<AttendanceDetial />} /> {/* This is your attendance route */}
 
         <Route
           path="/assignments/:id"
