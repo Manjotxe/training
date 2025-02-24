@@ -121,3 +121,15 @@
   width: 20px;
   height: 20px;
 }
+.unreadBadge {
+  background-color: #007bff;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 50%;
+  padding: 4px 8px;
+  margin-left: 8px;
+  display: inline-block;
+  min-width: 20px;
+  text-align: center;
+}

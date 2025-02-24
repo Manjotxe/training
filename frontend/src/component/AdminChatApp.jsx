@@ -12,28 +12,47 @@ export default function AdminChat() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [unreadCounts, setUnreadCounts] = useState({}); // Store unread counts
   const adminId = 3; // Admin ID is fixed as 3
 
-  // Fetch students from backend
+  // Fetch students & unread messages count from backend
   useEffect(() => {
     socket.emit("register-user", adminId);
+
     axios
       .get("http://localhost:5002/students")
       .then((res) => setStudents(res.data))
       .catch((err) => console.error("Error fetching students:", err));
+
+    axios
+      .get(`http://localhost:5002/unread-messages/${adminId}`)
+      .then((res) => {
+        const counts = {};
+        res.data.forEach(({ sender_id, unread_count }) => {
+          counts[sender_id] = unread_count;
+        });
+        setUnreadCounts(counts);
+      })
+      .catch((err) => console.error("Error fetching unread counts:", err));
   }, []);
 
-  // Listen for incoming messages
+  // Listen for incoming messages & update unread count
   useEffect(() => {
     socket.on("receive-message", (message) => {
       if (
-        message.receiver_id === null || // Show broadcast messages to everyone
+        message.receiver_id === null ||
         (message.sender_id === selectedStudent &&
           message.receiver_id === adminId) ||
         (message.sender_id === adminId &&
           message.receiver_id === selectedStudent)
       ) {
         setMessages((prev) => [...prev, message]);
+      } else {
+        // Increase unread count for sender if chat is not open
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [message.sender_id]: (prev[message.sender_id] || 0) + 1,
+        }));
       }
     });
 
@@ -42,7 +61,7 @@ export default function AdminChat() {
     };
   }, [selectedStudent]);
 
-  // Fetch chat history when a student is selected
+  // Fetch chat history when a student is selected & mark messages as read
   useEffect(() => {
     if (!selectedStudent) return;
 
@@ -50,6 +69,17 @@ export default function AdminChat() {
       .get(`http://localhost:5002/chat/${selectedStudent}/${adminId}`)
       .then((res) => setMessages(res.data))
       .catch((err) => console.error("Error fetching messages:", err));
+
+    // Mark messages as read
+    axios
+      .post("http://localhost:5002/mark-as-read", {
+        adminId,
+        studentId: selectedStudent,
+      })
+      .then(() => {
+        setUnreadCounts((prev) => ({ ...prev, [selectedStudent]: 0 }));
+      })
+      .catch((err) => console.error("Error marking messages as read:", err));
   }, [selectedStudent]);
 
   const sendMessage = async () => {
@@ -57,7 +87,7 @@ export default function AdminChat() {
 
     const messageData = {
       sender_id: adminId,
-      receiver_id: selectedStudent === 0 ? null : selectedStudent, // Use null for broadcast
+      receiver_id: selectedStudent === 0 ? null : selectedStudent,
       message: input,
     };
 
@@ -81,7 +111,7 @@ export default function AdminChat() {
             selectedStudent === 0 ? styles.selected : ""
           }`}
           onClick={() => {
-            setSelectedStudent(0); // 0 represents broadcast mode
+            setSelectedStudent(0);
             setMessages([]);
           }}
         >
@@ -96,7 +126,12 @@ export default function AdminChat() {
             }`}
             onClick={() => setSelectedStudent(student.id)}
           >
-            {student.name}
+            {student.name}{" "}
+            {unreadCounts[student.id] > 0 && (
+              <span className={styles.unreadBadge}>
+                {unreadCounts[student.id]}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -135,12 +170,12 @@ export default function AdminChat() {
                 : "Select a student to message"
             }
             className={styles.inputField}
-            disabled={selectedStudent === null} // Only disable when no selection is made
+            disabled={selectedStudent === null}
           />
           <button
             onClick={sendMessage}
             className={styles.sendButton}
-            disabled={selectedStudent === null} // Allow for broadcast mode
+            disabled={selectedStudent === null}
           >
             <Send className={styles.sendIcon} />
           </button>
