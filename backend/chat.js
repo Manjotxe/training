@@ -51,11 +51,10 @@ io.on("connection", (socket) => {
     // If it's a broadcast, set receiver_id to NULL (or use a fixed value)
     const isBroadcast = receiver_id === null || receiver_id === 0;
     const sql =
-      "INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)";
-
+      "INSERT INTO messages (sender_id, receiver_id, message, is_read) VALUES (?, ?, ?, ?)";
     db.query(
       sql,
-      [sender_id, isBroadcast ? null : receiver_id, msgText],
+      [sender_id, isBroadcast ? null : receiver_id, msgText, false],
       (err, result) => {
         if (err) {
           console.error("Error saving message:", err);
@@ -113,10 +112,52 @@ app.get("/chat/:user1/:user2", (req, res) => {
     }
   });
 });
+app.get("/unread-messages/:adminId", (req, res) => {
+  const { adminId } = req.params;
+  const sql = `
+    SELECT sender_id, COUNT(*) AS unread_count
+    FROM messages
+    WHERE receiver_id = ? AND is_read = FALSE
+    GROUP BY sender_id
+  `;
 
-// API to fetch students (users) from admission_form table
+  db.query(sql, [adminId], (err, results) => {
+    if (err) {
+      res.status(500).json({ error: "Failed to fetch unread messages" });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+app.post("/mark-as-read", (req, res) => {
+  const { adminId, studentId } = req.body;
+
+  const sql = `
+    UPDATE messages
+    SET is_read = TRUE
+    WHERE sender_id = ? AND receiver_id = ?
+  `;
+
+  db.query(sql, [studentId, adminId], (err, result) => {
+    if (err) {
+      res.status(500).json({ error: "Failed to mark messages as read" });
+    } else {
+      res.json({ success: true });
+    }
+  });
+});
+
+// API to fetch students sorted by latest message timestamp
 app.get("/students", (req, res) => {
-  const sql = "SELECT id, name FROM admission_form WHERE role = 'user'";
+  const sql = `
+    SELECT a.id, a.name, 
+      (SELECT MAX(created_at) FROM messages WHERE sender_id = a.id OR receiver_id = a.id) AS last_message_time
+    FROM admission_form a
+    WHERE role = 'user'
+    ORDER BY last_message_time IS NULL, last_message_time DESC;
+
+  `;
 
   db.query(sql, (err, results) => {
     if (err) {
