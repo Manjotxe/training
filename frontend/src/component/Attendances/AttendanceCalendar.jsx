@@ -1,39 +1,65 @@
-import { useState } from 'react';
-import Calendar from 'react-calendar';
-import { format } from 'date-fns';
-import 'react-calendar/dist/Calendar.css';
+import { useState, useEffect } from "react";
+import Calendar from "react-calendar";
+import { format } from "date-fns";
+import "react-calendar/dist/Calendar.css";
 
 function AttendanceCalendar({ attendance }) {
   const [date, setDate] = useState(new Date());
+  const [attendanceData, setAttendanceData] = useState({});
 
-  // Function to determine the tile class
+  useEffect(() => {
+    if (attendance?.attendance_data) {
+      try {
+        const parsedData =
+          typeof attendance.attendance_data === "string"
+            ? JSON.parse(attendance.attendance_data)
+            : attendance.attendance_data;
+
+        setAttendanceData(parsedData);
+        console.log("Parsed Attendance Data:", parsedData);
+      } catch (error) {
+        console.error("Error parsing attendance data:", error);
+      }
+    }
+  }, [attendance]);
+
   const tileClassName = ({ date }) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const status = attendance[dateStr]?.toLowerCase(); // Ensure case consistency
+    const dateStr = format(date, "yyyy-MM-dd");
+    const status = attendanceData[dateStr]?.toLowerCase();
+    const dayOfWeek = date.getDay();
 
-    return `calendar-tile ${status || 'no-data'}`;
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return "calendar-tile holiday";
+    }
+
+    return status ? `calendar-tile ${status}` : "calendar-tile no-data";
   };
 
-  // Function to add content inside the calendar tiles
   const tileContent = ({ date, view }) => {
-    if (view !== 'month') return null;
+    if (view !== "month") return null;
 
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const status = attendance[dateStr]?.toLowerCase();
-
-   
+    const dateStr = format(date, "yyyy-MM-dd");
+    const status = attendanceData[dateStr]?.toLowerCase();
+    const dayOfWeek = date.getDay();
 
     return (
       <div className="attendance-indicator">
-        {status && (
+        {dayOfWeek === 0 || dayOfWeek === 6 ? (
           <>
-            <span className={`status-icon ${status}`}>
-              {status === 'present' ? '✓' : '✗'}
-            </span>
-            <span className={`status-label ${status}`}>
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </span>
+            <span className="status-icon holiday">★</span>
+            <span className="status-label holiday">Holiday</span>
           </>
+        ) : (
+          status && (
+            <>
+              <span className={`status-icon ${status}`}>
+                {status === "present" ? "✓" : "✗"}
+              </span>
+              <span className={`status-label ${status}`}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </span>
+            </>
+          )
         )}
       </div>
     );
@@ -51,6 +77,10 @@ function AttendanceCalendar({ attendance }) {
           <div className="legend-item">
             <span className="legend-dot absent"></span>
             <span>Absent</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-dot holiday"></span>
+            <span>Holiday</span>
           </div>
         </div>
       </div>

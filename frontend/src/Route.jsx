@@ -29,7 +29,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/attendance" element={<Attendance />} /> {/* This is your attendance route */}
-        <Route path="/attendancedetial" element={<AttendanceDetial />} /> {/* This is your attendance route */}
+        <Route path="/attendancedetial/:studentId" element={<AttendanceDetial />} /> {/* This is your attendance route */}
+
 
         <Route
           path="/assignments/:id"

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import styles from "../styles/users.module.css"; // Import the CSS module
 import Bill from "./Bills";
+import { Link } from "react-router-dom";
+
 import Footer from "../component/Footer";
 import Header from "../component/Header";
 
@@ -126,6 +128,7 @@ function Data() {
                   <th>Duration</th>
                   <th>Started At</th>
                   <th>Generate Bill</th>
+                  <th>Attendance</th>
                 </tr>
               </thead>
               <tbody>
@@ -145,6 +148,13 @@ function Data() {
                       >
                         Bill
                       </button>
+                    </td>
+                    <td>
+                      <td>
+                        <Link to={`/attendancedetial/${user.id}`} className={styles.bill}>
+                          Attendance
+                        </Link>
+                      </td>
                     </td>
                   </tr>
                 ))}

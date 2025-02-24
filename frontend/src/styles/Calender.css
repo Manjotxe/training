@@ -198,10 +198,7 @@
     border-color: #f56565 !important;
   }
   
-  .calendar-tile.no-data {
-    background-color: #f8fafc !important;
-  }
-  
+ 
   .attendance-indicator {
     display: flex;
     flex-direction: column;
@@ -296,6 +293,7 @@
     font-weight: 600 !important;
     color: #4a5568 !important;
     padding: 0.5rem !important;
+    
   }
   
   .react-calendar__month-view__days {
@@ -307,9 +305,17 @@
   }
   
   .react-calendar__tile--active {
-    background: #4299e1 !important;
-    color: white !important;
+    background: #4299e1 !important; /* Blue background */
+    color: white !important; /* White text */
   }
+  
+  .react-calendar__tile--active.present,
+  .react-calendar__tile--active.absent,
+  .react-calendar__tile--active.holiday {
+    background: #4299e1 !important; /* Ensure selected background applies */
+    color: white !important; /* Ensure text turns white */
+  }
+  
   
   @media (max-width: 768px) {
     .app-container {
