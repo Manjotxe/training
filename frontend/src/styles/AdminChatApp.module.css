@@ -133,3 +133,8 @@
   min-width: 20px;
   text-align: center;
 }
+.senderName {
+  font-weight: bold;
+  color: #007bff;
+  margin-right: 5px;
+}
