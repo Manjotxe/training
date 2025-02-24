@@ -48,45 +48,44 @@ io.on("connection", (socket) => {
 
     const { sender_id, receiver_id, message: msgText } = message;
 
-    // If it's a broadcast, set receiver_id to NULL (or use a fixed value)
-    const isBroadcast = receiver_id === null || receiver_id === 0;
     const sql =
       "INSERT INTO messages (sender_id, receiver_id, message, is_read) VALUES (?, ?, ?, ?)";
-    db.query(
-      sql,
-      [sender_id, isBroadcast ? null : receiver_id, msgText, false],
-      (err, result) => {
-        if (err) {
-          console.error("Error saving message:", err);
-          return;
-        }
-        console.log("Message saved to database");
-
-        if (isBroadcast) {
-          // Send the message to all students
-          Object.keys(onlineUsers).forEach((receiver_id) => {
-            if (receiver_id != sender_id) {
-              io.to(onlineUsers[receiver_id]).emit("receive-message", message);
-            }
-          });
-          console.log("Broadcast message sent to all students");
-        } else {
-          // Send message to specific user if online
-          const receiverSocketId = onlineUsers[receiver_id];
-          if (receiverSocketId) {
-            io.to(receiverSocketId).emit("receive-message", message);
-            console.log(`Message sent to user ${receiver_id}`);
-          }
-        }
+    db.query(sql, [sender_id, receiver_id, msgText, false], (err) => {
+      if (err) {
+        console.error("Error saving message:", err);
+        return;
       }
-    );
+
+      // Send message to specific user if online
+      const receiverSocketId = onlineUsers[receiver_id];
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("receive-message", message);
+      }
+    });
+  });
+
+  // Handle sending group messages
+  socket.on("send-group-message", (message) => {
+    console.log("Group message received:", message);
+
+    const { sender_id, message: msgText } = message;
+
+    const sql = "INSERT INTO group_chats (sender_id, message) VALUES (?, ?)";
+    db.query(sql, [sender_id, msgText], (err) => {
+      if (err) {
+        console.error("Error saving group message:", err);
+        return;
+      }
+
+      // Broadcast message to all connected users
+      io.emit("receive-group-message", message);
+    });
   });
 
   // When user disconnects, remove them from online users
   socket.on("disconnect", () => {
     Object.keys(onlineUsers).forEach((key) => {
       if (onlineUsers[key] === socket.id) {
-        console.log(`User ${key} disconnected`);
         delete onlineUsers[key];
       }
     });
@@ -163,6 +162,21 @@ app.get("/students", (req, res) => {
     if (err) {
       console.error("Error fetching students:", err);
       res.status(500).json({ error: "Failed to fetch students" });
+    } else {
+      res.json(results);
+    }
+  });
+});
+// API to fetch group chat messages
+app.get("/group-chat", (req, res) => {
+  const sql = `SELECT gc.*, a.name AS sender_name 
+               FROM group_chats gc 
+               JOIN admission_form a ON gc.sender_id = a.id 
+               ORDER BY gc.created_at ASC`;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      res.status(500).json({ error: "Failed to fetch group chat messages" });
     } else {
       res.json(results);
     }
