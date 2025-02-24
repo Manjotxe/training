@@ -51,7 +51,7 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
             ) : role === "user" ? (
               <a href={`/chat`}>Chat</a>
             ) : null}
-            {role === "admin" && <a href="/admission">Admissions</a>}
+            {role === "admin" && <a href="/attendance">Attendance</a>}
             <a href="/course" onClick={handleCoursesClick}>
               Courses
             </a>{" "}
