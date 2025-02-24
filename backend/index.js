@@ -171,7 +171,7 @@ app.post("/api/courses", (req, res) => {
 
   if (!courseName || !duration || !languages) {
     return res.status(400).send("All fields are required.");
-  }
+  } 
 
   const query =
     "INSERT INTO course (courseName, duration, image, languages) VALUES (?, ?, ?, ?)";
