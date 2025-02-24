@@ -527,7 +527,6 @@ app.get("/api/courses", (req, res) => {
   pool.execute(query, (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Database error" });
-      res.status(500).json({ error: "Database error", details: error.message });
     }
     res.json(results);
   });

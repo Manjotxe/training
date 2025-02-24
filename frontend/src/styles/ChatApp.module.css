@@ -95,4 +95,9 @@
     left: 50%;
     transform: translateX(-50%);
   }
+  .senderName {
+    font-weight: bold;
+    color: #007bff;
+    margin-right: 5px;
+  }
   
