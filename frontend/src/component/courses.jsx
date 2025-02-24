@@ -16,6 +16,7 @@ const CourseManagement = () => {
   const [newCourse, setNewCourse] = useState({
     courseName: "",
     duration: "",
+    image: "",
     languages: "",
   });
 
@@ -37,9 +38,7 @@ const CourseManagement = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await axios.get(
-          "https://training-1qal.onrender.com/api/courses"
-        );
+        const response = await axios.get("http://localhost:5000/api/courses");
         setCourses(response.data);
       } catch (err) {
         console.error("Error fetching courses:", err);
@@ -67,7 +66,7 @@ const CourseManagement = () => {
         newCourse
       );
       setCourses((prev) => [...prev, response.data]); // Update courses list
-      setNewCourse({ courseName: "", duration: "", languages: "" }); // Reset form
+      setNewCourse({ courseName: "", duration: "", image: "", languages: "" }); // Reset form
       setShowModal(false); // Hide modal
     } catch (err) {
       console.error("Error adding course:", err);
@@ -152,6 +151,17 @@ const CourseManagement = () => {
                   id="duration"
                   name="duration"
                   value={newCourse.duration}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="image">Image reference(Link)</label>
+                <input
+                  type="text"
+                  id="image"
+                  name="image"
+                  value={newCourse.image}
                   onChange={handleInputChange}
                   required
                 />
