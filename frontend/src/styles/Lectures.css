@@ -1,0 +1,36 @@
+.legend-color {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+}
+
+.react-calendar {
+  font-family: Arial, sans-serif;
+}
+
+.react-calendar__tile {
+  padding: 0.75em 0.5em;
+}
+
+.react-calendar__month-view__weekdays {
+  font-size: 0.75em;
+  text-transform: uppercase;
+}
+
+.react-calendar__tile--active {
+  background: #007bff;
+  color: white;
+}
+
+.react-calendar__tile--now {
+  background: #f8f9fa;
+}
+
+.lecture-item {
+  cursor: pointer;
+}
+
+.lecture-item:hover {
+  opacity: 0.9;
+}
+

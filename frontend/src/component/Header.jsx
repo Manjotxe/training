@@ -1,25 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-function Header({ isLoggedIn, onLogout }) {
-  // Get the role from localStorage (or sessionStorage, or wherever it is stored)
-  const role = localStorage.getItem("role"); // Assuming you store the role in localStorage
+function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // State to manage menu visibility
+  const role = localStorage.getItem("role");
+  const userId = localStorage.getItem("ID");
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen); // Toggle menu visibility
+  };
 
   return (
     <header className="header">
       <nav>
         <div className="top-bar">
           <div className="left-links">
-            <a href="#">STUDY MATERIAL</a>
-            <a href="#">CAMPUS VISIT</a>
-            <a href="#">PUBLIC NOTICE</a>
-            <a href="#">RECOGNITIONS</a>
-            <a href="#" className="active">
-              ONLINE EDUCATION
-            </a>
-            <a href="#" className="deb-id">
-              DEB-ID
-            </a>
+            <a href="#">About Us</a>
+            <a href="#">DEB-ID</a>
             <a href="#">CONTACT US</a>
           </div>
           <div className="right-contact">
@@ -44,15 +41,37 @@ function Header({ isLoggedIn, onLogout }) {
           <div className="logo">
             <h2>Training</h2>
           </div>
-          <div className="nav-links">
-            <a href="#">About</a>
-            {role === "admin" ? <a href="/admission">Admissions</a> : null}{" "}
-            {/* Show "Admissions" only for admin */}
-            <a href="#">Programs</a>
-            <a href="#">Academics</a>
-            <a href="#">e-Connect</a>
-            <a href="#">Placements</a>
-            {/* Conditional rendering for login/logout */}
+          <button className="menu-toggle" onClick={toggleMenu}>
+            {/* Toggle button for smaller screens */}☰
+          </button>
+          <div className={`nav-links ${isMenuOpen ? "show" : ""}`}>
+            <a href="/">Home</a>
+            {role === "admin" ? (
+              <a href="/chatadmin">Chat</a>
+            ) : role === "user" ? (
+              <a href={`/chat`}>Chat</a>
+            ) : null}
+            {role === "admin" && <a href="/admission">Admissions</a>}
+            <a href="/course" onClick={handleCoursesClick}>
+              Courses
+            </a>{" "}
+            {role === "admin" ? (
+              <a href="/assignment">Assignments</a>
+            ) : role === "user" ? (
+              <a href={`/assignments/${userId}`}>Assignments</a>
+            ) : null}
+            {role === "admin" && <a href="/data">All Students</a>}
+            {isLoggedIn ? (
+              <a href="/lectures">TimeTable</a>
+            ) : (
+              <a href="/login">TimeTable</a>
+            )}
+            {role === "admin" && <a href="/add-lecture">Add Lecture</a>}
+            {isLoggedIn ? (
+              <a href={`/profile/${userId}`}>MyProfile</a>
+            ) : (
+              <a href="/login">MyProfile</a>
+            )}
             {!isLoggedIn ? (
               <Link to="/login" className="apply-now">
                 Login

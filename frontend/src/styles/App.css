@@ -90,6 +90,7 @@
   justify-content: space-between;
   align-items: center;
   background: white;
+  position: relative;
 }
 
 .logo img {
@@ -128,6 +129,40 @@
 
 .nav-links a:hover::after {
   width: 100%;
+}
+
+/* Responsive toggle menu styles */
+.menu-toggle {
+  display: none; /* Hidden by default */
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Hide nav-links by default on smaller screens */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none; /* Hidden by default on smaller screens */
+    flex-direction: column;
+    gap: 15px;
+    background-color: white;
+    position: absolute;
+    top: 60px;
+    right: 40px;
+    width: 200px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    z-index: 10;
+  }
+
+  .nav-links.show {
+    display: flex; /* Shown when toggled */
+  }
+
+  .menu-toggle {
+    display: block; /* Show the toggle button on smaller screens */
+  }
 }
 
 .apply-now {
@@ -215,50 +250,41 @@
   color: white; /* Change text color to white for contrast */
 }
 
-.footer-icons {
+.footer-qualities {
   display: flex;
-  justify-content: center; /* Center icons */
+  justify-content: center; /* Center the qualities section */
+  flex-wrap: wrap; /* Allow wrapping for smaller screens */
   gap: 20px;
   max-width: 1200px;
   margin: 0 auto 60px;
 }
 
-.icon-box {
-  width: 80px;
-  height: 80px;
-  background: #f8f9fa;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+.quality-box {
+  border-radius: 10px; /* Rounded corners for a modern look */
+  padding: 20px; /* Spacing inside the box */
+  width: 300px; /* Fixed width for consistency */
+  text-align: center; /* Center-align content */
+  box-shadow: 0 4px 15px rgba(247, 148, 29, 0.2); /* Box shadow for depth */
+  color: #333; /* Darker text color for readability */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.icon-box:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  background: #006d7e; /* Highlight background on hover */
+.quality-box:hover {
+  transform: translateY(-5px); /* Lift effect on hover */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Shadow on hover */
 }
 
-.icon {
-  width: 40px; /* Adjust icon size */
-  height: 40px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  transition: transform 0.3s ease;
+.quality-box h3 {
+  font-size: 20px;
+  color: rgb(247, 148, 29); /* Highlight heading with golden color */
+  margin-bottom: 10px;
+  font-weight: 600;
 }
 
-.icon-box:hover .icon {
-  transform: scale(1.2); /* Slightly scale up on hover */
+.quality-box p {
+  font-size: 14px;
+  color: #666; /* Softer text color for the description */
 }
-
-.direction { background-image: url('/icons/direction.png'); }
-.graph { background-image: url('/icons/graph.png'); }
-.stack { background-image: url('/icons/stack.png'); }
-.clock { background-image: url('/icons/clock.png'); }
 
 .footer-tabs {
   max-width: 1200px;
@@ -317,8 +343,78 @@
     margin-bottom: 30px; /* Add space between columns on smaller screens */
   }
 
-  .footer-icons {
+  .footer-qualities {
     flex-direction: column;
-    gap: 15px;
+    align-items: center;
   }
+}
+
+
+/* Courses Section */
+.courses-section {
+  padding: 60px 20px;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.courses-wrapper h2 {
+  font-size: 32px;
+  color: #333;
+  margin-bottom: 40px;
+}
+
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.course-card {
+  height: 400px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.course-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.course-image {
+  width: 100%;
+  height: 220px;
+  object-fit: fill;
+}
+
+.course-title {
+  font-size: 20px;
+  color: #006d7e;
+  margin: 15px 0 10px;
+}
+
+.course-description {
+  font-size: 14px;
+  color: #666;
+  padding: 0 15px;
+  margin-bottom: 20px;
+}
+
+.course-btn {
+  display: inline-block;
+  background: linear-gradient(45deg, #006d7e, #005666);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 15px;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.course-btn:hover {
+  background: linear-gradient(45deg, #005666, #004555);
+  transform: translateY(-2px);
 }

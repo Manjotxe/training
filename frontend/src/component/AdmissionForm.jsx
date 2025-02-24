@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +6,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/AdmissionForm.css";
 
 function AdmissionForm() {
+  // Helper function to get today's date in 'YYYY-MM-DD' format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0]; // Format date to 'YYYY-MM-DD'
+  };
   const [formData, setFormData] = useState({
     name: "",
     dob: "",
@@ -23,8 +28,9 @@ function AdmissionForm() {
     schoolX: "",
     schoolXII: "",
     courseName: "",
-    admissionDate: "",
+    admissionDate: getTodayDate(),
   });
+  const [courses, setCourses] = useState([]);
   const [signature, setSignature] = useState(null);
   const [photo, setPhoto] = useState(null);
   const sigPad = useRef(null);
@@ -38,6 +44,19 @@ function AdmissionForm() {
       [name]: value,
     }));
   };
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/courses");
+        const data = await response.json();
+        setCourses(data);
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
@@ -384,16 +403,27 @@ function AdmissionForm() {
                     <label htmlFor="courseName" className="form-label">
                       Course Name
                     </label>
-                    <input
-                      type="text"
+                    <select
                       className="form-control"
                       id="courseName"
                       name="courseName"
                       value={formData.courseName}
                       onChange={handleChange}
                       required
-                    />
+                    >
+                      <option value="">Select a course</option>
+                      {Array.isArray(courses) &&
+                        courses.map((course) => (
+                          <option
+                            key={course.course_id}
+                            value={course.courseName}
+                          >
+                            {course.courseName}
+                          </option>
+                        ))}
+                    </select>
                   </div>
+
                   <div className="col-md-6 mb-3">
                     <label htmlFor="admissionDate" className="form-label">
                       Admission Date

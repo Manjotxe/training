@@ -1,0 +1,67 @@
+/* Notifications.module.css */
+.notificationsContainer {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.notificationsHeading {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.notificationsList {
+    list-style-type: none;
+    padding: 0;
+}
+
+.notificationsListItem {
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.notificationsMessage {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #555;
+}
+
+.notificationsLink,
+.notificationsFile {
+    margin: 0;
+}
+
+.notificationsLink a,
+.notificationsFile a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.notificationsLink a:hover,
+.notificationsFile a:hover {
+    text-decoration: underline;
+}
+.closeButton {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
+  .closeButton:hover {
+    color: red;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
