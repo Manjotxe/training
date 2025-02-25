@@ -41,8 +41,8 @@ export default function ChatApp() {
   useEffect(() => {
     socket.on("receive-message", (newMessage) => {
       if (
-        newMessage.receiver_id === userId ||
-        newMessage.receiver_id === null
+        (newMessage.receiver_id === userId && !isGroupChat) ||
+        (newMessage.receiver_id === null && !isGroupChat)
       ) {
         setMessages((prevMessages) => [...prevMessages, newMessage]);
       }
