@@ -19,6 +19,7 @@ import AddLecture from "./component/AddLecture.jsx";
 import Chat from "./component/ChatApp.jsx";
 import AdminChat from "./component/AdminChatApp.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
+import CourseDetails from "./component/CourseDetails.jsx";
 
 function App() {
   return (
@@ -64,7 +65,14 @@ function App() {
             )
           }
         />
-        <Route path="/canvas" element={<CanvasComponent />} />
+        <Route
+          path="/canvas"
+          element={
+            <PrivateRoute>
+              <CanvasComponent />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/admission"
           element={
@@ -115,6 +123,7 @@ function App() {
             )
           }
         />
+        <Route path="/coursedetails/:course_id" element={<CourseDetails />} />
       </Routes>
     </Router>
   );
