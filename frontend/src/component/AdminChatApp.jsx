@@ -91,7 +91,7 @@ export default function AdminChat() {
       socket.off("receive-message", handleReceiveMessage);
       socket.off("receive-group-message", handleGroupMessage);
     };
-  }, []); // Empty dependency array - only run once
+  }, []);
 
   // Fetch chat history when switching conversations
   useEffect(() => {
@@ -124,10 +124,10 @@ export default function AdminChat() {
     const messageData = isGroupChat
       ? { sender_id: adminId, message: input }
       : {
-          sender_id: adminId,
-          receiver_id: selectedStudent === 0 ? null : selectedStudent,
-          message: input,
-        };
+        sender_id: adminId,
+        receiver_id: selectedStudent === 0 ? null : selectedStudent,
+        message: input,
+      };
 
     // Add message to UI immediately
     const optimisticMessage = {
@@ -166,9 +166,8 @@ export default function AdminChat() {
 
         <div className={`${styles.sidebarContent} p-3`}>
           <button
-            className={`${styles.studentButton} ${
-              selectedStudent === 0 ? styles.selected : ""
-            } w-100 mb-2`}
+            className={`${styles.studentButton} ${selectedStudent === 0 ? styles.selected : ""
+              } w-100 mb-2`}
             onClick={() => {
               setSelectedStudent(0);
               setIsGroupChat(false);
@@ -180,9 +179,8 @@ export default function AdminChat() {
           </button>
 
           <button
-            className={`${styles.studentButton} ${
-              isGroupChat ? styles.selected : ""
-            } w-100 mb-2`}
+            className={`${styles.studentButton} ${isGroupChat ? styles.selected : ""
+              } w-100 mb-2`}
             onClick={() => {
               setIsGroupChat(true);
               setSelectedStudent(null);
@@ -196,30 +194,32 @@ export default function AdminChat() {
             Students
           </h6>
 
-          {students.map((student) => (
-            <button
-              key={student.id}
-              className={`${styles.studentButton} ${
-                selectedStudent === student.id ? styles.selected : ""
-              } w-100 mb-2`}
-              onClick={() => {
-                setSelectedStudent(student.id);
-                setIsGroupChat(false);
-              }}
-            >
-              <div className={styles.studentInfo}>
-                <div className={styles.avatarCircle}>
-                  {student.name.charAt(0)}
+          {students
+            .filter((student) =>
+              student.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map((student) => (
+              <button
+                key={student.id}
+                className={`${styles.studentButton} ${selectedStudent === student.id ? styles.selected : ""
+                  } w-100 mb-2`}
+                onClick={() => {
+                  setSelectedStudent(student.id);
+                  setIsGroupChat(false);
+                }}
+              >
+                <div className={styles.studentInfo}>
+                  <div className={styles.avatarCircle}>{student.name.charAt(0)}</div>
+                  <span>{student.name}</span>
                 </div>
-                <span>{student.name}</span>
-              </div>
-              {unreadCounts[student.id] > 0 && (
-                <span className={`${styles.unreadBadge} badge bg-danger`}>
-                  {unreadCounts[student.id]}
-                </span>
-              )}
-            </button>
-          ))}
+                {unreadCounts[student.id] > 0 && (
+                  <span className={`${styles.unreadBadge} badge bg-danger`}>
+                    {unreadCounts[student.id]}
+                  </span>
+                )}
+              </button>
+            ))}
+
         </div>
       </div>
 
@@ -241,15 +241,15 @@ export default function AdminChat() {
                   {isGroupChat
                     ? "Group Chat"
                     : selectedStudent === 0
-                    ? "All Students"
-                    : students.find((s) => s.id === selectedStudent)?.name}
+                      ? "All Students"
+                      : students.find((s) => s.id === selectedStudent)?.name}
                 </h5>
                 <small className="text-muted">
                   {isGroupChat
                     ? `${students.length} participants`
                     : selectedStudent === 0
-                    ? `${students.length} students`
-                    : "Direct Message"}
+                      ? `${students.length} students`
+                      : "Direct Message"}
                 </small>
               </div>
             </div>
@@ -265,14 +265,12 @@ export default function AdminChat() {
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`${styles.messageWrapper} ${
-                msg.sender_id === adminId ? styles.sent : styles.received
-              }`}
+              className={`${styles.messageWrapper} ${msg.sender_id === adminId ? styles.sent : styles.received
+                }`}
             >
               <div
-                className={`${styles.message} ${
-                  msg.sender_id === adminId ? styles.userMessage : ""
-                }`}
+                className={`${styles.message} ${msg.sender_id === adminId ? styles.userMessage : ""
+                  }`}
               >
                 {isGroupChat && msg.sender_id !== adminId && (
                   <div className={styles.senderName}>{msg.sender_name}</div>
@@ -293,12 +291,11 @@ export default function AdminChat() {
               isGroupChat
                 ? "Message the group"
                 : selectedStudent !== null
-                ? selectedStudent === 0
-                  ? "Message All Students"
-                  : `Message ${
-                      students.find((s) => s.id === selectedStudent)?.name || ""
+                  ? selectedStudent === 0
+                    ? "Message All Students"
+                    : `Message ${students.find((s) => s.id === selectedStudent)?.name || ""
                     }`
-                : "Select a student to message"
+                  : "Select a student to message"
             }
             className="form-control"
             disabled={selectedStudent === null && !isGroupChat}

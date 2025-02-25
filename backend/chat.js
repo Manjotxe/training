@@ -57,10 +57,7 @@ io.on("connection", (socket) => {
       }
 
       // Send message to specific user if online
-      const receiverSocketId = onlineUsers[receiver_id];
-      if (receiverSocketId) {
         io.to(receiverSocketId).emit("receive-message", message);
-      }
     });
   });
 
@@ -169,8 +166,7 @@ app.get("/students", (req, res) => {
 });
 // API to fetch group chat messages
 app.get("/group-chat", (req, res) => {
-  const sql = `SELECT gc.*, a.name AS sender_name 
-  
+  const sql = `SELECT gc.*, a.name AS sender_name
                FROM group_chat gc 
                JOIN admission_form a ON gc.sender_id = a.id 
                ORDER BY gc.created_at ASC`;
