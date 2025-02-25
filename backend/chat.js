@@ -37,9 +37,40 @@ io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   // When a user logs in, store their socket ID
-  socket.on("register-user", (userId) => {
-    onlineUsers[userId] = socket.id;
-    console.log(`User ${userId} is online with socket ID: ${socket.id}`);
+  socket.on("register-user", async (userId) => {
+    try {
+      // Convert userId to an integer (since id in admission_form is INT(11))
+      const numericUserId = parseInt(userId, 10);
+
+      // Fetch user name from the database
+      db.query(
+        "SELECT name FROM admission_form WHERE id = ?",
+        [numericUserId],
+        (err, rows) => {
+          if (err) {
+            console.error("Error fetching user name:", err);
+            return;
+          }
+
+          // Check if rows is valid before accessing length
+          if (!Array.isArray(rows) || rows.length === 0) {
+            console.log(`User ${numericUserId} not found in the database.`);
+            return;
+          }
+
+          const userName = rows[0].name;
+
+          // Store both user ID and name in onlineUsers
+          onlineUsers[numericUserId] = { socketId: socket.id, name: userName };
+
+          console.log(
+            `User ${numericUserId} (${userName}) is online with socket ID: ${socket.id}`
+          );
+        }
+      );
+    } catch (error) {
+      console.error("Error fetching user name:", error);
+    }
   });
 
   // Handle sending messages
@@ -74,8 +105,18 @@ io.on("connection", (socket) => {
         return;
       }
 
+      // Get the sender's name from the onlineUsers list
+      const senderName = onlineUsers[sender_id]?.name || "Unknown";
+
+      // Prepare message object with sender details
+      const messageWithSender = {
+        sender_id,
+        sender_name: senderName, // Include sender name
+        message: msgText,
+      };
+
       // Broadcast message to all connected users
-      io.emit("receive-group-message", message);
+      io.emit("receive-group-message", messageWithSender);
     });
   });
 
