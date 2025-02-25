@@ -196,30 +196,34 @@ export default function AdminChat() {
             Students
           </h6>
 
-          {students.map((student) => (
-            <button
-              key={student.id}
-              className={`${styles.studentButton} ${
-                selectedStudent === student.id ? styles.selected : ""
-              } w-100 mb-2`}
-              onClick={() => {
-                setSelectedStudent(student.id);
-                setIsGroupChat(false);
-              }}
-            >
-              <div className={styles.studentInfo}>
-                <div className={styles.avatarCircle}>
-                  {student.name.charAt(0)}
+          {students
+            .filter((student) =>
+              student.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map((student) => (
+              <button
+                key={student.id}
+                className={`${styles.studentButton} ${
+                  selectedStudent === student.id ? styles.selected : ""
+                } w-100 mb-2`}
+                onClick={() => {
+                  setSelectedStudent(student.id);
+                  setIsGroupChat(false);
+                }}
+              >
+                <div className={styles.studentInfo}>
+                  <div className={styles.avatarCircle}>
+                    {student.name.charAt(0)}
+                  </div>
+                  <span>{student.name}</span>
                 </div>
-                <span>{student.name}</span>
-              </div>
-              {unreadCounts[student.id] > 0 && (
-                <span className={`${styles.unreadBadge} badge bg-danger`}>
-                  {unreadCounts[student.id]}
-                </span>
-              )}
-            </button>
-          ))}
+                {unreadCounts[student.id] > 0 && (
+                  <span className={`${styles.unreadBadge} badge bg-danger`}>
+                    {unreadCounts[student.id]}
+                  </span>
+                )}
+              </button>
+            ))}
         </div>
       </div>
 
