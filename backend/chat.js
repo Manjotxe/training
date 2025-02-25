@@ -57,10 +57,7 @@ io.on("connection", (socket) => {
       }
 
       // Send message to specific user if online
-      const receiverSocketId = onlineUsers[receiver_id];
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("receive-message", message);
-      }
+      io.emit("receive-message", message);
     });
   });
 

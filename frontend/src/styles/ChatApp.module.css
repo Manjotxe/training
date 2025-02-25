@@ -1,103 +1,119 @@
 .chatContainer {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background-color: #f3f4f6;
-    padding: 1rem;
-  }
-  
-  .chatHeader {
-    font-size: 1.25rem;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-  }
-  
-  .chatWindow {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1rem;
-    background-color: white;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    border: 1px solid #ddd;
-  }
-  
-  .messageList {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .message {
-    padding: 0.5rem;
-    border-radius: 10px;
-    max-width: 60%;
-  }
-  
-  .userMessage {
-    background-color: #3b82f6;
-    color: white;
-    align-self: flex-end;
-  }
-  
-  .botMessage {
-    background-color: #e5e7eb;
-    color: black;
-  }
-  
-  .inputContainer {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-    border: 1px solid #ddd;
-    margin-top: 1rem;
-  }
-  
-  .inputField {
-    flex: 1;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-  }
-  
-  .sendButton {
-    background-color: #3b82f6;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 10px;
-    transition: background 0.2s ease-in-out;
-  }
-  
-  .sendButton:hover {
-    background-color: #2563eb;
-  }
-  .headerContainer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Keeps button on left & heading centered */
-    position: relative;
-    padding: 0 1rem;
-  }
-  
-  .chatHeader {
-    flex: 1;
-    text-align: center;
-    margin: 0;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  .senderName {
-    font-weight: bold;
-    color: #007bff;
-    margin-right: 5px;
-  }
-  
+  height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.headerBox {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.headerAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e7f1ff;
+  color: #0d6efd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+}
+
+.messagesContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+}
+
+.messagesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.messageWrapper {
+  display: flex;
+  margin-bottom: 0.5rem;
+}
+
+.messageWrapper.sent {
+  justify-content: flex-end;
+}
+
+.messageWrapper.received {
+  justify-content: flex-start;
+}
+
+.message {
+  max-width: 70%;
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  background-color: #e9ecef;
+  position: relative;
+}
+
+.message.userMessage {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.senderName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: #6c757d;
+}
+
+.userMessage .senderName {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.inputContainer {
+  display: flex;
+  gap: 10px;
+  padding: 1rem;
+  background-color: #fff;
+}
+
+.inputContainer input {
+  border: 1px solid #dee2e6;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.inputContainer input:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.sendButton {
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sendButton:hover {
+  background-color: #0b5ed7;
+}
+.headerBox {
+  position: fixed;  /* Fixes it at the top */
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;  /* Ensures it stays on top */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: white;
+}
+
+/* Adjust messages container to prevent overlap */
+.messagesContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  margin-top: 60px; /* Adjust this based on the height of .headerBox */
+}

@@ -12,9 +12,9 @@ export default function ChatApp() {
   const [input, setInput] = useState("");
   const [userId, setUserId] = useState(null);
   const [isGroupChat, setIsGroupChat] = useState(false);
-  const receiverId = 3; // Admin ID is fixed as 3
+  const receiverId = 3;
 
-  // Fetch chat history when the component mounts or chat type changes
+  // All existing useEffect hooks and functions remain the same
   useEffect(() => {
     const storedUserId = localStorage.getItem("ID");
     if (storedUserId) {
@@ -38,12 +38,11 @@ export default function ChatApp() {
     fetchMessages();
   }, [isGroupChat]);
 
-  // Listen for incoming messages
   useEffect(() => {
     socket.on("receive-message", (newMessage) => {
       if (
         newMessage.receiver_id === userId ||
-        newMessage.receiver_id === null // Group message
+        newMessage.receiver_id === null
       ) {
         setMessages((prevMessages) => [...prevMessages, newMessage]);
       }
@@ -61,7 +60,6 @@ export default function ChatApp() {
     };
   }, [userId, isGroupChat]);
 
-  // Send Message
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -73,59 +71,96 @@ export default function ChatApp() {
       socket.emit("send-group-message", newMessage);
     } else {
       socket.emit("send-message", newMessage);
+      setMessages((prev) => [...prev, newMessage]);
     }
 
     setInput("");
   };
 
   return (
-    <div className={styles.chatContainer}>
-      <div className={styles.headerContainer}>
-        <Link to="/" className="btn btn-outline-primary">
-          Back to Home
-        </Link>
-        <h1 className={styles.chatHeader}>
-          <MessageCircle /> {isGroupChat ? "Group Chat" : "Chat with Teacher"}
-        </h1>
-      </div>
-
-      <div className={styles.chatWindow}>
-        <div className={styles.messageList}>
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`${styles.message} ${
-                msg.sender_id === userId ? styles.userMessage : styles.message
-              }`}
-            >
-              {isGroupChat && msg.sender_id !== userId && (
-                <span className={styles.senderName}>{msg.sender_name}: </span>
-              )}
-              {msg.message}
+    <div className="container-fluid p-0">
+      <div className="row g-0 h-100vh">
+        <div className="col">
+          <div className={`${styles.chatContainer} d-flex flex-column h-100`}>
+            {/* Chat Header */}
+            <div className={`${styles.headerBox} bg-white border-bottom`}>
+              <div className="d-flex align-items-center justify-content-between p-3">
+                <Link to="/" className="btn btn-outline-primary btn-sm">
+                  ← Back to Home
+                </Link>
+                <div className="d-flex align-items-center">
+                  <div className={styles.headerAvatar}>
+                    {isGroupChat ? (
+                      <Users size={20} />
+                    ) : (
+                      <MessageCircle size={20} />
+                    )}
+                  </div>
+                  <h5 className="mb-0 ms-2">
+                    {isGroupChat ? "Group Chat" : "Chat with Teacher"}
+                  </h5>
+                </div>
+                <button
+                  className={`btn ${
+                    isGroupChat ? "btn-primary" : "btn-outline-primary"
+                  } btn-sm`}
+                  onClick={() => setIsGroupChat(!isGroupChat)}
+                >
+                  <Users size={16} className="me-1" />
+                  {isGroupChat ? "Switch to Private" : "Switch to Group"}
+                </button>
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      <div className={styles.inputContainer}>
-        <button
-          className="btn btn-secondary"
-          onClick={() => setIsGroupChat(!isGroupChat)}
-        >
-          <Users className="w-5 h-5" />{" "}
-          {isGroupChat ? "Private Chat" : "Group Chat"}
-        </button>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={
-            isGroupChat ? "Message the group..." : "Type a message..."
-          }
-          className={styles.inputField}
-        />
-        <button onClick={sendMessage} className={styles.sendButton}>
-          <Send className="w-5 h-5" />
-        </button>
+            {/* Messages Area */}
+            <div className={`${styles.messagesContainer} flex-grow-1 bg-light`}>
+              <div className={styles.messagesList}>
+                {messages.map((msg, index) => (
+                  <div
+                    key={index}
+                    className={`${styles.messageWrapper} ${
+                      msg.sender_id === userId ? styles.sent : styles.received
+                    }`}
+                  >
+                    <div
+                      className={`${styles.message} ${
+                        msg.sender_id === userId ? styles.userMessage : ""
+                      }`}
+                    >
+                      {isGroupChat && msg.sender_id !== userId && (
+                        <div className={styles.senderName}>
+                          {msg.sender_name}
+                        </div>
+                      )}
+                      {msg.message}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Input Area */}
+            <div className={`${styles.inputContainer} bg-white border-top`}>
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                placeholder={
+                  isGroupChat
+                    ? "Message the group..."
+                    : "Message your teacher..."
+                }
+                className="form-control"
+              />
+              <button
+                onClick={sendMessage}
+                className={`${styles.sendButton} btn btn-primary`}
+              >
+                <Send size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
