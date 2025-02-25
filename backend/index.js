@@ -702,6 +702,22 @@ app.get("/notifications", (req, res) => {
     res.status(200).json(results);
   });
 });
+//Route to get the course details with course id
+app.get("/coursebyid/:course_id", (req, res) => {
+  const courseId = req.params.course_id;
+  const sql = "SELECT * FROM course WHERE course_id = ?";
+
+  pool.query(sql, [courseId], (err, result) => {
+    if (err) {
+      console.error("Error fetching course details:", err);
+      return res.status(500).json({ error: "Database query failed" });
+    }
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+    res.json(result[0]); // Send first course object
+  });
+});
 
 // Start the server
 const PORT = process.env.PORT || 3000;

@@ -35,6 +35,15 @@ function App() {
       }
     }
   };
+  const handleCourseClick = (e) => {
+    e.preventDefault(); // Prevent default behavior of <Link>
+
+    const coursesSection = document.querySelector(".courses-section");
+    if (coursesSection) {
+      coursesSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove the token from localStorage
     localStorage.removeItem("role"); // Remove the token from localStorage
@@ -60,7 +69,7 @@ function App() {
                 LOGIN
               </Link>
             ) : (
-              <Link to="/get-started" className="login-btn">
+              <Link className="login-btn" to="#" onClick={handleCourseClick}>
                 GET STARTED
               </Link>
             )}
@@ -83,8 +92,11 @@ function App() {
                   />
                   <h3 className="course-title">{course.courseName}</h3>
                   <p className="course-description">{course.languages}</p>
-                  <Link to="/courses" className="course-btn">
-                    Explore Course
+                  <Link
+                    to={`/coursedetails/${course.course_id}`}
+                    className="course-btn"
+                  >
+                    Explore Course          
                   </Link>
                 </div>
               ))
