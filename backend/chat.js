@@ -70,7 +70,7 @@ io.on("connection", (socket) => {
 
     const { sender_id, message: msgText } = message;
 
-    const sql = "INSERT INTO group_chats (sender_id, message) VALUES (?, ?)";
+    const sql = "INSERT INTO group_chat (sender_id, message) VALUES (?, ?)";
     db.query(sql, [sender_id, msgText], (err) => {
       if (err) {
         console.error("Error saving group message:", err);
@@ -170,7 +170,8 @@ app.get("/students", (req, res) => {
 // API to fetch group chat messages
 app.get("/group-chat", (req, res) => {
   const sql = `SELECT gc.*, a.name AS sender_name 
-               FROM group_chats gc 
+  
+               FROM group_chat gc 
                JOIN admission_form a ON gc.sender_id = a.id 
                ORDER BY gc.created_at ASC`;
 
