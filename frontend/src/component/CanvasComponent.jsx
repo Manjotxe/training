@@ -3,9 +3,11 @@ import io from "socket.io-client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUndo } from "@fortawesome/free-solid-svg-icons";
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import Header from "./Header";
 import axios from "axios";
 
 const CanvasComponent = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const canvasRef = useRef(null);
   const socket = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -30,6 +32,19 @@ const CanvasComponent = () => {
 
     return () => socket.current.disconnect();
   }, []);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+  //logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    setIsLoggedIn(false);
+    navigate("/");
+  };
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -157,278 +172,281 @@ const CanvasComponent = () => {
   };
 
   return (
-    <div
-      className="container"
-      style={{ backgroundColor: "#f7fafc", padding: "2rem" }}
-    >
-      <div className="wrapper" style={{ maxWidth: "80%", margin: "0 auto" }}>
-        <div
-          className="canvasWrapper"
-          style={{
-            backgroundColor: "white",
-            borderRadius: "1rem",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            padding: "1.5rem",
-          }}
-        >
-          <h1
-            style={{
-              textAlign: "center",
-              fontSize: "2rem",
-              fontWeight: "bold",
-              color: "#2d3748",
-              marginBottom: "2rem",
-            }}
-          >
-            Inquiry Form
-          </h1>
-
-          {/* Name and Email Input Fields */}
+    <>
+      <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} />
+      <div
+        className="container"
+        style={{ backgroundColor: "#f7fafc", padding: "2rem" }}
+      >
+        <div className="wrapper" style={{ maxWidth: "80%", margin: "0 auto" }}>
           <div
-            className="inputFields"
+            className="canvasWrapper"
             style={{
-              marginBottom: "2rem",
-              display: "flex",
-              gap: "1rem",
-              flexDirection: "column",
+              backgroundColor: "white",
+              borderRadius: "1rem",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              padding: "1.5rem",
             }}
           >
-            <input
-              type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+            <h1
               style={{
-                padding: "1rem",
-                borderRadius: "0.5rem",
-                border: "1px solid #e2e8f0",
-                fontSize: "1rem",
+                textAlign: "center",
+                fontSize: "2rem",
+                fontWeight: "bold",
                 color: "#2d3748",
+                marginBottom: "2rem",
               }}
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{
-                padding: "1rem",
-                borderRadius: "0.5rem",
-                border: "1px solid #e2e8f0",
-                fontSize: "1rem",
-                color: "#2d3748",
-              }}
-            />
-          </div>
-
-          {/* Canvas Title */}
-          <h1
-            className="heading"
-            style={{
-              textAlign: "center",
-              fontSize: "2rem",
-              fontWeight: "bold",
-              color: "#2d3748",
-              marginBottom: "2rem",
-            }}
-          >
-            Canvas
-          </h1>
-
-          {/* Tools Panel */}
-          <div
-            className="toolsPanel"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "1rem",
-              paddingLeft: "1rem",
-              paddingRight: "1rem",
-              marginBottom: "1.5rem",
-            }}
-          >
-            <div
-              className="toolButtons"
-              style={{ display: "flex", alignItems: "center", gap: "1rem" }}
             >
-              {/* Color buttons */}
-              <button
-                className="colorButton"
-                style={{
-                  backgroundColor: "black",
-                  color: "white",
-                  width: "2rem",
-                  height: "2rem",
-                  borderRadius: "9999px",
-                  borderWidth: "2px",
-                  borderColor: "#e5e7eb",
-                }}
-                onClick={() => handleColorChange("black")}
-              ></button>
-              <button
-                className="colorButton"
-                style={{
-                  backgroundColor: "red",
-                  color: "white",
-                  width: "2rem",
-                  height: "2rem",
-                  borderRadius: "9999px",
-                  borderWidth: "2px",
-                  borderColor: "#e5e7eb",
-                }}
-                onClick={() => handleColorChange("red")}
-              ></button>
-              <button
-                className="colorButton"
-                style={{
-                  backgroundColor: "blue",
-                  color: "white",
-                  width: "2rem",
-                  height: "2rem",
-                  borderRadius: "9999px",
-                  borderWidth: "2px",
-                  borderColor: "#e5e7eb",
-                }}
-                onClick={() => handleColorChange("blue")}
-              ></button>
-              <button
-                className="colorButton"
-                style={{
-                  backgroundColor: "green",
-                  color: "white",
-                  width: "2rem",
-                  height: "2rem",
-                  borderRadius: "9999px",
-                  borderWidth: "2px",
-                  borderColor: "#e5e7eb",
-                }}
-                onClick={() => handleColorChange("green")}
-              ></button>
-            </div>
+              Inquiry Form
+            </h1>
 
-            {/* Line width control */}
+            {/* Name and Email Input Fields */}
             <div
-              className="lineWidthControl"
-              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              className="inputFields"
+              style={{
+                marginBottom: "2rem",
+                display: "flex",
+                gap: "1rem",
+                flexDirection: "column",
+              }}
             >
               <input
-                type="range"
-                min="1"
-                max="20"
-                value={lineWidth}
-                onChange={(e) => handleLineWidthChange(e.target.value)}
-                style={{ width: "100%" }}
+                type="text"
+                placeholder="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={{
+                  padding: "1rem",
+                  borderRadius: "0.5rem",
+                  border: "1px solid #e2e8f0",
+                  fontSize: "1rem",
+                  color: "#2d3748",
+                }}
               />
-              <span className="lineWidthText" style={{ fontWeight: "500" }}>
-                {lineWidth}
-              </span>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  padding: "1rem",
+                  borderRadius: "0.5rem",
+                  border: "1px solid #e2e8f0",
+                  fontSize: "1rem",
+                  color: "#2d3748",
+                }}
+              />
+            </div>
+
+            {/* Canvas Title */}
+            <h1
+              className="heading"
+              style={{
+                textAlign: "center",
+                fontSize: "2rem",
+                fontWeight: "bold",
+                color: "#2d3748",
+                marginBottom: "2rem",
+              }}
+            >
+              Canvas
+            </h1>
+
+            {/* Tools Panel */}
+            <div
+              className="toolsPanel"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "1rem",
+                paddingLeft: "1rem",
+                paddingRight: "1rem",
+                marginBottom: "1.5rem",
+              }}
+            >
+              <div
+                className="toolButtons"
+                style={{ display: "flex", alignItems: "center", gap: "1rem" }}
+              >
+                {/* Color buttons */}
+                <button
+                  className="colorButton"
+                  style={{
+                    backgroundColor: "black",
+                    color: "white",
+                    width: "2rem",
+                    height: "2rem",
+                    borderRadius: "9999px",
+                    borderWidth: "2px",
+                    borderColor: "#e5e7eb",
+                  }}
+                  onClick={() => handleColorChange("black")}
+                ></button>
+                <button
+                  className="colorButton"
+                  style={{
+                    backgroundColor: "red",
+                    color: "white",
+                    width: "2rem",
+                    height: "2rem",
+                    borderRadius: "9999px",
+                    borderWidth: "2px",
+                    borderColor: "#e5e7eb",
+                  }}
+                  onClick={() => handleColorChange("red")}
+                ></button>
+                <button
+                  className="colorButton"
+                  style={{
+                    backgroundColor: "blue",
+                    color: "white",
+                    width: "2rem",
+                    height: "2rem",
+                    borderRadius: "9999px",
+                    borderWidth: "2px",
+                    borderColor: "#e5e7eb",
+                  }}
+                  onClick={() => handleColorChange("blue")}
+                ></button>
+                <button
+                  className="colorButton"
+                  style={{
+                    backgroundColor: "green",
+                    color: "white",
+                    width: "2rem",
+                    height: "2rem",
+                    borderRadius: "9999px",
+                    borderWidth: "2px",
+                    borderColor: "#e5e7eb",
+                  }}
+                  onClick={() => handleColorChange("green")}
+                ></button>
+              </div>
+
+              {/* Line width control */}
+              <div
+                className="lineWidthControl"
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  value={lineWidth}
+                  onChange={(e) => handleLineWidthChange(e.target.value)}
+                  style={{ width: "100%" }}
+                />
+                <span className="lineWidthText" style={{ fontWeight: "500" }}>
+                  {lineWidth}
+                </span>
+              </div>
+            </div>
+
+            {/* Canvas */}
+            <div
+              className="canvasContainer"
+              style={{
+                position: "relative",
+                borderRadius: "1rem",
+                overflow: "hidden",
+                backgroundColor: "#f9fafb",
+                borderWidth: "1px",
+                borderColor: "#e5e7eb",
+              }}
+            >
+              <canvas
+                ref={canvasRef}
+                width={800}
+                height={400}
+                className="canvas"
+                style={{ width: "100%", touchAction: "none" }}
+                onMouseDown={startDrawing}
+                onMouseUp={stopDrawing}
+                onMouseMove={draw}
+                onTouchStart={startDrawing}
+                onTouchEnd={stopDrawing}
+                onTouchMove={draw}
+              />
+            </div>
+
+            {/* Canvas control buttons */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: "10px",
+              }}
+            >
+              <button
+                className="button"
+                onClick={handleUndo}
+                style={{
+                  paddingLeft: "1rem",
+                  paddingRight: "1rem",
+                  paddingTop: "0.5rem",
+                  paddingBottom: "0.5rem",
+                  gap: "0.5rem",
+                  borderRadius: "0.5rem",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <FontAwesomeIcon icon={faUndo} />
+                Undo
+              </button>
+              <button
+                className="button"
+                onClick={handleClearCanvas}
+                style={{
+                  paddingLeft: "1rem",
+                  paddingRight: "1rem",
+                  paddingTop: "0.5rem",
+                  paddingBottom: "0.5rem",
+                  gap: "0.5rem",
+                  borderRadius: "0.5rem",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <FontAwesomeIcon icon={faTrashCan} />
+                Clear Canvas
+              </button>
             </div>
           </div>
-
-          {/* Canvas */}
-          <div
-            className="canvasContainer"
-            style={{
-              position: "relative",
-              borderRadius: "1rem",
-              overflow: "hidden",
-              backgroundColor: "#f9fafb",
-              borderWidth: "1px",
-              borderColor: "#e5e7eb",
-            }}
-          >
-            <canvas
-              ref={canvasRef}
-              width={800}
-              height={400}
-              className="canvas"
-              style={{ width: "100%", touchAction: "none" }}
-              onMouseDown={startDrawing}
-              onMouseUp={stopDrawing}
-              onMouseMove={draw}
-              onTouchStart={startDrawing}
-              onTouchEnd={stopDrawing}
-              onTouchMove={draw}
-            />
-          </div>
-
-          {/* Canvas control buttons */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: "10px",
-            }}
-          >
-            <button
-              className="button"
-              onClick={handleUndo}
-              style={{
-                paddingLeft: "1rem",
-                paddingRight: "1rem",
-                paddingTop: "0.5rem",
-                paddingBottom: "0.5rem",
-                gap: "0.5rem",
-                borderRadius: "0.5rem",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <FontAwesomeIcon icon={faUndo} />
-              Undo
-            </button>
-            <button
-              className="button"
-              onClick={handleClearCanvas}
-              style={{
-                paddingLeft: "1rem",
-                paddingRight: "1rem",
-                paddingTop: "0.5rem",
-                paddingBottom: "0.5rem",
-                gap: "0.5rem",
-                borderRadius: "0.5rem",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <FontAwesomeIcon icon={faTrashCan} />
-              Clear Canvas
-            </button>
-          </div>
         </div>
+        <button
+          type="submit"
+          className="submitButton"
+          style={{
+            backgroundColor: "#4CAF50",
+            color: "white",
+            padding: "1rem",
+            display: "block", // Ensures it's treated as a block-level element
+            margin: "1rem auto", // Centers the button horizontally and adds spacing at the top
+            border: "none",
+            borderRadius: "0.5rem",
+            fontSize: "1rem",
+            fontWeight: "bold",
+            cursor: "pointer",
+            width: "80%",
+            transition: "background-color 0.3s ease, transform 0.2s ease",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          }}
+          onClick={handleSubmit}
+          onMouseOver={(e) => {
+            e.target.style.backgroundColor = "#45a049";
+            e.target.style.transform = "scale(1.02)";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.backgroundColor = "#4CAF50";
+            e.target.style.transform = "scale(1)";
+          }}
+        >
+          Submit
+        </button>
       </div>
-      <button
-        type="submit"
-        className="submitButton"
-        style={{
-          backgroundColor: "#4CAF50",
-          color: "white",
-          padding: "1rem",
-          display: "block", // Ensures it's treated as a block-level element
-          margin: "1rem auto", // Centers the button horizontally and adds spacing at the top
-          border: "none",
-          borderRadius: "0.5rem",
-          fontSize: "1rem",
-          fontWeight: "bold",
-          cursor: "pointer",
-          width: "80%",
-          transition: "background-color 0.3s ease, transform 0.2s ease",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        }}
-        onClick={handleSubmit}
-        onMouseOver={(e) => {
-          e.target.style.backgroundColor = "#45a049";
-          e.target.style.transform = "scale(1.02)";
-        }}
-        onMouseOut={(e) => {
-          e.target.style.backgroundColor = "#4CAF50";
-          e.target.style.transform = "scale(1)";
-        }}
-      >
-        Submit
-      </button>
-    </div>
+    </>
   );
 };
 
