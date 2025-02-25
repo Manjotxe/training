@@ -139,7 +139,6 @@ export default function AdminChat() {
       socket.emit("send-group-message", messageData);
     } else {
       socket.emit("send-message", messageData);
-      setMessages((prev) => [...prev, messageData]);
     }
     setInput("");
   };
