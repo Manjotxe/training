@@ -18,6 +18,8 @@ import Lectures from "./component/Lectures.jsx";
 import AddLecture from "./component/AddLecture.jsx";
 import Chat from "./component/ChatApp.jsx";
 import AdminChat from "./component/AdminChatApp.jsx";
+import AttendanceDetail from "./component/AttendanceDetail.jsx";
+import Attendance from "./component/Attendance.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
 import CourseDetails from "./component/CourseDetails.jsx";
 
@@ -52,6 +54,22 @@ function App() {
           element={
             <PrivateRoute>
               <AdminChat />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/attendancedetial/:studentId"
+          element={
+            <PrivateRoute>
+              <AttendanceDetail />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/attendance"
+          element={
+            <PrivateRoute>
+              <Attendance />
             </PrivateRoute>
           }
         />

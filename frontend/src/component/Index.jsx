@@ -7,7 +7,9 @@ import axios from "axios"; // Import axios for making HTTP requests
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [courses, setCourses] = useState([]); // State to store fetched courses
+  const [courses, setCourses] = useState([]); // State to store fetched courses
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -15,16 +17,20 @@ function App() {
     }
     const fetchCourses = async () => {
       try {
+        setIsLoading(true);
         const response = await axios.get(
           "http://localhost:5000/api/courses/main"
         );
         setCourses(response.data); // Update the state with fetched courses
       } catch (error) {
         console.error("Error fetching courses:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchCourses();
   }, []);
+
   const handleCoursesClick = (e) => {
     const role = localStorage.getItem("role");
     if (!role || role !== "admin") {
@@ -35,6 +41,7 @@ function App() {
       }
     }
   };
+
   const handleCourseClick = (e) => {
     e.preventDefault(); // Prevent default behavior of <Link>
 
@@ -56,8 +63,7 @@ function App() {
         isLoggedIn={isLoggedIn}
         onLogout={handleLogout}
         handleCoursesClick={handleCoursesClick}
-      />{" "}
-      {/* Pass props to Header */}
+      />
       <main className="main-content">
         <div className="content-wrapper">
           <div className="text-content">
@@ -77,35 +83,46 @@ function App() {
         </div>
       </main>
       {/* Courses Section */}
-      <section className="courses-section">
-        <div className="courses-wrapper">
+      <section className="courses-section" id="courses">
+        <div className="section-header">
           <h2>Our Courses</h2>
+          <div className="section-divider"></div>
+        </div>
+        <div className="courses-wrapper">
           <div className="courses-grid">
             {/* Map over the fetched courses */}
-            {courses.length > 0 ? (
+            {isLoading ? (
+              <div className="loading-spinner">
+                <div className="spinner"></div>
+                <p>Loading courses...</p>
+              </div>
+            ) : courses.length > 0 ? (
               courses.map((course, index) => (
                 <div key={index} className="course-card">
-                  <img
-                    src={course.image} // Assuming the API provides image URLs
-                    alt={course.title}
-                    className="course-image"
-                  />
-                  <h3 className="course-title">{course.courseName}</h3>
-                  <p className="course-description">{course.languages}</p>
-                  <Link
-                    to={`/coursedetails/${course.course_id}`}
-                    className="course-btn"
-                  >
-                    Explore Course          
-                  </Link>
+                  <div className="course-image-container">
+                    <img
+                      src={course.image} // Assuming the API provides image URLs
+                      alt={course.title}
+                      className="course-image"
+                    />
+                  </div>
+                  <div className="course-content">
+                    <h3 className="course-title">{course.courseName}</h3>
+                    <p className="course-description">{course.languages}</p>
+                    <Link
+                      to={`/coursedetails/${course.course_id}`}
+                      className="course-btn"
+                    >
+                      Explore Course
+                    </Link>
+                  </div>
                 </div>
               ))
             ) : (
-              <p>Loading courses...</p>
+              <p className="no-courses">No courses available at the moment.</p>
             )}
           </div>
         </div>
-              
       </section>
       <Footer /> {/* Use the Footer component */}
     </div>

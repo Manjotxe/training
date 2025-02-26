@@ -4,6 +4,7 @@ import {
   MessageCircle,
   Send,
   Users,
+  Mail,
   MessageSquare,
   Search,
 } from "lucide-react";
@@ -16,7 +17,7 @@ const socket = io("http://localhost:5002");
 
 export default function AdminChat() {
   const [students, setStudents] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(0);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [unreadCounts, setUnreadCounts] = useState({});
@@ -257,9 +258,31 @@ export default function AdminChat() {
               </div>
             </div>
           ) : (
-            <h5 className="text-muted mb-0">
-              Select a conversation to start messaging
-            </h5>
+            <div className="d-flex align-items-center">
+              <div className={styles.headerAvatar}>
+                {selectedStudent == 0 ? (
+                  <Mail />
+                ) : (
+                  students.find((s) => s.id === selectedStudent)?.name.charAt(0)
+                )}
+              </div>
+              <div>
+                <h5 className="mb-0">
+                  {isGroupChat
+                    ? "Group Chat"
+                    : selectedStudent === 0
+                    ? "Message Everyone Personally"
+                    : students.find((s) => s.id === selectedStudent)?.name}
+                </h5>
+                <small className="text-muted">
+                  {isGroupChat
+                    ? `${students.length} participants`
+                    : selectedStudent === 0
+                    ? `${students.length} students`
+                    : "Direct Message"}
+                </small>
+              </div>
+            </div>
           )}
         </div>
 
