@@ -36,24 +36,42 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
       <nav>
         <div className="top-bar">
           <div className="left-links">
-            <a href="#">About Us</a>
-            <a href="#">DEB-ID</a>
-            <a href="#">CONTACT US</a>
+            <a href="#" className="top-link">
+              About Us
+            </a>
+            <a href="#" className="top-link deb-id">
+              DEB-ID
+            </a>
+            <a href="#" className="top-link">
+              CONTACT US
+            </a>
           </div>
           <div className="right-contact">
-            <span>+91-1824-521350</span>
+            <span className="phone-number">+91-1824-521350</span>
             <div className="social-icons">
-              <a href="#" className="facebook">
-                f
+              <a
+                href="#"
+                className="social-icon facebook"
+                aria-label="Facebook"
+              >
+                <i className="fa-brands fa-facebook-f"></i>
               </a>
-              <a href="#" className="instagram">
-                i
+              <a
+                href="#"
+                className="social-icon instagram"
+                aria-label="Instagram"
+              >
+                <i className="fa-brands fa-instagram"></i>
               </a>
-              <a href="#" className="linkedin">
-                in
+              <a
+                href="#"
+                className="social-icon linkedin"
+                aria-label="LinkedIn"
+              >
+                <i className="fa-brands fa-linkedin-in"></i>
               </a>
-              <a href="#" className="youtube">
-                yt
+              <a href="#" className="social-icon youtube" aria-label="YouTube">
+                <i className="fa-brands fa-youtube"></i>
               </a>
             </div>
           </div>
@@ -62,30 +80,57 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
           <div className="logo">
             <h2>Training</h2>
           </div>
-          <button className="menu-toggle" onClick={toggleMenu}>
-            ☰
+          <button
+            className="menu-toggle"
+            onClick={toggleMenu}
+            aria-label="Toggle menu"
+          >
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
           </button>
           <div className={`nav-links ${isMenuOpen ? "show" : ""}`}>
-            <a href="/">Home</a>
+            <a href="/" className="nav-item">
+              Home
+            </a>
             {role === "admin" ? (
-              <a href="/chatadmin">Chat</a>
+              <a href="/chatadmin" className="nav-item">
+                Chat
+              </a>
             ) : role === "user" ? (
-              <a href={`/chat`}>Chat</a>
+              <a href={`/chat`} className="nav-item">
+                Chat
+              </a>
             ) : null}
-            {role === "admin" && <a href="/admission">Admissions</a>}
+            {role === "admin" && (
+              <a href="/admission" className="nav-item">
+                Admissions
+              </a>
+            )}
+            {role === "admin" && (
+              <a href="/attendance" className="nav-item">
+                Mark Attendance
+              </a>
+            )}
 
-            <a href="/course" onClick={handleCoursesClick}>
+            <a href="/course" onClick={handleCoursesClick} className="nav-item">
               Courses
             </a>
 
             {role === "user" && (
-              <a href={`/assignments/${userId}`}>Assignments</a>
+              <a href={`/assignments/${userId}`} className="nav-item">
+                Assignments
+              </a>
             )}
 
             {isLoggedIn ? (
-              <a href="/lectures">TimeTable</a>
+              <a href="/lectures" className="nav-item">
+                TimeTable
+              </a>
             ) : (
-              <a href="/login">TimeTable</a>
+              <a href="/login" className="nav-item">
+                TimeTable
+              </a>
             )}
 
             {/* Admin dropdown menu */}
@@ -93,7 +138,7 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
               <div className="custom-dropdown" ref={dropdownRef}>
                 <a
                   href="#"
-                  className="dropdown-toggle"
+                  className="dropdown-toggle nav-item"
                   onClick={toggleAdminDropdown}
                 >
                   Admin Tools{" "}
@@ -118,9 +163,13 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
             )}
 
             {isLoggedIn ? (
-              <a href={`/profile/${userId}`}>MyProfile</a>
+              <a href={`/profile/${userId}`} className="nav-item">
+                MyProfile
+              </a>
             ) : (
-              <a href="/login">MyProfile</a>
+              <a href="/login" className="nav-item">
+                MyProfile
+              </a>
             )}
 
             {!isLoggedIn ? (

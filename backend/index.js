@@ -167,30 +167,39 @@ app.get("/api/courses/main", (req, res) => {
   });
 });
 app.post("/api/courses", (req, res) => {
-  const { courseName, duration, image, languages } = req.body;
+  const { courseName, duration, image, languages, price, description } =
+    req.body;
 
-  if (!courseName || !duration || !languages) {
+  if (!courseName || !duration || !languages || !price || !description) {
     return res.status(400).send("All fields are required.");
   }
 
   const query =
-    "INSERT INTO course (courseName, duration, image, languages) VALUES (?, ?, ?, ?)";
-  pool.query(query, [courseName, duration, image, languages], (err, result) => {
-    if (err) {
-      console.error("Error adding course:", err);
-      res.status(500).send("Failed to add course.");
-    } else {
-      const newCourse = {
-        id: result.insertId,
-        courseName,
-        duration,
-        image,
-        languages,
-      };
-      res.status(201).json(newCourse);
+    "INSERT INTO course (courseName, duration, image, languages, price, description) VALUES (?, ?, ?, ?, ?, ?)";
+
+  pool.query(
+    query,
+    [courseName, duration, image, languages, price, description],
+    (err, result) => {
+      if (err) {
+        console.error("Error adding course:", err);
+        res.status(500).send("Failed to add course.");
+      } else {
+        const newCourse = {
+          id: result.insertId,
+          courseName,
+          duration,
+          image,
+          languages,
+          price,
+          description,
+        };
+        res.status(201).json(newCourse);
+      }
     }
-  });
+  );
 });
+
 app.get("/api/courses", (req, res) => {
   const query = "SELECT course_id, courseName, duration, languages FROM course";
 
