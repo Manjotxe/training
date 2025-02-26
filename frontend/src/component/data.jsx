@@ -3,6 +3,7 @@ import styles from "../styles/users.module.css"; // Import the CSS module
 import Bill from "./Bills";
 import Footer from "../component/Footer";
 import Header from "../component/Header";
+import { useNavigate, Link } from "react-router-dom";
 
 function Data() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -14,7 +15,7 @@ function Data() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [yearFilter, setYearFilter] = useState(""); // Add state for year filter
-
+  const navigate = useNavigate();
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -73,7 +74,9 @@ function Data() {
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
-
+  const viewAttendance = () => {
+    navigate("/attendance");
+  };
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -126,6 +129,7 @@ function Data() {
                   <th>Duration</th>
                   <th>Started At</th>
                   <th>Generate Bill</th>
+                  <th>View Attendance</th>
                 </tr>
               </thead>
               <tbody>
@@ -145,6 +149,15 @@ function Data() {
                       >
                         Bill
                       </button>
+                    </td>
+                    <td>
+                      <Link
+                        to={`/attendancedetial/${user.id}`}
+                        className={styles.bill}
+                        style={{ textDecoration: "none" }}
+                      >
+                        Attendance
+                      </Link>
                     </td>
                   </tr>
                 ))}
