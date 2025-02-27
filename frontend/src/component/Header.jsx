@@ -136,11 +136,7 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
             {/* Admin dropdown menu */}
             {role === "admin" && (
               <div className="custom-dropdown" ref={dropdownRef}>
-                <a
-                  href="#"
-                  className="dropdown-toggle nav-item"
-                  onClick={toggleAdminDropdown}
-                >
+                <a href="#" className="nav-item" onClick={toggleAdminDropdown}>
                   Admin Tools{" "}
                   <span
                     className={`dropdown-arrow ${
