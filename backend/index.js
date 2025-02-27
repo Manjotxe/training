@@ -201,7 +201,8 @@ app.post("/api/courses", (req, res) => {
 });
 
 app.get("/api/courses", (req, res) => {
-  const query = "SELECT course_id, courseName, duration, languages FROM course";
+  const query =
+    "SELECT course_id, courseName, duration, languages, price, description FROM course";
 
   pool.execute(query, (err, results) => {
     if (err) {
