@@ -19,6 +19,7 @@ import AddLecture from "./component/AddLecture.jsx";
 import Chat from "./component/ChatApp.jsx";
 import AdminChat from "./component/AdminChatApp.jsx";
 import AttendanceDetail from "./component/AttendanceDetail.jsx";
+import FaceLogin from "./component/FaceLogin.jsx";
 import Attendance from "./component/Attendance.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
 import CourseDetails from "./component/CourseDetails.jsx";
@@ -29,6 +30,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/facelogin" element={<FaceLogin />} />
         <Route
           path="/assignments/:id"
           element={
