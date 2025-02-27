@@ -99,6 +99,7 @@ const CourseManagement = () => {
         <main className="container mx-auto px-4 py-12 flex-grow">
           <div className="text-center mb-12">
             <h1 className={styles.courseHeader}>Available Courses</h1>
+            <br></br>
             <button
               className={styles.addCourseButton}
               onClick={() => setShowModal(true)}

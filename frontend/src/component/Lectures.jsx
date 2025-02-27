@@ -233,7 +233,11 @@ export default function Lectures() {
                               lecture.lecture_url ? (
                                 <a
                                   key={lecture.id}
-                                  href={lecture.lecture_url}
+                                  href={
+                                    lecture.lecture_url.startsWith("http")
+                                      ? lecture.lecture_url
+                                      : `https://${lecture.lecture_url}`
+                                  }
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   style={{ textDecoration: "none" }}
