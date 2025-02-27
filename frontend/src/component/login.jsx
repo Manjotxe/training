@@ -1,17 +1,27 @@
 import React, { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
-import "../styles/login.css";
+import "../styles/Login.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUserCircle, faEnvelope, faLock, faSignInAlt, faCamera, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faUserCircle,
+  faEnvelope,
+  faLock,
+  faSignInAlt,
+  faCamera,
+  faEye,
+  faEyeSlash,
+  faTimes,
+} from "@fortawesome/free-solid-svg-icons";
 
 const AuthLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [login, setLogin] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // Toggle password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const submit = async (evt) => {
     evt.preventDefault();
@@ -61,14 +71,33 @@ const AuthLogin = () => {
       ) : (
         <div className="auth-login-container">
           <div className="auth-login-box">
+            <FontAwesomeIcon
+              icon={faTimes}
+              className="auth-close-icon"
+              onClick={() => navigate("/")}
+              style={{
+                fontSize: "22px",
+                position: "absolute",
+                top: "120px",
+                right: "34%",
+                cursor: "pointer",
+              }}
+            />
+
             <div className="auth-login-header">
-              <FontAwesomeIcon icon={faUserCircle} className="auth-profile-icon" />
+              <FontAwesomeIcon
+                icon={faUserCircle}
+                className="auth-profile-icon"
+              />
               <h2>Welcome Back</h2>
               <p className="auth-subtitle">Please login to your account</p>
             </div>
             <form onSubmit={submit} className="auth-login-form">
               <div className="auth-input-group">
-                <FontAwesomeIcon icon={faEnvelope} className="auth-input-icon" />
+                <FontAwesomeIcon
+                  icon={faEnvelope}
+                  className="auth-input-icon"
+                />
                 <input
                   type="email"
                   placeholder="Email"
@@ -93,12 +122,19 @@ const AuthLogin = () => {
                 </button>
               </div>
               <button type="submit" className="auth-login-btn">
-                <FontAwesomeIcon icon={faSignInAlt} /> {loading ? "Loading..." : "Login"}
+                <FontAwesomeIcon icon={faSignInAlt} />{" "}
+                {loading ? "Loading..." : "Login"}
               </button>
               <div className="auth-alternative-login">
-                <button type="button" id="faceLoginBtn" className="auth-face-login-btn">
-                  <FontAwesomeIcon icon={faCamera} /> Login with Face
-                </button>
+                <Link to="/faceLogin">
+                  <button
+                    type="button"
+                    id="faceLoginBtn"
+                    className="auth-face-login-btn"
+                  >
+                    <FontAwesomeIcon icon={faCamera} /> Login with Face
+                  </button>
+                </Link>
               </div>
             </form>
           </div>
