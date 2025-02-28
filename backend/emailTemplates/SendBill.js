@@ -1,9 +1,9 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 const db = require("../connection"); // Import the database connection
 
 // Nodemailer setup for sending email
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
     user: process.env.ADMIN_EMAIL,
     pass: process.env.EMAIL_PASS,
@@ -21,15 +21,15 @@ const formatDate = (dateString) => {
 const sendBillEmail = (email, rupees, date) => {
   return new Promise((resolve, reject) => {
     // Query to fetch data from the `admission_form` table based on email
-    const query = 'SELECT * FROM admission_form WHERE email = ?';
+    const query = "SELECT * FROM admission_form WHERE email = ?";
 
     db.query(query, [email], (err, results) => {
       if (err) {
-        return reject('Error fetching data from database: ' + err.message);
+        return reject("Error fetching data from database: " + err.message);
       }
 
       if (results.length === 0) {
-        return reject('No record found for this email');
+        return reject("No record found for this email");
       }
 
       const { name, courseName, admissionDate } = results[0];
@@ -37,9 +37,9 @@ const sendBillEmail = (email, rupees, date) => {
       const mailOptions = {
         from: process.env.ADMIN_EMAIL,
         to: email,
-        subject: 'Your Receipt from YOREX INFOTECH',
+        subject: "Your Receipt from TRAINING TEAM",
         html: `
-          <h1 style="color: pink; text-align: center;">YOREX INFOTECH</h1>
+          <h1 style="color: pink; text-align: center;">TRAINING TEAM</h1>
           <p style="text-align: center;">PROFESSIONAL TRAINING & DEVELOPMENT</p>
           <p style="text-align: center;">An ISO 9001:2008 Certified</p>
           <h2 style="text-align: center;">Receipt</h2>
@@ -50,7 +50,9 @@ const sendBillEmail = (email, rupees, date) => {
             </tr>
             <tr>
               <td style="border: 1px solid #ddd; padding: 8px;">Admission Date</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${formatDate(admissionDate)||null}</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${
+                formatDate(admissionDate) || null
+              }</td>
             </tr>
             <tr>
               <td style="border: 1px solid #ddd; padding: 8px;">Name</td>
@@ -73,17 +75,17 @@ const sendBillEmail = (email, rupees, date) => {
               <td style="border: 1px solid #ddd; padding: 8px;">${date}</td>
             </tr>
           </table>
-          <p style="text-align: center;">Thank you for choosing YOREX INFOTECH!</p>
-          <footer style="text-align: center; color: pink;">YOREX INFOTECH</footer>
+          <p style="text-align: center;">Thank you for choosing TRAINING TEAM!</p>
+          <footer style="text-align: center; color: pink;">TRAINING TEAM</footer>
         `,
       };
 
       // Send the email
       transporter.sendMail(mailOptions, (err, info) => {
         if (err) {
-          return reject('Error sending email: ' + err.message);
+          return reject("Error sending email: " + err.message);
         }
-        console.log('Email sent:', info.response);
+        console.log("Email sent:", info.response);
         resolve(info);
       });
     });
