@@ -254,8 +254,10 @@ const AddLecture = () => {
                           >
                             Edit
                           </button>
+
                           <button
-                            className="btn btn-sm btn-outline-danger"
+                            className="btn btn-sm btn-outline-danger btn-outline-primary me-2"
+                            style={{ marginTop: "5px", padding: "9px" }}
                             onClick={() => handleDeleteLecture(lecture.id)}
                           >
                             Delete
