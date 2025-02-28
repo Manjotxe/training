@@ -8,7 +8,7 @@ const inquiryTemplate = (name) => `
 
     <p>If you have any further questions, feel free to reply to this email.</p>
     
-    <p style="margin-top: 30px;">Best regards,<br/>Yorex Infotech Team</p>
+    <p style="margin-top: 30px;">Best regards,<br/>Training Team</p>
   </div>
 `;
 
