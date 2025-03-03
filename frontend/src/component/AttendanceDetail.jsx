@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import "react-calendar/dist/Calendar.css";
 import "../styles/Calender.css";
 
-function Abc() {
+function AttendanceDetail() {
   const { studentId } = useParams(); // Extract studentId from URL
   const [student, setStudent] = useState(null);
   const [attendance, setAttendance] = useState(null);
@@ -36,7 +36,9 @@ function Abc() {
       .then((data) => {
         if (data.attendance && data.attendance.length > 0) {
           try {
-            const studentAttendance = data.attendance.find((a) => a.student_id == studentId);
+            const studentAttendance = data.attendance.find(
+              (a) => a.student_id == studentId
+            );
 
             if (studentAttendance) {
               const formattedAttendance =
@@ -87,7 +89,9 @@ function Abc() {
 
   // Calculate attendance percentage
   const attendancePercentage =
-    totalWorkingDays > 0 ? ((totalPresent / totalWorkingDays) * 100).toFixed(2) : "N/A";
+    totalWorkingDays > 0
+      ? ((totalPresent / totalWorkingDays) * 100).toFixed(2)
+      : "N/A";
 
   const tileClassName = ({ date }) => {
     const dateStr = format(date, "yyyy-MM-dd");
@@ -159,7 +163,9 @@ function Abc() {
             </div>
             <div className="summary-item">
               <span className="summary-value">
-                {attendancePercentage !== "N/A" ? attendancePercentage + "%" : "N/A"}
+                {attendancePercentage !== "N/A"
+                  ? attendancePercentage + "%"
+                  : "N/A"}
               </span>
               <span className="summary-label">Attendance</span>
             </div>
@@ -209,4 +215,4 @@ function Abc() {
   );
 }
 
-export default Abc;
+export default AttendanceDetail;
