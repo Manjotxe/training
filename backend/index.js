@@ -669,6 +669,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
       pool.query(
         notificationSql,
         [
+          null,
           fileData?.file_name || null,
           fileData?.file_path || null,
           fileData?.file_type || null,
