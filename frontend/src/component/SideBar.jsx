@@ -50,10 +50,26 @@ const Sidebar = () => {
               Dashboard
             </Link>
             <Link
+              to="/attendance-record"
+              className={`nav-link ${
+                isActive("/attendance-record") ? "active" : ""
+              }`}
+            >
+              Attendance Records
+            </Link>
+            <Link
               to="/record"
               className={`nav-link ${isActive("/record") ? "active" : ""}`}
             >
               Locality Records
+            </Link>
+            <Link
+              to="/course-record"
+              className={`nav-link ${
+                isActive("/course-record") ? "active" : ""
+              }`}
+            >
+              Course Records
             </Link>
             <Link
               to="/reports"

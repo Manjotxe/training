@@ -222,7 +222,7 @@ app.post("/api/admissions", (req, res) => {
     profession,
     nationality,
     maritalStatus,
-    sex,
+    sex, // Gender from admission_form
     address,
     city,
     pinCode,
@@ -230,7 +230,7 @@ app.post("/api/admissions", (req, res) => {
     email,
     schoolX,
     schoolXII,
-    courseName,
+    courseName, // Course Name instead of ID
     admissionDate,
     signature,
     photo,
@@ -238,75 +238,64 @@ app.post("/api/admissions", (req, res) => {
 
   const randomPassword = crypto.randomBytes(4).toString("hex").slice(0, 8);
 
-  const getCourseIdQuery = `SELECT course_id FROM course WHERE courseName = ?`;
+  const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, courseName, admissionDate, signature, photo) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  pool.query(getCourseIdQuery, [courseName], (err, result) => {
+  const values = [
+    name,
+    dob,
+    fatherName,
+    motherName,
+    profession,
+    nationality,
+    maritalStatus,
+    sex,
+    address,
+    city,
+    pinCode,
+    phoneNumber,
+    email,
+    randomPassword,
+    schoolX,
+    schoolXII,
+    courseName, // Storing Course Name instead of Course ID
+    admissionDate,
+    signature,
+    photo,
+  ];
+
+  pool.query(query, values, (err, result) => {
     if (err) {
-      console.error("Error fetching course_id:", err);
-      return res.status(500).json({ error: "Failed to fetch course_id" });
+      console.error("Error inserting data:", err);
+      return res.status(500).json({ error: "Failed to save admission data" });
     }
 
-    if (result.length === 0) {
-      return res.status(404).json({ error: "Course not found" });
-    }
+    const studentId = result.insertId;
 
-    const courseId = result[0].course_id;
+    axios
+      .get(`https://api.postalpincode.in/pincode/${pinCode}`)
+      .then((response) => {
+        const postOfficeData = response.data[0]?.PostOffice?.[0];
+        if (!postOfficeData) {
+          return res.status(400).json({ error: "Invalid Pincode" });
+        }
 
-    const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, course_id, courseName, admissionDate, signature, photo) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const realAddress = postOfficeData.Name;
+        const district = postOfficeData.District;
+        const location = `${realAddress}, ${district}`;
 
-    const values = [
-      name,
-      dob,
-      fatherName,
-      motherName,
-      profession,
-      nationality,
-      maritalStatus,
-      sex,
-      address,
-      city,
-      pinCode,
-      phoneNumber,
-      email,
-      randomPassword,
-      schoolX,
-      schoolXII,
-      courseId,
-      courseName,
-      admissionDate,
-      signature,
-      photo,
-    ];
+        // **UPDATED QUERY: Storing courseName instead of course_id**
+        const addressQuery = `INSERT INTO student_data (student_id, location, course, gender) VALUES (?, ?, ?, ?)`;
 
-    pool.query(query, values, (err, result) => {
-      if (err) {
-        console.error("Error inserting data:", err);
-        return res.status(500).json({ error: "Failed to save admission data" });
-      }
-
-      const studentId = result.insertId;
-
-      axios
-        .get(`https://api.postalpincode.in/pincode/${pinCode}`)
-        .then((response) => {
-          const postOfficeData = response.data[0]?.PostOffice?.[0];
-          if (!postOfficeData) {
-            return res.status(400).json({ error: "Invalid Pincode" });
-          }
-
-          const realAddress = postOfficeData.Name;
-          const district = postOfficeData.District;
-          const location = `${realAddress}, ${district}`;
-
-          const addressQuery = `INSERT INTO student_data (student_id, location) VALUES (?, ?)`;
-
-          pool.query(addressQuery, [studentId, location], (err) => {
+        pool.query(
+          addressQuery,
+          [studentId, location, courseName, sex],
+          (err) => {
             if (err) {
-              console.error("Error inserting address:", err);
+              console.error("Error inserting student data:", err);
               return res
                 .status(500)
-                .json({ error: "Failed to save address data" });
+                .json({ error: "Failed to save student data" });
             }
 
             sendAdmissionConfirmationEmail(
@@ -315,19 +304,20 @@ app.post("/api/admissions", (req, res) => {
               courseName,
               randomPassword
             );
+
             res.status(201).json({
               message: "Admission Successful",
               password: randomPassword,
             });
-          });
-        })
-        .catch((error) => {
-          console.error("Error fetching address:", error);
-          return res
-            .status(500)
-            .json({ error: "Failed to fetch address details" });
-        });
-    });
+          }
+        );
+      })
+      .catch((error) => {
+        console.error("Error fetching address:", error);
+        return res
+          .status(500)
+          .json({ error: "Failed to fetch address details" });
+      });
   });
 });
 
@@ -746,6 +736,27 @@ app.get("/students/location", async (req, res) => {
   } catch (error) {
     console.error("Error fetching student locations:", error.message);
     res.status(500).json({ error: error.message }); // Send actual error message
+  }
+});
+app.get("/students/courses", async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+          course,
+          COUNT(*) as total_students,
+          SUM(CASE WHEN gender = 'Male' THEN 1 ELSE 0 END) as male_students,
+          SUM(CASE WHEN gender = 'Female' THEN 1 ELSE 0 END) as female_students,
+          SUM(CASE WHEN gender NOT IN ('Male', 'Female') THEN 1 ELSE 0 END) as other_students
+      FROM student_data
+      GROUP BY course
+      ORDER BY total_students DESC;
+    `;
+
+    const [rows] = await pool.promise().query(query);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching student courses:", error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
