@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+.student-chart-component {
+  font-family: 'Poppins', sans-serif;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  margin: 20px 0;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.chart-header h2 {
+  margin: 0;
+  font-weight: 600;
+  color: #006d7e;
+  font-size: 1.8rem;
+}
+
+.chart-toggle .btn {
+  font-weight: 500;
+}
+
+.chart-toggle .btn-primary {
+  background: linear-gradient(45deg, #006d7e, #005666);
+  border-color: #005666;
+}
+
+.chart-toggle .btn-outline-primary {
+  color: #006d7e;
+  border-color: #006d7e;
+}
+
+.chart-toggle .btn-outline-primary:hover {
+  background-color: rgba(0, 109, 126, 0.1);
+  color: #006d7e;
+}
+
+.chart-wrapper {
+  height: 400px;
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.stats-summary {
+  margin-top: 30px;
+}
+
+.stats-card {
+  background: linear-gradient(to right, rgba(255, 105, 180, 0.1), rgba(0, 109, 126, 0.1));
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.3s ease;
+  height: 100%;
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stats-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  color: #006d7e;
+}
+
+.stats-card p {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  background: linear-gradient(to right, #ff69b4, #006d7e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+}
+
+.loading-container {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.error-container {
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .chart-toggle {
+    width: 100%;
+    display: flex;
+  }
+  
+  .chart-toggle .btn {
+    flex: 1;
+  }
+  
+  .chart-wrapper {
+    height: 300px;
+  }
+}
+
+.main-container {
+    display: flex;
+    align-items: flex-start;
+  }
+  
+  .sidebar-container {
+    width: 270px; /* Adjust width as needed */
+    min-height: 700px;
+    margin-top: 18px;
+    flex-shrink: 0;
+    border-radius: 50px;
+  }
+  
+  .content-container {
+    flex-grow: 1;
+    padding-left: 20px; /* Space between sidebar and content */
+  }
+  

@@ -152,6 +152,7 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
                 >
                   <a href="/canvas">Inquiry Form</a>
                   <a href="/data">All Students</a>
+                  <a href="/record">Records</a>
                   <a href="/add-lecture">Add Lecture</a>
                   <a href="/assignment">Assignments</a>
                 </div>
