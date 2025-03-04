@@ -17,6 +17,7 @@ import PrivateRoute from "./component/PrivateRoute.jsx";
 import Lectures from "./component/Lectures.jsx";
 import AddLecture from "./component/AddLecture.jsx";
 import Chat from "./component/ChatApp.jsx";
+import StudentLocationChart from "./component/StudentLocationChart.jsx";
 import AdminChat from "./component/AdminChatApp.jsx";
 import AttendanceDetail from "./component/AttendanceDetail.jsx";
 import FaceLogin from "./component/FaceLogin.jsx";
@@ -56,6 +57,14 @@ function App() {
           element={
             <PrivateRoute>
               <AdminChat />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/record"
+          element={
+            <PrivateRoute>
+              <StudentLocationChart />
             </PrivateRoute>
           }
         />
