@@ -766,14 +766,95 @@ app.get("/students/courses", async (req, res) => {
 
 // Fetch Attendance Data API
 app.get("/api/attendance", (req, res) => {
-  const query = "SELECT name, present, absent FROM attendance";
+  const query = "SELECT attendance_data FROM student_attendance";
+  const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+  const currentYear = new Date().getFullYear();
+  const lastFiveYears = Array.from({ length: 5 }, (_, i) => currentYear - i); // Generate last 5 years
+
   pool.query(query, (err, results) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json(results);
+
+    let monthlyAttendance = {};
+    let yearlyAttendance = {};
+    let totalStudents = results.length; // Total number of students
+
+    results.forEach((row) => {
+      const attendanceData = JSON.parse(row.attendance_data);
+
+      for (const [date, status] of Object.entries(attendanceData)) {
+        if (date > today) continue; // Skip future dates
+
+        const dateObj = new Date(date);
+        const monthName = dateObj.toLocaleString("en-US", { month: "short" });
+        const yearMonth = `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}`; // YYYY-M format
+        const year = dateObj.getFullYear(); // YYYY format
+
+        // Process Monthly Data
+        if (!monthlyAttendance[yearMonth]) {
+          const totalDaysInMonth = new Date(dateObj.getFullYear(), dateObj.getMonth() + 1, 0).getDate();
+          monthlyAttendance[yearMonth] = { name: monthName, year: year, present: 0, totalDays: totalDaysInMonth };
+        }
+        if (status === "Present") {
+          monthlyAttendance[yearMonth].present += 1;
+        }
+
+        // Process Yearly Data
+        if (lastFiveYears.includes(year)) { // Include only last 5 years
+          if (!yearlyAttendance[year]) {
+            yearlyAttendance[year] = { name: year.toString(), present: 0, totalDays: 0 };
+          }
+          yearlyAttendance[year].totalDays += 1;
+          if (status === "Present") {
+            yearlyAttendance[year].present += 1;
+          }
+        }
+      }
+    });
+
+    // Format Monthly Attendance Response
+    const monthlyResponse = Object.values(monthlyAttendance).map((month) => {
+      const avgPresent = totalStudents > 0 ? (month.present / totalStudents).toFixed(2) : "0.00";
+      const avgAbsent = totalStudents > 0 ? ((month.totalDays * totalStudents - month.present) / totalStudents).toFixed(2) : "0.00";
+
+      return {
+        name: month.name,
+        present: avgPresent,
+        absent: avgAbsent,
+      };
+    });
+
+    // Format Yearly Attendance Response (Only for the last 5 years)
+    const yearlyResponse = lastFiveYears.map((year) => {
+      if (yearlyAttendance[year]) {
+        const avgPresent = totalStudents > 0 ? (yearlyAttendance[year].present / totalStudents).toFixed(2) : "0.00";
+        const avgAbsent = totalStudents > 0 ? ((yearlyAttendance[year].totalDays * totalStudents - yearlyAttendance[year].present) / totalStudents).toFixed(2) : "0.00";
+
+        return {
+          name: year.toString(),
+          present: avgPresent,
+          absent: avgAbsent,
+        };
+      } else {
+        return {
+          name: year.toString(),
+          present: "0.00",
+          absent: "0.00",
+        };
+      }
+    });
+
+    res.json({
+      monthlyData: monthlyResponse,
+      yearlyData: yearlyResponse,
+    });
   });
 });
+
+
+
+
 
 // Fetch Course Names API
 app.get("/api/courses", (req, res) => {
