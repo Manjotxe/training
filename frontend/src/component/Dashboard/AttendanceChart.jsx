@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
+import { 
+  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, 
   Tooltip, Legend, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
 import { motion } from 'framer-motion';
@@ -13,8 +13,6 @@ const AttendanceChart = ({ view, chartType = 'default' }) => {
   useEffect(() => {
     const fetchAttendanceData = async () => {
       try {
-        console.log("AttendanceChart component mounted");
-
         const response = await fetch('http://localhost:5000/api/attendance');
         if (!response.ok) {
           throw new Error('Failed to fetch data');
