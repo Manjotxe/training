@@ -18,6 +18,7 @@ import Lectures from "./component/Lectures.jsx";
 import AddLecture from "./component/AddLecture.jsx";
 import Chat from "./component/ChatApp.jsx";
 import StudentLocationChart from "./component/StudentLocationChart.jsx";
+import Dashboard from "./component/Dashboard/Dashboard.jsx";
 import AdminChat from "./component/AdminChatApp.jsx";
 import AttendanceDetail from "./component/AttendanceDetail.jsx";
 import StudentCourseGenderChart from "./component/StudentCourseGenderChart.jsx";
@@ -33,7 +34,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/attendance-record" element={<AttendanceChart />} />
         <Route path="/facelogin" element={<FaceLogin />} />
         <Route
           path="/assignments/:id"
@@ -60,6 +60,22 @@ function App() {
           element={
             <PrivateRoute>
               <AdminChat />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/attendance-record"
+          element={
+            <PrivateRoute>
+              <AttendanceChart />
             </PrivateRoute>
           }
         />
