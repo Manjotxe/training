@@ -1,80 +1,155 @@
 /* Sidebar Container */
 .sidebar {
-    border-radius: 10px;
-    margin-top: 1px;
-    height: 100vh;
-    width: 250px;
-    background: white;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease-in-out;
-    transform: translateX(-100%);
-    z-index: 1050;
-  }
-  
-  .sidebar.show {
+  border-radius: 10px;
+  margin-top: 1px;
+  height: 100vh;
+  width: 250px; /* Keeping original width */
+  background: white;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-100%);
+  z-index: 1050;
+  position: sticky;
+  top: 0;
+}
+
+.sidebar.show {
+  transform: translateX(0);
+}
+
+@media (min-width: 768px) {
+  .sidebar {
     transform: translateX(0);
   }
-  
-  @media (min-width: 768px) {
-    .sidebar {
-      transform: translateX(0);
-    }
-  }
-  
-  /* Sidebar Header */
-  .sidebar-header {
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .sidebar-title {
-    font-size: 16px;
-    font-weight: bold;
-    color: #333;
-  }
-  
-  /* Sidebar Content */
-  .sidebar-content {
-    padding: 15px;
-    overflow-y: auto;
-    height: calc(100vh - 60px);
-  }
-  
-  /* Sidebar Sections */
-  .sidebar-section {
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-    color: #888;
-    margin-bottom: 8px;
-  }
-  
-  /* Navigation Links */
-  .nav-link {
-    color: #555;
-    padding: 8px 12px;
-    border-radius: 5px;
-    transition: background 0.2s ease-in-out;
-  }
-  
-  .nav-link:hover {
-    background: #f0f0f0;
-    color: #222;
-  }
-  
-  .nav-link.active {
-    background: #ff69b4;
-    color: white !important;
-  }
-  
-  /* Mobile Menu Button */
-  .menu-btn {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 1100;
-  }
-  
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.logo-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ff69b4;
+  letter-spacing: -0.5px;
+}
+
+.logo-subtext {
+  font-size: 12px;
+  color: #888;
+  margin-top: -3px;
+}
+
+/* Sidebar Content */
+.sidebar-content {
+  padding: 15px;
+  overflow-y: auto;
+  height: calc(100vh - 60px);
+}
+
+/* Sidebar Sections */
+.sidebar-section-wrapper {
+  margin-bottom: 15px;
+}
+
+.sidebar-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 15px 0;
+  color: #888;
+}
+
+.section-line {
+  flex-grow: 1;
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.section-text {
+  margin: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Navigation Links */
+.nav-link {
+  display: flex;
+  align-items: center;
+  color: #555;
+  padding: 8px 12px;
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  position: relative;
+}
+
+.nav-link-icon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  color: #888;
+  transition: color 0.2s ease;
+}
+
+.nav-link-text {
+  flex-grow: 1;
+}
+
+.nav-link-arrow {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.nav-link:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.nav-link:hover .nav-link-icon {
+  color: #ff69b4;
+}
+
+.nav-link:hover .nav-link-arrow {
+  opacity: 1;
+}
+
+.nav-link.active {
+  background: #ff69b4;
+  color: white !important;
+}
+
+.nav-link.active .nav-link-icon {
+  color: white;
+}
+
+/* Mobile Menu Button */
+.menu-btn {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1100;
+  background-color: #ff69b4;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
