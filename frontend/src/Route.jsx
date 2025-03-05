@@ -25,6 +25,7 @@ import FaceLogin from "./component/FaceLogin.jsx";
 import Attendance from "./component/Attendance.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
 import CourseDetails from "./component/CourseDetails.jsx";
+import AttendanceChart from "./component/Dashboard/Attendance.jsx";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/attendancechart" element={<AttendanceChart />} />
         <Route path="/facelogin" element={<FaceLogin />} />
         <Route
           path="/assignments/:id"
