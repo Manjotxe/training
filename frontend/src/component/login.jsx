@@ -1,14 +1,27 @@
 import React, { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
-import styles from "../styles/login.module.css"; // Import the CSS Module
+import "../styles/Login.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUserCircle,
+  faEnvelope,
+  faLock,
+  faSignInAlt,
+  faCamera,
+  faEye,
+  faEyeSlash,
+  faTimes,
+} from "@fortawesome/free-solid-svg-icons";
 
-const Login = () => {
+const AuthLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [login, setLogin] = useState(false);
-  const [load, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const submit = async (evt) => {
     evt.preventDefault();
@@ -17,12 +30,10 @@ const Login = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://localhost:5000/login",
+        "http://127.0.0.1:5000/login",
         loginData,
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           withCredentials: true,
         }
       );
@@ -31,8 +42,8 @@ const Login = () => {
       if (resData.success) {
         setLogin(true);
         localStorage.setItem("token", resData.user.success);
-        localStorage.setItem("role", resData.user.role); // Assuming the response contains `username`
-        localStorage.setItem("ID", resData.user.id); // Assuming the response contains `username`
+        localStorage.setItem("role", resData.user.role);
+        localStorage.setItem("ID", resData.user.id);
       } else {
         Swal.fire({
           title: "Login Failed",
@@ -58,41 +69,72 @@ const Login = () => {
       {login ? (
         <Navigate to="/" />
       ) : (
-        <div className={styles.container}>
-          <div className={styles.mainDiv}>
-            <div className={styles.title}>Login Form</div>
-            <form onSubmit={submit}>
-              <div className={styles.inputBox}>
+        <div className="auth-login-container">
+          <div className="auth-login-box">
+            <FontAwesomeIcon
+              icon={faTimes}
+              className="auth-close-icon"
+              onClick={() => navigate("/")}
+              style={{
+                fontSize: "22px",
+                position: "absolute",
+                top: "120px",
+                right: "34%",
+                cursor: "pointer",
+              }}
+            />
+
+            <div className="auth-login-header">
+              <FontAwesomeIcon
+                icon={faUserCircle}
+                className="auth-profile-icon"
+              />
+              <h2>Welcome Back</h2>
+              <p className="auth-subtitle">Please login to your account</p>
+            </div>
+            <form onSubmit={submit} className="auth-login-form">
+              <div className="auth-input-group">
+                <FontAwesomeIcon
+                  icon={faEnvelope}
+                  className="auth-input-icon"
+                />
                 <input
                   type="email"
-                  className="form-control"
+                  placeholder="Email"
+                  required
                   onChange={(e) => setEmail(e.target.value)}
-                  id="email"
-                  placeholder="Enter your email"
-                  required
                 />
               </div>
-              <div className={styles.inputBox}>
+              <div className="auth-input-group">
+                <FontAwesomeIcon icon={faLock} className="auth-input-icon" />
                 <input
-                  type="password"
-                  className="form-control"
-                  onChange={(e) => setPassword(e.target.value)}
-                  id="password"
-                  placeholder="Enter your password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
                   required
+                  onChange={(e) => setPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  className="auth-toggle-password"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                </button>
               </div>
-              <div className={styles.optionDiv}>
-                <div className={styles.checkBox}>
-                  <input type="checkbox" />
-                  <span>Remember me</span>
-                </div>
-                <div className={styles.forgetDiv}>
-                  <a href="#">Forgot password?</a>
-                </div>
-              </div>
-              <div className={styles.inputBox + " " + styles.button}>
-                <input type="submit" value={load ? "Loading..." : "Login"} />
+              <button type="submit" className="auth-login-btn">
+                <FontAwesomeIcon icon={faSignInAlt} />{" "}
+                {loading ? "Loading..." : "Login"}
+              </button>
+              <div className="auth-alternative-login">
+                <Link to="/faceLogin">
+                  <button
+                    type="button"
+                    id="faceLoginBtn"
+                    className="auth-face-login-btn"
+                  >
+                    <FontAwesomeIcon icon={faCamera} /> Login with Face
+                  </button>
+                </Link>
               </div>
             </form>
           </div>
@@ -102,4 +144,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default AuthLogin;

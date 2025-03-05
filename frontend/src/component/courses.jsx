@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -11,13 +11,15 @@ const CourseManagement = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  const [showModal, setShowModal] = useState(false); // State to toggle modal visibility
   const [newCourse, setNewCourse] = useState({
     courseName: "",
     duration: "",
     image: "",
     languages: "",
+    price: "", // Added price field
+    description: "", // Added description field
   });
 
   useEffect(() => {
@@ -34,7 +36,6 @@ const CourseManagement = () => {
     navigate("/");
   };
 
-  // Fetch courses from backend
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -51,13 +52,11 @@ const CourseManagement = () => {
     fetchCourses();
   }, []);
 
-  // Handle input change for new course
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewCourse((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Submit new course to backend
   const handleAddCourse = async (e) => {
     e.preventDefault();
     try {
@@ -66,7 +65,14 @@ const CourseManagement = () => {
         newCourse
       );
       setCourses((prev) => [...prev, response.data]); // Update courses list
-      setNewCourse({ courseName: "", duration: "", image: "", languages: "" }); // Reset form
+      setNewCourse({
+        courseName: "",
+        duration: "",
+        image: "",
+        languages: "",
+        price: "",
+        description: "",
+      }); // Reset form
       setShowModal(false); // Hide modal
     } catch (err) {
       console.error("Error adding course:", err);
@@ -93,6 +99,7 @@ const CourseManagement = () => {
         <main className="container mx-auto px-4 py-12 flex-grow">
           <div className="text-center mb-12">
             <h1 className={styles.courseHeader}>Available Courses</h1>
+            <br></br>
             <button
               className={styles.addCourseButton}
               onClick={() => setShowModal(true)}
@@ -116,6 +123,16 @@ const CourseManagement = () => {
                     <div className={styles.cardDetails}>
                       <p>
                         <span>Languages:</span> {course.languages}
+                      </p>
+                    </div>
+                    <div className={styles.cardDetails}>
+                      <p>
+                        <span>Price:</span> ${course.price}
+                      </p>
+                    </div>
+                    <div className={styles.cardDetails}>
+                      <p>
+                        <span>Description:</span> {course.description}
                       </p>
                     </div>
                   </div>
@@ -177,11 +194,32 @@ const CourseManagement = () => {
                   required
                 />
               </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="price">Price</label>
+                <input
+                  type="number"
+                  id="price"
+                  name="price"
+                  value={newCourse.price}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="description">Description</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={newCourse.description}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
               <div className={styles.modalActions}>
                 <button
                   type="button"
                   className={styles.cancelButton}
-                  onClick={() => setShowModal(false)} // Hide modal
+                  onClick={() => setShowModal(false)}
                 >
                   Cancel
                 </button>

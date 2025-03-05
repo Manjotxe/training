@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import Header from "./Header";
 import "../styles/AddLecture.css";
 
 const AddLecture = () => {
   const [lectures, setLectures] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
   const [newLecture, setNewLecture] = useState({
     title: "",
     startTime: "",
@@ -46,12 +50,24 @@ const AddLecture = () => {
 
     fetchLectures();
   }, [editLecture]); // Re-run when editLecture changes
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewLecture({ ...newLecture, [name]: value });
   };
-
+  //logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    setIsLoggedIn(false);
+    navigate("/");
+  };
   // Handle Add or Update Lecture
   const handleSubmitLecture = async (e) => {
     e.preventDefault();
@@ -125,133 +141,138 @@ const AddLecture = () => {
   };
 
   return (
-    <div className="container-fluid lecture-management">
-      <div className="row">
-        <div className="col-md-4">
-          <div className="card add-lecture-card">
-            <div className="card-body">
-              <h2 className="card-title">
-                {newLecture.id ? "Edit" : "Add"} Lecture
-              </h2>
-              <form onSubmit={handleSubmitLecture}>
-                <div className="mb-3">
-                  <label htmlFor="title" className="form-label">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="title"
-                    name="title"
-                    value={newLecture.title}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="startTime" className="form-label">
-                    Start Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    className="form-control"
-                    id="startTime"
-                    name="startTime"
-                    value={newLecture.startTime}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="endTime" className="form-label">
-                    End Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    className="form-control"
-                    id="endTime"
-                    name="endTime"
-                    value={newLecture.endTime}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="lecturer" className="form-label">
-                    Lecturer URL
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="lecturer"
-                    name="lecturer"
-                    value={newLecture.lecturer}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <button type="submit" className="btn btn-primary">
-                  {newLecture.id ? "Update" : "Add"} Lecture
-                </button>
-              </form>
+    <>
+      <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} />
+      <div className="container-fluid lecture-management">
+        <div className="row">
+          <div className="col-md-4">
+            <div className="card add-lecture-card">
+              <div className="card-body">
+                <h2 className="card-title">
+                  {newLecture.id ? "Edit" : "Add"} Lecture
+                </h2>
+                <form onSubmit={handleSubmitLecture}>
+                  <div className="mb-3">
+                    <label htmlFor="title" className="form-label">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="title"
+                      name="title"
+                      value={newLecture.title}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="startTime" className="form-label">
+                      Start Time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      className="form-control"
+                      id="startTime"
+                      name="startTime"
+                      value={newLecture.startTime}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="endTime" className="form-label">
+                      End Time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      className="form-control"
+                      id="endTime"
+                      name="endTime"
+                      value={newLecture.endTime}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="lecturer" className="form-label">
+                      Lecturer URL
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="lecturer"
+                      name="lecturer"
+                      value={newLecture.lecturer}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-primary">
+                    {newLecture.id ? "Update" : "Add"} Lecture
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="col-md-8">
-          <div className="card lecture-list-card">
-            <div className="card-body">
-              <h2 className="card-title">Lecture List</h2>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                    <th>URL</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lectures.map((lecture) => (
-                    <tr key={lecture.id}>
-                      <td>{lecture.title}</td>
-                      <td>{new Date(lecture.start_time).toLocaleString()}</td>
-                      <td>{new Date(lecture.end_time).toLocaleString()}</td>
-                      <td>
-                        <a
-                          href={
-                            lecture.lecture_url &&
-                            lecture.lecture_url.startsWith("http")
-                              ? lecture.lecture_url
-                              : `https://${lecture.lecture_url}` // Assuming this is a fallback URL
-                          }
-                        >
-                          {lecture.lecture_url}
-                        </a>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-outline-primary me-2"
-                          onClick={() => handleEditLecture(lecture.id)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDeleteLecture(lecture.id)}
-                        >
-                          Delete
-                        </button>
-                      </td>
+          <div className="col-md-8">
+            <div className="card lecture-list-card">
+              <div className="card-body">
+                <h2 className="card-title">Lecture List</h2>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Start Time</th>
+                      <th>End Time</th>
+                      <th>URL</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {lectures.map((lecture) => (
+                      <tr key={lecture.id}>
+                        <td>{lecture.title}</td>
+                        <td>{new Date(lecture.start_time).toLocaleString()}</td>
+                        <td>{new Date(lecture.end_time).toLocaleString()}</td>
+                        <td>
+                          <a
+                            href={
+                              lecture.lecture_url &&
+                              lecture.lecture_url.startsWith("http")
+                                ? lecture.lecture_url
+                                : `https://${lecture.lecture_url}` // Assuming this is a fallback URL
+                            }
+                          >
+                            {lecture.lecture_url}
+                          </a>
+                        </td>
+                        <td>
+                          <button
+                            className="btn btn-sm btn-outline-primary me-2"
+                            onClick={() => handleEditLecture(lecture.id)}
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            className="btn btn-sm btn-outline-danger btn-outline-primary me-2"
+                            style={{ marginTop: "5px", padding: "9px" }}
+                            onClick={() => handleDeleteLecture(lecture.id)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
