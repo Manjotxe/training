@@ -857,9 +857,14 @@ app.get("/api/attendance", (req, res) => {
     // Calculate Current Year Attendance Percentage
     const currentYearResponse = {
       name: currentYear.toString(),
-      presentPercent: totalStudents > 0 ? ((currentYearAttendance.present / (currentYearAttendance.totalDays * totalStudents)) * 100).toFixed(2) : "0.00",
-      absentPercent: totalStudents > 0 ? (100 - ((currentYearAttendance.present / (currentYearAttendance.totalDays * totalStudents)) * 100)).toFixed(2) : "0.00",
+      presentPercent: currentYearAttendance.totalDays > 0
+        ? ((currentYearAttendance.present / (totalStudents * currentYearAttendance.totalDays)) * 100).toFixed(2)
+        : "0.00",
+      absentPercent: currentYearAttendance.totalDays > 0
+        ? (100 - ((currentYearAttendance.present / (totalStudents * currentYearAttendance.totalDays)) * 100)).toFixed(2)
+        : "0.00",
     };
+    
 
     res.json({
       monthlyData: monthlyResponse,
