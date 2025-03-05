@@ -19,15 +19,12 @@ const AttendanceChart = ({ view, chartType = 'default' }) => {
         }
         const result = await response.json();
         
-        // Ensure the data is formatted correctly
-        const formattedData = result.map(item => ({
-          name: item.date || item.month,  // Adjust based on API response
-          present: item.present || 0,
-          absent: item.absent || 0,
-          attendanceRate: item.attendanceRate || 0,
-          targetRate: item.targetRate || 100
-        }));
-
+        // Selecting correct dataset based on the view prop
+        let formattedData = view === 'monthly' ? result.monthlyData : result.yearlyData;
+        
+        // Sorting data in increasing order of year
+        formattedData = formattedData.sort((a, b) => a.year - b.year);
+        
         setData(formattedData);
         setLoading(false);
       } catch (error) {
@@ -37,7 +34,7 @@ const AttendanceChart = ({ view, chartType = 'default' }) => {
     };
 
     fetchAttendanceData();
-  }, []);
+  }, [view]);
 
   const chartVariants = {
     hidden: { opacity: 0 },
