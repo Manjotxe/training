@@ -142,7 +142,7 @@ const StudentCourseGenderChart = () => {
               <h2>
                 {view === "course"
                   ? "Student Distribution by Course"
-                  : "Gender Distribution"}
+                  : "Gender Distribution of Students"}
               </h2>
               <div className="btn-group chart-toggle">
                 <button
