@@ -1,132 +1,324 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
-import { MessageCircle, Send, Users } from "lucide-react";
+import {
+  MessageCircle,
+  Send,
+  Users,
+  Mail,
+  MessageSquare,
+  Search,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import styles from "../styles/AdminChatApp.module.css";
 
-const socket = io("http://localhost:5002"); // Connect to Socket.io server
+// Move socket connection outside component to prevent recreation
+const socket = io("http://localhost:5002");
 
 export default function AdminChat() {
   const [students, setStudents] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(0);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const adminId = 3; // Admin ID is fixed as 3
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const [isGroupChat, setIsGroupChat] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const adminId = 3;
 
-  // Fetch students from backend
+  // Use refs to access latest state in socket callbacks
+  const selectedStudentRef = useRef(selectedStudent);
+  const isGroupChatRef = useRef(isGroupChat);
+  const messagesRef = useRef(messages);
+
+  // Update refs when state changes
+  useEffect(() => {
+    selectedStudentRef.current = selectedStudent;
+    isGroupChatRef.current = isGroupChat;
+    messagesRef.current = messages;
+  }, [selectedStudent, isGroupChat, messages]);
+
+  // Initial setup - fetch students and register socket
   useEffect(() => {
     socket.emit("register-user", adminId);
+
     axios
       .get("http://localhost:5002/students")
       .then((res) => setStudents(res.data))
       .catch((err) => console.error("Error fetching students:", err));
-  }, []);
-
-  // Listen for incoming messages
-  useEffect(() => {
-    socket.on("receive-message", (message) => {
-      if (
-        message.receiver_id === null || // Show broadcast messages to everyone
-        (message.sender_id === selectedStudent &&
-          message.receiver_id === adminId) ||
-        (message.sender_id === adminId &&
-          message.receiver_id === selectedStudent)
-      ) {
-        setMessages((prev) => [...prev, message]);
-      }
-    });
-
-    return () => {
-      socket.off("receive-message");
-    };
-  }, [selectedStudent]);
-
-  // Fetch chat history when a student is selected
-  useEffect(() => {
-    if (!selectedStudent) return;
 
     axios
-      .get(`http://localhost:5002/chat/${selectedStudent}/${adminId}`)
-      .then((res) => setMessages(res.data))
-      .catch((err) => console.error("Error fetching messages:", err));
-  }, [selectedStudent]);
+      .get(`http://localhost:5002/unread-messages/${adminId}`)
+      .then((res) => {
+        const counts = {};
+        res.data.forEach(({ sender_id, unread_count }) => {
+          counts[sender_id] = unread_count;
+        });
+        setUnreadCounts(counts);
+      })
+      .catch((err) => console.error("Error fetching unread counts:", err));
+
+    // Socket listeners
+    const handleReceiveMessage = (message) => {
+      console.log("Received message:", message);
+      if (
+        message.receiver_id === null ||
+        (message.sender_id === selectedStudentRef.current &&
+          message.receiver_id === adminId) ||
+        (message.sender_id === adminId &&
+          message.receiver_id === selectedStudentRef.current)
+      ) {
+        setMessages((prev) => [...prev, message]);
+      } else {
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [message.sender_id]: (prev[message.sender_id] || 0) + 1,
+        }));
+      }
+    };
+
+    const handleGroupMessage = (message) => {
+      console.log("Received group message:", message);
+      if (isGroupChatRef.current) {
+        setMessages((prev) => [...prev, message]);
+      }
+    };
+
+    // Set up socket listeners
+    socket.on("receive-message", handleReceiveMessage);
+    socket.on("receive-group-message", handleGroupMessage);
+
+    // Cleanup socket listeners
+    return () => {
+      socket.off("receive-message", handleReceiveMessage);
+      socket.off("receive-group-message", handleGroupMessage);
+    };
+  }, []); // Empty dependency array - only run once
+
+  // Fetch chat history when switching conversations
+  useEffect(() => {
+    if (isGroupChat) {
+      axios
+        .get("http://localhost:5002/group-chat")
+        .then((res) => setMessages(res.data))
+        .catch((err) => console.error("Error fetching group messages:", err));
+    } else if (selectedStudent) {
+      axios
+        .get(`http://localhost:5002/chat/${selectedStudent}/${adminId}`)
+        .then((res) => setMessages(res.data))
+        .catch((err) => console.error("Error fetching messages:", err));
+
+      axios
+        .post("http://localhost:5002/mark-as-read", {
+          adminId,
+          studentId: selectedStudent,
+        })
+        .then(() => {
+          setUnreadCounts((prev) => ({ ...prev, [selectedStudent]: 0 }));
+        })
+        .catch((err) => console.error("Error marking messages as read:", err));
+    }
+  }, [selectedStudent, isGroupChat]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const messageData = {
-      sender_id: adminId,
-      receiver_id: selectedStudent === 0 ? null : selectedStudent, // Use null for broadcast
-      message: input,
+    const messageData = isGroupChat
+      ? { sender_id: adminId, message: input }
+      : {
+          sender_id: adminId,
+          receiver_id: selectedStudent === 0 ? null : selectedStudent,
+          message: input,
+        };
+
+    // Add message to UI immediately
+    const optimisticMessage = {
+      ...messageData,
+      sender_name: "Admin", // Add any other necessary fields
     };
 
-    setMessages((prev) => [...prev, messageData]);
-    socket.emit("send-message", messageData);
+    if (isGroupChat) {
+      socket.emit("send-group-message", messageData);
+    } else {
+      socket.emit("send-message", messageData);
+    }
     setInput("");
   };
 
   return (
-    <div className={styles.chatContainer}>
-      {/* Sidebar for student list */}
-      <div className={styles.sidebar}>
-        <Link to="/" className="btn btn-outline-primary">
-          Back to Home
-        </Link>
-        <h2 className={styles.sidebarTitle}>
-          <Users /> Students
-        </h2>
-        <button
-          className={`${styles.studentButton} ${
-            selectedStudent === 0 ? styles.selected : ""
-          }`}
-          onClick={() => {
-            setSelectedStudent(0); // 0 represents broadcast mode
-            setMessages([]);
-          }}
-        >
-          Send to All
-        </button>
+    <div className={`${styles.chatContainer} container-fluid p-0`}>
+      {/* Sidebar */}
+      <div className={`${styles.sidebar} bg-white`}>
+        <div className="p-3 border-bottom">
+          <Link to="/" className="btn btn-outline-primary btn-sm mb-3 w-100">
+            ← Back to Home
+          </Link>
+          <div className={`${styles.searchWrapper} position-relative`}>
+            <Search className={styles.searchIcon} />
+            <input
+              type="text"
+              placeholder="Search students..."
+              className="form-control form-control-sm pl-4"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
 
-        {students.map((student) => (
+        <div className={`${styles.sidebarContent} p-3`}>
           <button
-            key={student.id}
             className={`${styles.studentButton} ${
-              selectedStudent === student.id ? styles.selected : ""
-            }`}
-            onClick={() => setSelectedStudent(student.id)}
+              selectedStudent === 0 ? styles.selected : ""
+            } w-100 mb-2`}
+            onClick={() => {
+              setSelectedStudent(0);
+              setIsGroupChat(false);
+              setMessages([]);
+            }}
           >
-            {student.name}
+            <Users className="me-2" />
+            Send to All
           </button>
-        ))}
+
+          <button
+            className={`${styles.studentButton} ${
+              isGroupChat ? styles.selected : ""
+            } w-100 mb-2`}
+            onClick={() => {
+              setIsGroupChat(true);
+              setSelectedStudent(null);
+            }}
+          >
+            <MessageSquare className="me-2" />
+            Group Chat
+          </button>
+
+          <h6 className="text-uppercase text-muted small fw-bold mt-4 mb-3">
+            Students
+          </h6>
+
+          {students
+            .filter((student) =>
+              student.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map((student) => (
+              <button
+                key={student.id}
+                className={`${styles.studentButton} ${
+                  selectedStudent === student.id ? styles.selected : ""
+                } w-100 mb-2`}
+                onClick={() => {
+                  setSelectedStudent(student.id);
+                  setIsGroupChat(false);
+                }}
+              >
+                <div className={styles.studentInfo}>
+                  <div className={styles.avatarCircle}>
+                    {student.name.charAt(0)}
+                  </div>
+                  <span>{student.name}</span>
+                </div>
+                {unreadCounts[student.id] > 0 && (
+                  <span className={`${styles.unreadBadge} badge bg-danger`}>
+                    {unreadCounts[student.id]}
+                  </span>
+                )}
+              </button>
+            ))}
+        </div>
       </div>
 
-      {/* Chat Section */}
+      {/* Chat Area */}
       <div className={styles.chatMain}>
-        <h1 className={styles.chatHeader}>
-          <MessageCircle />{" "}
-          {selectedStudent
-            ? `Message ${students.find((s) => s.id === selectedStudent)?.name}`
-            : "Select a student to message"}
-        </h1>
-        <div className={styles.chatBox}>
+        {/* Chat Header */}
+        <div className={`${styles.chatHeader} border-bottom bg-white`}>
+          {isGroupChat || selectedStudent ? (
+            <div className="d-flex align-items-center">
+              <div className={styles.headerAvatar}>
+                {isGroupChat ? (
+                  <MessageSquare />
+                ) : (
+                  students.find((s) => s.id === selectedStudent)?.name.charAt(0)
+                )}
+              </div>
+              <div>
+                <h5 className="mb-0">
+                  {isGroupChat
+                    ? "Group Chat"
+                    : selectedStudent === 0
+                    ? "All Students"
+                    : students.find((s) => s.id === selectedStudent)?.name}
+                </h5>
+                <small className="text-muted">
+                  {isGroupChat
+                    ? `${students.length} participants`
+                    : selectedStudent === 0
+                    ? `${students.length} students`
+                    : "Direct Message"}
+                </small>
+              </div>
+            </div>
+          ) : (
+            <div className="d-flex align-items-center">
+              <div className={styles.headerAvatar}>
+                {selectedStudent == 0 ? (
+                  <Mail />
+                ) : (
+                  students.find((s) => s.id === selectedStudent)?.name.charAt(0)
+                )}
+              </div>
+              <div>
+                <h5 className="mb-0">
+                  {isGroupChat
+                    ? "Group Chat"
+                    : selectedStudent === 0
+                    ? "Message Everyone Personally"
+                    : students.find((s) => s.id === selectedStudent)?.name}
+                </h5>
+                <small className="text-muted">
+                  {isGroupChat
+                    ? `${students.length} participants`
+                    : selectedStudent === 0
+                    ? `${students.length} students`
+                    : "Direct Message"}
+                </small>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Messages Area */}
+        <div className={styles.messagesContainer}>
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`${styles.message} ${
-                msg.sender_id === adminId ? styles.userMessage : styles.message
+              className={`${styles.messageWrapper} ${
+                msg.sender_id === adminId ? styles.sent : styles.received
               }`}
             >
-              {msg.message}
+              <div
+                className={`${styles.message} ${
+                  msg.sender_id === adminId ? styles.userMessage : ""
+                }`}
+              >
+                {isGroupChat && msg.sender_id !== adminId && (
+                  <div className={styles.senderName}>{msg.sender_name}</div>
+                )}
+                {msg.message}
+              </div>
             </div>
           ))}
         </div>
-        <div className={styles.inputContainer}>
+
+        {/* Input Area */}
+        <div className={`${styles.inputContainer} bg-white border-top`}>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && sendMessage()}
             placeholder={
-              selectedStudent !== null
+              isGroupChat
+                ? "Message the group"
+                : selectedStudent !== null
                 ? selectedStudent === 0
                   ? "Message All Students"
                   : `Message ${
@@ -134,13 +326,13 @@ export default function AdminChat() {
                     }`
                 : "Select a student to message"
             }
-            className={styles.inputField}
-            disabled={selectedStudent === null} // Only disable when no selection is made
+            className="form-control"
+            disabled={selectedStudent === null && !isGroupChat}
           />
           <button
             onClick={sendMessage}
-            className={styles.sendButton}
-            disabled={selectedStudent === null} // Allow for broadcast mode
+            className={`${styles.sendButton} btn btn-primary`}
+            disabled={selectedStudent === null && !isGroupChat}
           >
             <Send className={styles.sendIcon} />
           </button>

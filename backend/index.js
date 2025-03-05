@@ -18,6 +18,7 @@ const multer = require("multer");
 const path = require("path");
 const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
+const axios = require("axios");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
 const { sendBillEmail } = require("./emailTemplates/SendBill");
 const {
@@ -167,32 +168,42 @@ app.get("/api/courses/main", (req, res) => {
   });
 });
 app.post("/api/courses", (req, res) => {
-  const { courseName, duration, image, languages } = req.body;
+  const { courseName, duration, image, languages, price, description } =
+    req.body;
 
-  if (!courseName || !duration || !languages) {
+  if (!courseName || !duration || !languages || !price || !description) {
     return res.status(400).send("All fields are required.");
   } 
 
   const query =
-    "INSERT INTO course (courseName, duration, image, languages) VALUES (?, ?, ?, ?)";
-  pool.query(query, [courseName, duration, image, languages], (err, result) => {
-    if (err) {
-      console.error("Error adding course:", err);
-      res.status(500).send("Failed to add course.");
-    } else {
-      const newCourse = {
-        id: result.insertId,
-        courseName,
-        duration,
-        image,
-        languages,
-      };
-      res.status(201).json(newCourse);
+    "INSERT INTO course (courseName, duration, image, languages, price, description) VALUES (?, ?, ?, ?, ?, ?)";
+
+  pool.query(
+    query,
+    [courseName, duration, image, languages, price, description],
+    (err, result) => {
+      if (err) {
+        console.error("Error adding course:", err);
+        res.status(500).send("Failed to add course.");
+      } else {
+        const newCourse = {
+          id: result.insertId,
+          courseName,
+          duration,
+          image,
+          languages,
+          price,
+          description,
+        };
+        res.status(201).json(newCourse);
+      }
     }
-  });
+  );
 });
+
 app.get("/api/courses", (req, res) => {
-  const query = "SELECT course_id, courseName, duration, languages FROM course";
+  const query =
+    "SELECT course_id, courseName, duration, languages, price, description FROM course";
 
   pool.execute(query, (err, results) => {
     if (err) {
@@ -211,7 +222,7 @@ app.post("/api/admissions", (req, res) => {
     profession,
     nationality,
     maritalStatus,
-    sex,
+    sex, // Gender from admission_form
     address,
     city,
     pinCode,
@@ -219,106 +230,97 @@ app.post("/api/admissions", (req, res) => {
     email,
     schoolX,
     schoolXII,
-    courseName,
+    courseName, // Course Name instead of ID
     admissionDate,
     signature,
     photo,
   } = req.body;
 
-  // Generate a 10-character random password
   const randomPassword = crypto.randomBytes(4).toString("hex").slice(0, 8);
 
-  // First, get the course_id based on courseName
-  const getCourseIdQuery = `SELECT course_id FROM course WHERE courseName = ?`;
+  const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, courseName, admissionDate, signature, photo) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  pool.query(getCourseIdQuery, [courseName], (err, result) => {
+  const values = [
+    name,
+    dob,
+    fatherName,
+    motherName,
+    profession,
+    nationality,
+    maritalStatus,
+    sex,
+    address,
+    city,
+    pinCode,
+    phoneNumber,
+    email,
+    randomPassword,
+    schoolX,
+    schoolXII,
+    courseName, // Storing Course Name instead of Course ID
+    admissionDate,
+    signature,
+    photo,
+  ];
+
+  pool.query(query, values, (err, result) => {
     if (err) {
-      console.error("Error fetching course_id:", err);
-      res.status(500).json({ error: "Failed to fetch course_id" });
-      return;
+      console.error("Error inserting data:", err);
+      return res.status(500).json({ error: "Failed to save admission data" });
     }
 
-    if (result.length === 0) {
-      res.status(404).json({ error: "Course not found" });
-      return;
-    }
+    const studentId = result.insertId;
 
-    const courseId = result[0].course_id;
+    axios
+      .get(`https://api.postalpincode.in/pincode/${pinCode}`)
+      .then((response) => {
+        const postOfficeData = response.data[0]?.PostOffice?.[0];
+        if (!postOfficeData) {
+          return res.status(400).json({ error: "Invalid Pincode" });
+        }
 
-    // Now, proceed with the insertion into the admission_form table
-    const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, course_id,courseName, admissionDate, signature, photo) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const realAddress = postOfficeData.Name;
+        const district = postOfficeData.District;
+        const location = `${realAddress}, ${district}`;
 
-    const values = [
-      name,
-      dob,
-      fatherName,
-      motherName,
-      profession,
-      nationality,
-      maritalStatus,
-      sex,
-      address,
-      city,
-      pinCode,
-      phoneNumber,
-      email,
-      randomPassword, // Add generated password here
-      schoolX,
-      schoolXII,
-      courseId,
-      courseName,
-      admissionDate,
-      signature,
-      photo,
-    ];
+        // **UPDATED QUERY: Storing courseName instead of course_id**
+        const addressQuery = `INSERT INTO student_data (student_id, location, course, gender) VALUES (?, ?, ?, ?)`;
 
-    pool.query(query, values, (err, result) => {
-      if (err) {
-        console.error("Error inserting data:", err);
-        res.status(500).json({ error: "Failed to save admission data" });
-        return;
-      }
+        pool.query(
+          addressQuery,
+          [studentId, location, courseName, sex],
+          (err) => {
+            if (err) {
+              console.error("Error inserting student data:", err);
+              return res
+                .status(500)
+                .json({ error: "Failed to save student data" });
+            }
 
-      // Send email to the user using the email service module
-      sendAdmissionConfirmationEmail(name, email, courseName, randomPassword)
-        .then(() => {
-          console.log("Email sent successfully to user.");
-        })
-        .catch((error) => {
-          console.error("Error sending email to user:", error);
-        });
-      // Send admission details to the admin
-      sendAdmissionDetailsToAdmin({
-        name,
-        dob,
-        fatherName,
-        motherName,
-        profession,
-        nationality,
-        maritalStatus,
-        sex,
-        address,
-        city,
-        pinCode,
-        phoneNumber,
-        email,
-        schoolX,
-        schoolXII,
-        courseName,
-        admissionDate,
-        signature,
-        photo,
-        password: randomPassword,
+            sendAdmissionConfirmationEmail(
+              name,
+              email,
+              courseName,
+              randomPassword
+            );
+
+            res.status(201).json({
+              message: "Admission Successful",
+              password: randomPassword,
+            });
+          }
+        );
+      })
+      .catch((error) => {
+        console.error("Error fetching address:", error);
+        return res
+          .status(500)
+          .json({ error: "Failed to fetch address details" });
       });
-
-      res.status(201).json({
-        message: "Admission Successful",
-        password: randomPassword, // Return the generated password for reference if needed
-      });
-    });
   });
 });
+
 //for display the users
 app.get("/users", (req, res) => {
   const search = req.query.search || ""; // Default to an empty string if search is not provided
@@ -659,6 +661,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
       pool.query(
         notificationSql,
         [
+          null,
           fileData?.file_name || null,
           fileData?.file_path || null,
           fileData?.file_type || null,
@@ -701,6 +704,60 @@ app.get("/notifications", (req, res) => {
     }
     res.status(200).json(results);
   });
+});
+//Route to get the course details with course id
+app.get("/coursebyid/:course_id", (req, res) => {
+  const courseId = req.params.course_id;
+  const sql = "SELECT * FROM course WHERE course_id = ?";
+
+  pool.query(sql, [courseId], (err, result) => {
+    if (err) {
+      console.error("Error fetching course details:", err);
+      return res.status(500).json({ error: "Database query failed" });
+    }
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+    res.json(result[0]); // Send first course object
+  });
+});
+
+// API to get student count by location
+app.get("/students/location", async (req, res) => {
+  try {
+    const query = `
+          SELECT location, COUNT(*) as student_count 
+          FROM student_data 
+          GROUP BY location
+          ORDER BY student_count DESC
+      `;
+    const [rows] = await pool.promise().query(query); // Use .promise() here
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching student locations:", error.message);
+    res.status(500).json({ error: error.message }); // Send actual error message
+  }
+});
+app.get("/students/courses", async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+          course,
+          COUNT(*) as total_students,
+          SUM(CASE WHEN gender = 'Male' THEN 1 ELSE 0 END) as male_students,
+          SUM(CASE WHEN gender = 'Female' THEN 1 ELSE 0 END) as female_students,
+          SUM(CASE WHEN gender NOT IN ('Male', 'Female') THEN 1 ELSE 0 END) as other_students
+      FROM student_data
+      GROUP BY course
+      ORDER BY total_students DESC;
+    `;
+
+    const [rows] = await pool.promise().query(query);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching student courses:", error.message);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Start the server

@@ -17,8 +17,14 @@ import PrivateRoute from "./component/PrivateRoute.jsx";
 import Lectures from "./component/Lectures.jsx";
 import AddLecture from "./component/AddLecture.jsx";
 import Chat from "./component/ChatApp.jsx";
+import StudentLocationChart from "./component/StudentLocationChart.jsx";
 import AdminChat from "./component/AdminChatApp.jsx";
+import AttendanceDetail from "./component/AttendanceDetail.jsx";
+import StudentCourseGenderChart from "./component/StudentCourseGenderChart.jsx";
+import FaceLogin from "./component/FaceLogin.jsx";
+import Attendance from "./component/Attendance.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
+import CourseDetails from "./component/CourseDetails.jsx";
 
 function App() {
   return (
@@ -26,6 +32,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/facelogin" element={<FaceLogin />} />
         <Route
           path="/assignments/:id"
           element={
@@ -55,6 +62,38 @@ function App() {
           }
         />
         <Route
+          path="/record"
+          element={
+            <PrivateRoute>
+              <StudentLocationChart />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/course-record"
+          element={
+            <PrivateRoute>
+              <StudentCourseGenderChart />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/attendancedetial/:studentId"
+          element={
+            <PrivateRoute>
+              <AttendanceDetail />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/attendance"
+          element={
+            <PrivateRoute>
+              <Attendance />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/profile/:id"
           element={
             localStorage.getItem("role") ? (
@@ -64,7 +103,14 @@ function App() {
             )
           }
         />
-        <Route path="/canvas" element={<CanvasComponent />} />
+        <Route
+          path="/canvas"
+          element={
+            <PrivateRoute>
+              <CanvasComponent />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/admission"
           element={
@@ -115,6 +161,7 @@ function App() {
             )
           }
         />
+        <Route path="/coursedetails/:course_id" element={<CourseDetails />} />
       </Routes>
     </Router>
   );

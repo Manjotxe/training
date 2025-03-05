@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { io } from "socket.io-client";
-import axios from "axios"; // Import axios for API requests
+import axios from "axios";
 import styles from "../styles/ChatApp.module.css";
 
 const socket = io("http://localhost:5002");
@@ -11,95 +11,156 @@ export default function ChatApp() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [userId, setUserId] = useState(null);
-  const receiverId = 3; // Admin ID is fixed as 3
+  const [isGroupChat, setIsGroupChat] = useState(false);
+  const receiverId = 3;
 
-  // Fetch chat history on component mount
+  // All existing useEffect hooks and functions remain the same
   useEffect(() => {
     const storedUserId = localStorage.getItem("ID");
     if (storedUserId) {
       setUserId(parseInt(storedUserId));
-      socket.emit("register-user", storedUserId); // Send user ID to backend
+      socket.emit("register-user", storedUserId);
     }
 
     const fetchMessages = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5002/chat/${storedUserId}/${receiverId}`
-        );
+        const url = isGroupChat
+          ? "http://localhost:5002/group-chat"
+          : `http://localhost:5002/chat/${storedUserId}/${receiverId}`;
+
+        const res = await axios.get(url);
         setMessages(res.data);
       } catch (error) {
         console.error("Error fetching messages:", error);
       }
     };
+
     fetchMessages();
-  }, []);
+  }, [isGroupChat]);
 
   useEffect(() => {
     socket.on("receive-message", (newMessage) => {
       if (
-        newMessage.receiver_id === userId ||
-        newMessage.receiver_id === null
+        (newMessage.receiver_id === userId && !isGroupChat) ||
+        (newMessage.receiver_id === null && !isGroupChat)
       ) {
-        // Only update if message is meant for this user
         setMessages((prevMessages) => [...prevMessages, newMessage]);
+      }
+    });
+
+    socket.on("receive-group-message", (message) => {
+      if (isGroupChat) {
+        setMessages((prev) => [...prev, message]);
       }
     });
 
     return () => {
       socket.off("receive-message");
+      socket.off("receive-group-message");
     };
-  }, [userId]);
+  }, [userId, isGroupChat]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const newMessage = {
-      message: input,
-      sender_id: userId,
-      receiver_id: receiverId,
-    };
-    setMessages((prev) => [...prev, newMessage]);
-    socket.emit("send-message", newMessage);
+    const newMessage = isGroupChat
+      ? { sender_id: userId, message: input }
+      : { message: input, sender_id: userId, receiver_id: receiverId };
+
+    if (isGroupChat) {
+      socket.emit("send-group-message", newMessage);
+    } else {
+      socket.emit("send-message", newMessage);
+      setMessages((prev) => [...prev, newMessage]);
+    }
 
     setInput("");
   };
 
   return (
-    <div className={styles.chatContainer}>
-      <div className={styles.headerContainer}>
-        <Link to="/" className="btn btn-outline-primary">
-          Back to Home
-        </Link>
-        <h1 className={styles.chatHeader}>
-          <MessageCircle /> Chat with Teacher
-        </h1>
-      </div>
-
-      <div className={styles.chatWindow}>
-        <div className={styles.messageList}>
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`${styles.message} ${
-                msg.sender_id === userId ? styles.userMessage : styles.message
-              }`}
-            >
-              {msg.message}
+    <div className="container-fluid p-0">
+      <div className="row g-0 h-100vh">
+        <div className="col">
+          <div className={`${styles.chatContainer} d-flex flex-column h-100`}>
+            {/* Chat Header */}
+            <div className={`${styles.headerBox} bg-white border-bottom`}>
+              <div className="d-flex align-items-center justify-content-between p-3">
+                <Link to="/" className="btn btn-outline-primary btn-sm">
+                  ← Back to Home
+                </Link>
+                <div className="d-flex align-items-center">
+                  <div className={styles.headerAvatar}>
+                    {isGroupChat ? (
+                      <Users size={20} />
+                    ) : (
+                      <MessageCircle size={20} />
+                    )}
+                  </div>
+                  <h5 className="mb-0 ms-2">
+                    {isGroupChat ? "Group Chat" : "Chat with Teacher"}
+                  </h5>
+                </div>
+                <button
+                  className={`btn ${
+                    isGroupChat ? "btn-primary" : "btn-outline-primary"
+                  } btn-sm`}
+                  onClick={() => setIsGroupChat(!isGroupChat)}
+                >
+                  <Users size={16} className="me-1" />
+                  {isGroupChat ? "Switch to Private" : "Switch to Group"}
+                </button>
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      <div className={styles.inputContainer}>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type a message..."
-          className={styles.inputField}
-        />
-        <button onClick={sendMessage} className={styles.sendButton}>
-          <Send className="w-5 h-5" />
-        </button>
+            {/* Messages Area */}
+            <div className={`${styles.messagesContainer} flex-grow-1 bg-light`}>
+              <div className={styles.messagesList}>
+                {messages.map((msg, index) => (
+                  <div
+                    key={index}
+                    className={`${styles.messageWrapper} ${
+                      msg.sender_id === userId ? styles.sent : styles.received
+                    }`}
+                  >
+                    <div
+                      className={`${styles.message} ${
+                        msg.sender_id === userId ? styles.userMessage : ""
+                      }`}
+                    >
+                      {isGroupChat && msg.sender_id !== userId && (
+                        <div className={styles.senderName}>
+                          {msg.sender_name}
+                        </div>
+                      )}
+                      {msg.message}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Input Area */}
+            <div className={`${styles.inputContainer} bg-white border-top`}>
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                placeholder={
+                  isGroupChat
+                    ? "Message the group..."
+                    : "Message your teacher..."
+                }
+                className="form-control"
+              />
+              <button
+                onClick={sendMessage}
+                className={`${styles.sendButton} btn btn-primary`}
+              >
+                <Send size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
