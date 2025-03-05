@@ -779,6 +779,7 @@ app.get("/api/attendance", (req, res) => {
     let monthlyAttendance = {};
     let yearlyAttendance = {};
     let totalStudents = results.length; // Total number of students
+    let currentYearAttendance = { present: 0, totalDays: 0 };
 
     results.forEach((row) => {
       const attendanceData = JSON.parse(row.attendance_data);
@@ -808,6 +809,14 @@ app.get("/api/attendance", (req, res) => {
           yearlyAttendance[year].totalDays += 1;
           if (status === "Present") {
             yearlyAttendance[year].present += 1;
+          }
+        }
+
+        // Process Current Year Attendance
+        if (year === currentYear) {
+          currentYearAttendance.totalDays += 1;
+          if (status === "Present") {
+            currentYearAttendance.present += 1;
           }
         }
       }
@@ -845,13 +854,20 @@ app.get("/api/attendance", (req, res) => {
       }
     });
 
+    // Calculate Current Year Attendance Percentage
+    const currentYearResponse = {
+      name: currentYear.toString(),
+      presentPercent: totalStudents > 0 ? ((currentYearAttendance.present / (currentYearAttendance.totalDays * totalStudents)) * 100).toFixed(2) : "0.00",
+      absentPercent: totalStudents > 0 ? (100 - ((currentYearAttendance.present / (currentYearAttendance.totalDays * totalStudents)) * 100)).toFixed(2) : "0.00",
+    };
+
     res.json({
       monthlyData: monthlyResponse,
       yearlyData: yearlyResponse,
+      currentYearData: currentYearResponse,
     });
   });
 });
-
 
 
 
