@@ -6,6 +6,7 @@ const {
   updateLecture,
   deleteLecture,
 } = require("./lectures"); // Import the functions
+const { format, eachDayOfInterval, parseISO } = require("date-fns");
 const inquiryRoute = require("./inquiry");
 require("./chat");
 const express = require("express");
@@ -18,6 +19,7 @@ const multer = require("multer");
 const path = require("path");
 const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
+const moment = require("moment");
 const axios = require("axios");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
 const { sendBillEmail } = require("./emailTemplates/SendBill");
@@ -173,7 +175,7 @@ app.post("/api/courses", (req, res) => {
 
   if (!courseName || !duration || !languages || !price || !description) {
     return res.status(400).send("All fields are required.");
-  } 
+  }
 
   const query =
     "INSERT INTO course (courseName, duration, image, languages, price, description) VALUES (?, ?, ?, ?, ?, ?)";
@@ -760,9 +762,7 @@ app.get("/students/courses", async (req, res) => {
   }
 });
 
-
-
-// for charts data 
+// for charts data
 
 // Fetch Attendance Data API
 app.get("/api/attendance", (req, res) => {
@@ -794,17 +794,31 @@ app.get("/api/attendance", (req, res) => {
 
         // Process Monthly Data
         if (!monthlyAttendance[yearMonth]) {
-          const totalDaysInMonth = new Date(dateObj.getFullYear(), dateObj.getMonth() + 1, 0).getDate();
-          monthlyAttendance[yearMonth] = { name: monthName, year: year, present: 0, totalDays: totalDaysInMonth };
+          const totalDaysInMonth = new Date(
+            dateObj.getFullYear(),
+            dateObj.getMonth() + 1,
+            0
+          ).getDate();
+          monthlyAttendance[yearMonth] = {
+            name: monthName,
+            year: year,
+            present: 0,
+            totalDays: totalDaysInMonth,
+          };
         }
         if (status === "Present") {
           monthlyAttendance[yearMonth].present += 1;
         }
 
         // Process Yearly Data
-        if (lastFiveYears.includes(year)) { // Include only last 5 years
+        if (lastFiveYears.includes(year)) {
+          // Include only last 5 years
           if (!yearlyAttendance[year]) {
-            yearlyAttendance[year] = { name: year.toString(), present: 0, totalDays: 0 };
+            yearlyAttendance[year] = {
+              name: year.toString(),
+              present: 0,
+              totalDays: 0,
+            };
           }
           yearlyAttendance[year].totalDays += 1;
           if (status === "Present") {
@@ -824,8 +838,15 @@ app.get("/api/attendance", (req, res) => {
 
     // Format Monthly Attendance Response
     const monthlyResponse = Object.values(monthlyAttendance).map((month) => {
-      const avgPresent = totalStudents > 0 ? (month.present / totalStudents).toFixed(2) : "0.00";
-      const avgAbsent = totalStudents > 0 ? ((month.totalDays * totalStudents - month.present) / totalStudents).toFixed(2) : "0.00";
+      const avgPresent =
+        totalStudents > 0 ? (month.present / totalStudents).toFixed(2) : "0.00";
+      const avgAbsent =
+        totalStudents > 0
+          ? (
+              (month.totalDays * totalStudents - month.present) /
+              totalStudents
+            ).toFixed(2)
+          : "0.00";
 
       return {
         name: month.name,
@@ -837,8 +858,18 @@ app.get("/api/attendance", (req, res) => {
     // Format Yearly Attendance Response (Only for the last 5 years)
     const yearlyResponse = lastFiveYears.map((year) => {
       if (yearlyAttendance[year]) {
-        const avgPresent = totalStudents > 0 ? (yearlyAttendance[year].present / totalStudents).toFixed(2) : "0.00";
-        const avgAbsent = totalStudents > 0 ? ((yearlyAttendance[year].totalDays * totalStudents - yearlyAttendance[year].present) / totalStudents).toFixed(2) : "0.00";
+        const avgPresent =
+          totalStudents > 0
+            ? (yearlyAttendance[year].present / totalStudents).toFixed(2)
+            : "0.00";
+        const avgAbsent =
+          totalStudents > 0
+            ? (
+                (yearlyAttendance[year].totalDays * totalStudents -
+                  yearlyAttendance[year].present) /
+                totalStudents
+              ).toFixed(2)
+            : "0.00";
 
         return {
           name: year.toString(),
@@ -857,14 +888,24 @@ app.get("/api/attendance", (req, res) => {
     // Calculate Current Year Attendance Percentage
     const currentYearResponse = {
       name: currentYear.toString(),
-      presentPercent: currentYearAttendance.totalDays > 0
-        ? ((currentYearAttendance.present / (totalStudents * currentYearAttendance.totalDays)) * 100).toFixed(2)
-        : "0.00",
-      absentPercent: currentYearAttendance.totalDays > 0
-        ? (100 - ((currentYearAttendance.present / (totalStudents * currentYearAttendance.totalDays)) * 100)).toFixed(2)
-        : "0.00",
+      presentPercent:
+        currentYearAttendance.totalDays > 0
+          ? (
+              (currentYearAttendance.present /
+                (totalStudents * currentYearAttendance.totalDays)) *
+              100
+            ).toFixed(2)
+          : "0.00",
+      absentPercent:
+        currentYearAttendance.totalDays > 0
+          ? (
+              100 -
+              (currentYearAttendance.present /
+                (totalStudents * currentYearAttendance.totalDays)) *
+                100
+            ).toFixed(2)
+          : "0.00",
     };
-    
 
     res.json({
       monthlyData: monthlyResponse,
@@ -873,9 +914,6 @@ app.get("/api/attendance", (req, res) => {
     });
   });
 });
-
-
-
 
 // Fetch Course Names API
 app.get("/api/courses", (req, res) => {
@@ -898,6 +936,105 @@ app.get("/api/studentcourses", (req, res) => {
   });
 });
 
+app.get("/total-students", async (req, res) => {
+  try {
+    const [rows] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS total FROM admission_form");
+    res.json({ totalStudents: rows[0].total });
+  } catch (error) {
+    console.error("Error fetching total students:", error.message); // Log the error
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/total-courses", async (req, res) => {
+  try {
+    const [rows] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS total FROM course");
+    res.json({ totalCourses: rows[0].total });
+  } catch (error) {
+    console.error("Error fetching total courses:", error.message); // Log the error
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/new-admissions", async (req, res) => {
+  try {
+    const lastMonth = moment().subtract(1, "months").format("YYYY-MM");
+    const query = `
+          SELECT COUNT(*) AS newAdmissions
+          FROM admission_form
+          WHERE DATE_FORMAT(created_at, '%Y-%m') = ?;
+      `;
+    const [rows] = await pool.promise().query(query, [lastMonth]);
+
+    res.json({ newAdmissions: rows[0].newAdmissions });
+  } catch (error) {
+    console.error("Error fetching new admissions:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/attendance", (req, res) => {
+  const sql = "SELECT student_id, attendance_data FROM student_attendance";
+
+  pool.query(sql, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    const formattedData = {};
+    const months = new Set();
+
+    results.forEach((row) => {
+      const attendanceData = JSON.parse(row.attendance_data);
+
+      Object.keys(attendanceData).forEach((date) => {
+        const month = date.substring(0, 7); // Extracts 'YYYY-MM'
+        months.add(month);
+
+        if (!formattedData[month]) {
+          formattedData[month] = { name: month, present: 0, absent: 0 };
+        }
+
+        if (attendanceData[date].toLowerCase().trim() === "present") {
+          formattedData[month].present += 1;
+        } else {
+          formattedData[month].absent += 1;
+        }
+      });
+    });
+
+    // Fill in missing dates as "Absent", skipping weekends
+    months.forEach((month) => {
+      const startDate = new Date(`${month}-01`);
+      const endDate = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        0
+      );
+      const allDates = eachDayOfInterval({
+        start: startDate,
+        end: endDate,
+      }).map((d) => format(d, "yyyy-MM-dd"));
+
+      allDates.forEach((date) => {
+        const dayOfWeek = parseISO(date).getDay(); // 0 = Sunday, 6 = Saturday
+
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+          return; // Skip Saturdays and Sundays
+        }
+
+        const monthKey = date.substring(0, 7);
+        if (!results.some((row) => JSON.parse(row.attendance_data)[date])) {
+          formattedData[monthKey].absent += 1; // Mark missing weekday dates as absent
+        }
+      });
+    });
+
+    res.json(Object.values(formattedData));
+  });
+});
 //chart data end
 
 // Start the server
