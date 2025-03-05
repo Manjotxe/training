@@ -11,6 +11,7 @@ require("./chat");
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const axios = require("axios");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
@@ -235,28 +236,23 @@ app.post("/api/admissions", (req, res) => {
     photo,
   } = req.body;
 
-  // Generate a 10-character random password
   const randomPassword = crypto.randomBytes(4).toString("hex").slice(0, 8);
 
-  // First, get the course_id based on courseName
   const getCourseIdQuery = `SELECT course_id FROM course WHERE courseName = ?`;
 
   pool.query(getCourseIdQuery, [courseName], (err, result) => {
     if (err) {
       console.error("Error fetching course_id:", err);
-      res.status(500).json({ error: "Failed to fetch course_id" });
-      return;
+      return res.status(500).json({ error: "Failed to fetch course_id" });
     }
 
     if (result.length === 0) {
-      res.status(404).json({ error: "Course not found" });
-      return;
+      return res.status(404).json({ error: "Course not found" });
     }
 
     const courseId = result[0].course_id;
 
-    // Now, proceed with the insertion into the admission_form table
-    const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, course_id,courseName, admissionDate, signature, photo) 
+    const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, course_id, courseName, admissionDate, signature, photo) 
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     const values = [
@@ -273,7 +269,7 @@ app.post("/api/admissions", (req, res) => {
       pinCode,
       phoneNumber,
       email,
-      randomPassword, // Add generated password here
+      randomPassword,
       schoolX,
       schoolXII,
       courseId,
@@ -286,46 +282,46 @@ app.post("/api/admissions", (req, res) => {
     pool.query(query, values, (err, result) => {
       if (err) {
         console.error("Error inserting data:", err);
-        res.status(500).json({ error: "Failed to save admission data" });
-        return;
+        return res.status(500).json({ error: "Failed to save admission data" });
       }
 
-      // Send email to the user using the email service module
-      sendAdmissionConfirmationEmail(name, email, courseName, randomPassword)
-        .then(() => {
-          console.log("Email sent successfully to user.");
+      const studentId = result.insertId; // Get the last inserted student_id
+
+      // Fetch real address details from API
+      axios
+        .get(`https://api.postalpincode.in/pincode/${pinCode}`)
+        .then((response) => {
+          const postOfficeData = response.data[0]?.PostOffice?.[0];
+          if (!postOfficeData) {
+            return res.status(400).json({ error: "Invalid Pincode" });
+          }
+
+          const realAddress = postOfficeData.Name;
+          const district = postOfficeData.District;
+
+          const location = `${realAddress}, ${district}`;
+
+          // Insert address details into student_address table
+          const addressQuery = `INSERT INTO student_data (student_id, location) VALUES (?, ?)`;
+
+          pool.query(addressQuery, [studentId, location], (err) => {
+            if (err) {
+              console.error("Error inserting address:", err);
+              return res.status(500).json({ error: "Failed to save address data" });
+            }
+          
+            // Send email and respond with success message
+            sendAdmissionConfirmationEmail(name, email, courseName, randomPassword);
+            res.status(201).json({
+              message: "Admission Successful",
+              password: randomPassword,
+            });
+          });
         })
         .catch((error) => {
-          console.error("Error sending email to user:", error);
+          console.error("Error fetching address:", error);
+          return res.status(500).json({ error: "Failed to fetch address details" });
         });
-      // Send admission details to the admin
-      sendAdmissionDetailsToAdmin({
-        name,
-        dob,
-        fatherName,
-        motherName,
-        profession,
-        nationality,
-        maritalStatus,
-        sex,
-        address,
-        city,
-        pinCode,
-        phoneNumber,
-        email,
-        schoolX,
-        schoolXII,
-        courseName,
-        admissionDate,
-        signature,
-        photo,
-        password: randomPassword,
-      });
-
-      res.status(201).json({
-        message: "Admission Successful",
-        password: randomPassword, // Return the generated password for reference if needed
-      });
     });
   });
 });
