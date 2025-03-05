@@ -17,8 +17,10 @@ import PrivateRoute from "./component/PrivateRoute.jsx";
 import Lectures from "./component/Lectures.jsx";
 import AddLecture from "./component/AddLecture.jsx";
 import Chat from "./component/ChatApp.jsx";
+import StudentLocationChart from "./component/StudentLocationChart.jsx";
 import AdminChat from "./component/AdminChatApp.jsx";
 import AttendanceDetail from "./component/AttendanceDetail.jsx";
+import StudentCourseGenderChart from "./component/StudentCourseGenderChart.jsx";
 import FaceLogin from "./component/FaceLogin.jsx";
 import Attendance from "./component/Attendance.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
@@ -56,6 +58,22 @@ function App() {
           element={
             <PrivateRoute>
               <AdminChat />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/record"
+          element={
+            <PrivateRoute>
+              <StudentLocationChart />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/course-record"
+          element={
+            <PrivateRoute>
+              <StudentCourseGenderChart />
             </PrivateRoute>
           }
         />
