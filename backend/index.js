@@ -760,6 +760,44 @@ app.get("/students/courses", async (req, res) => {
   }
 });
 
+
+
+// for charts data 
+
+// Fetch Attendance Data API
+app.get("/api/attendance", (req, res) => {
+  const query = "SELECT name, present, absent FROM attendance";
+  pool.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(results);
+  });
+});
+
+// Fetch Course Names API
+app.get("/api/courses", (req, res) => {
+  const query = "SELECT courseName FROM course"; // Assuming 'course_name' is the column name
+  pool.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(results);
+  });
+});
+
+app.get("/api/studentcourses", (req, res) => {
+  const query = "SELECT id, courseName, created_at FROM admission_form"; // Assuming 'course_name' is the column name
+  pool.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(results);
+  });
+});
+
+//chart data end
+
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
