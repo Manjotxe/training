@@ -766,108 +766,144 @@ app.get("/students/courses", async (req, res) => {
 
 // Fetch Attendance Data API
 app.get("/api/attendance", (req, res) => {
-  const query = "SELECT attendance_data FROM student_attendance";
+  const studentQuery = "SELECT id FROM admission_form";
+  const attendanceQuery = "SELECT attendance_data FROM student_attendance";
   const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
   const currentYear = new Date().getFullYear();
   const lastFiveYears = Array.from({ length: 5 }, (_, i) => currentYear - i); // Generate last 5 years
 
-  pool.query(query, (err, results) => {
+  // First, get the total number of students
+  pool.query(studentQuery, (err, studentResults) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
 
-    let monthlyAttendance = {};
-    let yearlyAttendance = {};
-    let totalStudents = results.length; // Total number of students
-    let currentYearAttendance = { present: 0, totalDays: 0 };
+    const totalStudents = studentResults.length; // Total number of students
 
-    results.forEach((row) => {
-      const attendanceData = JSON.parse(row.attendance_data);
+    // Next, get the attendance data
+    pool.query(attendanceQuery, (err, attendanceResults) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
 
-      for (const [date, status] of Object.entries(attendanceData)) {
-        if (date > today) continue; // Skip future dates
+      let monthlyAttendance = {};
+      let currentYearAttendance = { present: 0, totalDays: 0 };
 
-        const dateObj = new Date(date);
-        const monthName = dateObj.toLocaleString("en-US", { month: "short" });
-        const yearMonth = `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}`; // YYYY-M format
-        const year = dateObj.getFullYear(); // YYYY format
+      attendanceResults.forEach((row) => {
+        const attendanceData = JSON.parse(row.attendance_data);
 
-        // Process Monthly Data
-        if (!monthlyAttendance[yearMonth]) {
-          const totalDaysInMonth = new Date(
-            dateObj.getFullYear(),
-            dateObj.getMonth() + 1,
-            0
-          ).getDate();
-          monthlyAttendance[yearMonth] = {
-            name: monthName,
-            year: year,
-            present: 0,
-            totalDays: totalDaysInMonth,
-          };
-        }
-        if (status === "Present") {
-          monthlyAttendance[yearMonth].present += 1;
-        }
+        for (const [date, status] of Object.entries(attendanceData)) {
+          if (date > today) continue; // Skip future dates
 
-        // Process Yearly Data
-        if (lastFiveYears.includes(year)) {
-          // Include only last 5 years
-          if (!yearlyAttendance[year]) {
-            yearlyAttendance[year] = {
-              name: year.toString(),
+          const dateObj = new Date(date);
+          const monthName = dateObj.toLocaleString("en-US", { month: "short" });
+          const yearMonth = `${dateObj.getFullYear()}-${
+            dateObj.getMonth() + 1
+          }`;
+          const year = dateObj.getFullYear(); // YYYY format
+
+          // Calculate total days in the month excluding weekends (Saturday & Sunday)
+          const totalDaysInMonth = Array.from({
+            length: new Date(
+              dateObj.getFullYear(),
+              dateObj.getMonth() + 1,
+              0
+            ).getDate(),
+          })
+            .map((_, i) =>
+              new Date(
+                dateObj.getFullYear(),
+                dateObj.getMonth(),
+                i + 1
+              ).getDay()
+            )
+            .filter((day) => day !== 0 && day !== 6).length; // Excluding Sunday (0) and Saturday (6)
+
+          // Process Monthly Data
+          if (!monthlyAttendance[yearMonth]) {
+            monthlyAttendance[yearMonth] = {
+              name: monthName,
+              year: year,
+              month: dateObj.getMonth() + 1,
               present: 0,
-              totalDays: 0,
+              totalDays: totalDaysInMonth,
             };
           }
-          yearlyAttendance[year].totalDays += 1;
           if (status === "Present") {
-            yearlyAttendance[year].present += 1;
+            monthlyAttendance[yearMonth].present += 1;
+          }
+
+          // Process Current Year Attendance
+          if (year === currentYear) {
+            currentYearAttendance.totalDays += 1;
+            if (status === "Present") {
+              currentYearAttendance.present += 1;
+            }
           }
         }
+      });
 
-        // Process Current Year Attendance
-        if (year === currentYear) {
-          currentYearAttendance.totalDays += 1;
-          if (status === "Present") {
-            currentYearAttendance.present += 1;
-          }
-        }
-      }
-    });
-
-    // Format Monthly Attendance Response
-    const monthlyResponse = Object.values(monthlyAttendance).map((month) => {
-      const avgPresent =
-        totalStudents > 0 ? (month.present / totalStudents).toFixed(2) : "0.00";
-      const avgAbsent =
-        totalStudents > 0
-          ? (
-              (month.totalDays * totalStudents - month.present) /
-              totalStudents
-            ).toFixed(2)
-          : "0.00";
-
-      return {
-        name: month.name,
-        present: avgPresent,
-        absent: avgAbsent,
-      };
-    });
-
-    // Format Yearly Attendance Response (Only for the last 5 years)
-    const yearlyResponse = lastFiveYears.map((year) => {
-      if (yearlyAttendance[year]) {
+      // Format Monthly Attendance Response
+      const monthlyResponse = Object.values(monthlyAttendance).map((month) => {
         const avgPresent =
           totalStudents > 0
-            ? (yearlyAttendance[year].present / totalStudents).toFixed(2)
+            ? (month.present / totalStudents).toFixed(2)
             : "0.00";
         const avgAbsent =
           totalStudents > 0
             ? (
-                (yearlyAttendance[year].totalDays * totalStudents -
-                  yearlyAttendance[year].present) /
+                (month.totalDays * totalStudents - month.present) /
                 totalStudents
+              ).toFixed(2)
+            : "0.00";
+
+        return {
+          name: month.name,
+          year: month.year,
+          month: month.month,
+          present: avgPresent,
+          absent: avgAbsent,
+        };
+      });
+
+      // Group monthly data by year for calculation
+      const yearData = {};
+
+      // Initialize year data structure for all five years
+      lastFiveYears.forEach((year) => {
+        yearData[year] = {
+          present: [],
+          absent: [],
+        };
+      });
+
+      // Collect monthly values by year
+      monthlyResponse.forEach((month) => {
+        if (yearData[month.year]) {
+          yearData[month.year].present.push(parseFloat(month.present));
+          yearData[month.year].absent.push(parseFloat(month.absent));
+        }
+      });
+
+      // Calculate yearly averages based on monthly data
+      const yearlyResponse = lastFiveYears.map((year) => {
+        const presentValues = yearData[year].present;
+        const absentValues = yearData[year].absent;
+
+        // Calculate average: sum of values / number of months
+        const avgPresent =
+          presentValues.length > 0
+            ? (
+                presentValues.reduce((sum, val) => sum + val, 0) /
+                presentValues.length
+              ).toFixed(2)
+            : "0.00";
+
+        const avgAbsent =
+          absentValues.length > 0
+            ? (
+                absentValues.reduce((sum, val) => sum + val, 0) /
+                absentValues.length
               ).toFixed(2)
             : "0.00";
 
@@ -876,41 +912,33 @@ app.get("/api/attendance", (req, res) => {
           present: avgPresent,
           absent: avgAbsent,
         };
-      } else {
-        return {
-          name: year.toString(),
-          present: "0.00",
-          absent: "0.00",
-        };
-      }
-    });
+      });
 
-    // Calculate Current Year Attendance Percentage
-    const currentYearResponse = {
-      name: currentYear.toString(),
-      presentPercent:
-        currentYearAttendance.totalDays > 0
-          ? (
-              (currentYearAttendance.present /
-                (totalStudents * currentYearAttendance.totalDays)) *
-              100
-            ).toFixed(2)
-          : "0.00",
-      absentPercent:
-        currentYearAttendance.totalDays > 0
-          ? (
-              100 -
-              (currentYearAttendance.present /
-                (totalStudents * currentYearAttendance.totalDays)) *
-                100
-            ).toFixed(2)
-          : "0.00",
-    };
+      // Calculate Current Year Attendance Percentage
+      const totalPresent = monthlyResponse
+        .filter((month) => month.year === currentYear)
+        .reduce((sum, month) => sum + parseFloat(month.present), 0);
+      const totalAbsent = monthlyResponse
+        .filter((month) => month.year === currentYear)
+        .reduce((sum, month) => sum + parseFloat(month.absent), 0);
 
-    res.json({
-      monthlyData: monthlyResponse,
-      yearlyData: yearlyResponse,
-      currentYearData: currentYearResponse,
+      const currentYearResponse = {
+        name: currentYear.toString(),
+        presentPercent:
+          totalPresent + totalAbsent > 0
+            ? ((totalPresent / (totalPresent + totalAbsent)) * 100).toFixed(2)
+            : "0.00",
+        absentPercent:
+          totalPresent + totalAbsent > 0
+            ? ((totalAbsent / (totalPresent + totalAbsent)) * 100).toFixed(2)
+            : "0.00",
+      };
+
+      res.json({
+        monthlyData: monthlyResponse,
+        yearlyData: yearlyResponse,
+        currentYearData: currentYearResponse,
+      });
     });
   });
 });

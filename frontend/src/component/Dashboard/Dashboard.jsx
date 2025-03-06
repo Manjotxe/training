@@ -1,46 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import axios from "axios";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  Legend,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts";
-import Header from "../Header.jsx";
-import SideBar from "../SideBar.jsx";
-import { format, parse } from "date-fns";
-
-import "./Dashboard.css";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import Header from '../Header.jsx';
+import SideBar from '../SideBar.jsx';
+import './Dashboard.css';
 
 const Dashboard = () => {
-  const [attendanceView, setAttendanceView] = useState("monthly");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [courseData, setCourseData] = useState([]);
-  const [attendanceData, setAttendanceData] = useState([]); // New State for Attendance Data
-  const navigate = useNavigate();
+  const [locationData, setLocationData] = useState([]);
   const [totalStudents, setTotalStudents] = useState(0);
-  const [averageAttendance, setAverageAttendance] = useState(0);
   const [newAdmissions, setNewAdmissions] = useState(0);
   const [totalCourses, setTotalCourses] = useState(0);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
-  const COLORS = ["#0e7490", "#06b6d4", "#10b981", "#3b82f6", "#8b5cf6"];
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    setIsLoggedIn(false);
-    navigate("/");
-  };
+  const COLORS = ['#0e7490', '#06b6d4', '#10b981', '#3b82f6', '#8b5cf6'];
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -51,183 +28,147 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
-        const response = await axios.get(
-          "http://localhost:5000/students/courses"
-        );
-        const pieChartData = response.data.map((item) => ({
+        const response = await axios.get("http://localhost:5000/students/courses");
+        const pieChartData = response.data.map(item => ({
           name: item.course,
-          value: item.total_students,
+          value: item.total_students
         }));
         setCourseData(pieChartData);
-        setLoading(false);
       } catch (err) {
-        setError("Failed to fetch student course data");
-        setLoading(false);
-        console.error("Error fetching data:", err);
+        console.error("Error fetching course data:", err);
       }
     };
     fetchData();
   }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSummaryData = async () => {
       try {
-        const [attendanceRes, studentsRes, admissionsRes, coursesRes] =
-          await Promise.all([
-            axios.get("http://localhost:5000/api/attendance"),
-            axios.get("http://localhost:5000/total-students"),
-            axios.get("http://localhost:5000/new-admissions"),
-            axios.get("http://localhost:5000/total-courses"),
-          ]);
+        const [studentsRes, admissionsRes, coursesRes] = await Promise.all([
+          axios.get("http://localhost:5000/total-students"),
+          axios.get("http://localhost:5000/new-admissions"),
+          axios.get("http://localhost:5000/total-courses"),
+        ]);
 
-        setAttendanceData(attendanceRes.data);
         setTotalStudents(studentsRes.data.totalStudents);
         setNewAdmissions(admissionsRes.data.newAdmissions);
         setTotalCourses(coursesRes.data.totalCourses);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching summary data:", error);
       }
     };
-
-    fetchData();
+    fetchSummaryData();
   }, []);
+
+  useEffect(() => {
+    const fetchLocationData = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/students/location");
+        setLocationData(response.data);
+      } catch (error) {
+        console.error("Error fetching location data:", error);
+      }
+    };
+    fetchLocationData();
+  }, []);
+
+  // Function to create custom tooltip that shows location name and count
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-tooltip" style={{ backgroundColor: 'white', padding: '10px', border: '1px solid #ccc' }}>
+          <p className="label">{`Location: ${payload[0].payload.location}`}</p>
+          <p className="label">{`Students: ${payload[0].value}`}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Custom legend that removes the colored box
+  const CustomBarLegend = () => {
+    return (
+      <div style={{ textAlign: 'center', marginTop: '-30px'}}>
+        <span style={{ fontSize: '14px' }}>Students</span>
+      </div>
+    );
+  };
 
   return (
     <>
-      <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} />
+      <Header isLoggedIn={isLoggedIn} onLogout={() => { localStorage.removeItem("token"); navigate("/"); }} />
       <div className="sidebarr-container">
         <SideBar />
       </div>
       <div className="dashboard">
         <div className="dashboard-header">
           <h2>Educational Performance Overview</h2>
-          <p>
-            Comprehensive analytics for attendance, admissions, and student
-            performance
-          </p>
+          <p>Comprehensive analytics for attendance, admissions, and student performance</p>
         </div>
 
         <div className="dashboard-grid">
-          {/* Pie Chart for Course Distribution */}
-          <motion.div
-            className="chart-card"
-            whileHover={{
-              scale: 1.02,
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
-            }}
-            transition={{ duration: 0.3 }}
-          >
+          <motion.div className="chart-card" whileHover={{ scale: 1.02 }} transition={{ duration: 0.3 }}>
             <div className="card-header">
               <h3>Course Distribution</h3>
             </div>
             <div className="chart-container">
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
-                  <Pie
-                    data={courseData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name} (${(percent * 100).toFixed(0)}%)`
-                    }
-                  >
+                  <Pie data={courseData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
                     {courseData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    formatter={(value, name, props) => {
-                      const percent = props.payload?.percent;
-                      return percent !== undefined
-                        ? `${value} (${(percent * 100).toFixed(0)}%)`
-                        : `${value}`;
-                    }}
-                  />
-                  <Legend
-                    iconType="circle"
-                    layout="horizontal"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{
-                      paddingTop: "10px",
-                      color: "#64748b",
-                      fontSize: "0.85rem",
-                    }}
-                  />
+                  <Tooltip />
+                  <Legend verticalAlign="bottom" align="center" />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </motion.div>
 
-          {/* Bar Chart for Attendance Records */}
-          <motion.div
-            className="chart-card"
-            whileHover={{
-              scale: 1.02,
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
-            }}
-            transition={{ duration: 0.3 }}
-          >
+          <motion.div className="chart-card" whileHover={{ scale: 1.02 }} transition={{ duration: 0.3 }}>
             <div className="card-header">
-              <h3>Attendance Records</h3>
+              <h3>Students by Location</h3>
             </div>
             <div className="chart-container">
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={attendanceData}>
+                <BarChart 
+                  data={locationData} 
+                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="name"
-                    tickFormatter={(tick) => {
-                      const date = parse(tick, "yyyy-MM", new Date());
-                      return format(date, "MMMM, yyyy"); // Converts "2025-02" -> "February, 2025"
-                    }}
+                  <XAxis 
+                    dataKey="location" 
+                    tick={false}
+                    axisLine={true}
                   />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="present" fill="#10b981" name="Present" />
-                  <Bar dataKey="absent" fill="#ef4444" name="Absent" />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="student_count">
+                    {locationData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
                 </BarChart>
+                <CustomBarLegend />
               </ResponsiveContainer>
+              
             </div>
           </motion.div>
         </div>
 
-        {/* Summary Cards */}
         <div className="dashboard-summary">
-          <motion.div
-            className="summary-card"
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.2 }}
-          >
+          <motion.div className="summary-card" whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
             <h4>Total Students</h4>
-            <p className="summary-value">{totalStudents}</p>
+            <p>{totalStudents}</p>
           </motion.div>
-
-          <motion.div
-            className="summary-card"
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.2 }}
-          >
+          <motion.div className="summary-card" whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
             <h4>New Admissions</h4>
-            <p className="summary-value">{newAdmissions}</p>
+            <p>{newAdmissions}</p>
           </motion.div>
-
-          <motion.div
-            className="summary-card"
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.2 }}
-          >
+          <motion.div className="summary-card" whileHover={{ scale: 1.05 }} transition={{ duration: 0.2 }}>
             <h4>Total Courses</h4>
-            <p className="summary-value">{totalCourses}</p>
+            <p>{totalCourses}</p>
           </motion.div>
         </div>
       </div>
