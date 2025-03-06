@@ -4,6 +4,7 @@ import SideBar from "./SideBar";
 import Header from "./Header";
 import { Pie, Bar, Doughnut } from "react-chartjs-2";
 import axios from "axios";
+import { motion } from "framer-motion"; // Import framer-motion
 import {
   Chart as ChartJS,
   ArcElement,
@@ -189,6 +190,28 @@ const StudentLocationChart = () => {
     navigate("/");
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.5,
+        when: "beforeChildren",
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
   return (
     <>
       <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} />
@@ -196,9 +219,17 @@ const StudentLocationChart = () => {
         <div className="sidebar-container">
           <SideBar />
         </div>
-        <div className="content-container">
-          <div className="student-chart-component">
-            <div className="chart-header">
+        <motion.div
+          className="content-container"
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+        >
+          <motion.div
+            className="student-chart-component"
+            variants={itemVariants}
+          >
+            <motion.div className="chart-header" variants={itemVariants}>
               <h2>Student Distribution by Location</h2>
               <div className="btn-group chart-toggle" role="group">
                 <button
@@ -235,14 +266,16 @@ const StudentLocationChart = () => {
                   Bar Chart
                 </button>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="chart-wrapper">{renderChart()}</div>
+            <motion.div className="chart-wrapper" variants={itemVariants}>
+              {renderChart()}
+            </motion.div>
 
-            <div className="stats-summary">
+            <motion.div className="stats-summary" variants={itemVariants}>
               <div className="row">
                 <div className="col-md-4">
-                  <div className="stats-card">
+                  <motion.div className="stats-card" variants={itemVariants}>
                     <h3>Total Students</h3>
                     <p>
                       {locationData.reduce(
@@ -250,28 +283,28 @@ const StudentLocationChart = () => {
                         0
                       )}
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
                 <div className="col-md-4">
-                  <div className="stats-card">
+                  <motion.div className="stats-card" variants={itemVariants}>
                     <h3>Locations</h3>
                     <p>{locationData.length}</p>
-                  </div>
+                  </motion.div>
                 </div>
                 <div className="col-md-4">
-                  <div className="stats-card">
+                  <motion.div className="stats-card" variants={itemVariants}>
                     <h3>Top Location</h3>
                     <p>
                       {locationData.sort(
                         (a, b) => b.student_count - a.student_count
                       )[0]?.location || "N/A"}
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
     </>
   );
