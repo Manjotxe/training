@@ -277,16 +277,27 @@ app.post("/api/admissions", (req, res) => {
     axios
       .get(`https://api.postalpincode.in/pincode/${pinCode}`)
       .then((response) => {
-        const postOfficeData = response.data[0]?.PostOffice?.[0];
-        if (!postOfficeData) {
-          return res.status(400).json({ error: "Invalid Pincode" });
+        const postOffices = response.data[0]?.PostOffice;
+        if (!postOffices || postOffices.length === 0) {
+          return res
+            .status(400)
+            .json({ error: "Invalid Pincode or No Data Found" });
         }
 
-        const realAddress = postOfficeData.Name;
-        const district = postOfficeData.District;
+        // Find the post office that matches any word in the provided address
+        let selectedPostOffice = postOffices.find((postOffice) =>
+          address.toLowerCase().includes(postOffice.Name.toLowerCase())
+        );
+
+        // If no match found, use the first post office as a fallback
+        if (!selectedPostOffice) {
+          selectedPostOffice = postOffices[0];
+        }
+
+        const realAddress = selectedPostOffice.Name;
+        const district = selectedPostOffice.District;
         const location = `${realAddress}, ${district}`;
 
-        // **UPDATED QUERY: Storing courseName instead of course_id**
         const addressQuery = `INSERT INTO student_data (student_id, location, course, gender) VALUES (?, ?, ?, ?)`;
 
         pool.query(
