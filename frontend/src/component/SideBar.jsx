@@ -60,7 +60,7 @@ const Sidebar = () => {
         <div className="sidebar-header">
           <div className="logo-container">
             <span className="logo-text">Student</span>
-            <span className="logo-subtext">Records</span>
+            <span className="logo-subtext">Records </span>
           </div>
         </div>
 
@@ -96,13 +96,13 @@ const Sidebar = () => {
               <span className="section-line"></span>
             </h6>
             <nav className="nav-group">
-              <SidebarLink to="/reports" icon={FileText}>
+              <SidebarLink to="#" icon={FileText}>
                 Reports
               </SidebarLink>
-              <SidebarLink to="/students" icon={Users}>
+              <SidebarLink to="/data" icon={Users}>
                 Students
               </SidebarLink>
-              <SidebarLink to="/settings" icon={Settings}>
+              <SidebarLink to="#" icon={Settings}>
                 Settings
               </SidebarLink>
             </nav>
