@@ -313,11 +313,11 @@ function AdmissionForm() {
                           name="dob"
                           value={formData.dob}
                           onChange={handleChange}
+                          max={getTodayDate()} // Restricts selection to past dates only
                           required
                         />
                       </div>
                     </div>
-
                     <div className="row">
                       <div className="col-md-6 mb-3">
                         <label htmlFor="fatherName" className="form-label">

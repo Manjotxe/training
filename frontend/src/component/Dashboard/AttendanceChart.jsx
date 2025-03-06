@@ -24,7 +24,13 @@ const AttendanceChart = ({ view, chartType = 'default' }) => {
           .sort((a, b) => a.name.localeCompare(b.name));
 
         setData(formattedData);
-        setCurrentYearData(result.currentYearData || null);
+        const currentData = result.currentYearData || null;
+        setCurrentYearData(currentData);
+
+        // Store the currentYearData in localStorage
+        if (currentData) {
+          localStorage.setItem('currentYearData', JSON.stringify(currentData));
+        }
       } catch (error) {
         setError(error.message);
       } finally {
@@ -113,73 +119,8 @@ const AttendanceChart = ({ view, chartType = 'default' }) => {
       style={{ width: '100%', height: '100%' }}
     >
       {renderChart()}
-      <br/>
-      {currentYearData && (
- <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '10px' }}>
- <div style={{ 
-   flex: 1, margin: '10px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px', 
-   backgroundColor: '#d4edda', textAlign: 'center',
-   boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-   transition: 'transform 0.3s, box-shadow 0.3s'
- }}
- onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 128, 0, 0.5)'}
- onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)'}
- >
-   <h4>Present</h4>
-   <p>{currentYearData.presentPercent}%</p>
- </div>
-
- <div style={{ 
-   flex: 1, margin: '10px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px', 
-   backgroundColor: '#f8d7da', textAlign: 'center',
-   boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-   transition: 'transform 0.3s, box-shadow 0.3s'
- }}
- onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 8px 16px rgba(255, 0, 0, 0.5)'}
- onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)'}
- >
-   <h4>Absent</h4>
-   <p>{currentYearData.absentPercent}%</p>
- </div>
-
- <div style={{ 
-   flex: 1, margin: '10px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px', 
-   backgroundColor: '#f9f9f9', textAlign: 'center',
-   boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-   transition: 'transform 0.3s, box-shadow 0.3s'
- }}
- onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 255, 0.5)'}
- onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)'}
- >
-   <h4>Current Year <br/>({currentYearData.name})</h4>
- </div>
-</div>
-
-     
-      )}
     </motion.div>
   );
-};
-// Styles for the statistic boxes
-const statBoxStyle = {
-  flex: 1,
-  background: '#fff',
-  padding: '20px',
-  borderRadius: '8px',
-  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-  textAlign: 'center'
-};
-
-const statTitleStyle = {
-  fontSize: '16px',
-  color: '#34495E',
-  marginBottom: '10px'
-};
-
-const statValueStyle = {
-  fontSize: '24px',
-  fontWeight: 'bold',
-  color: '#2980B9'
 };
 
 export default AttendanceChart;
