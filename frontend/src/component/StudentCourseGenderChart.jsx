@@ -4,6 +4,7 @@ import SideBar from "./SideBar";
 import Header from "./Header";
 import { Pie, Bar, Doughnut } from "react-chartjs-2";
 import axios from "axios";
+import { motion } from "framer-motion"; // Import framer-motion
 import {
   Chart as ChartJS,
   ArcElement,
@@ -121,6 +122,28 @@ const StudentCourseGenderChart = () => {
     }
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.5,
+        when: "beforeChildren",
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
   if (loading) {
     return <div className="chart-container">Loading...</div>;
   }
@@ -136,15 +159,26 @@ const StudentCourseGenderChart = () => {
         <div className="sidebar-container">
           <SideBar />
         </div>
-        <div className="content-container">
-          <div className="student-chart-component">
-            <div className="chart-header">
+        <motion.div
+          className="content-container"
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+        >
+          <motion.div
+            className="student-chart-component"
+            variants={itemVariants}
+          >
+            <motion.div className="chart-header" variants={itemVariants}>
               <h2>
                 {view === "course"
                   ? "Student Distribution by Course"
                   : "Gender Distribution of Students"}
               </h2>
-              <div className="btn-group chart-toggle">
+              <motion.div
+                className="btn-group chart-toggle"
+                variants={itemVariants}
+              >
                 <button
                   onClick={() => setView("course")}
                   className={`btn ${
@@ -165,8 +199,11 @@ const StudentCourseGenderChart = () => {
                 >
                   Gender View
                 </button>
-              </div>
-              <div className="btn-group chart-toggle">
+              </motion.div>
+              <motion.div
+                className="btn-group chart-toggle"
+                variants={itemVariants}
+              >
                 <button
                   onClick={() => setChartType("pie")}
                   className={`btn ${
@@ -197,11 +234,13 @@ const StudentCourseGenderChart = () => {
                 >
                   Bar Chart
                 </button>
-              </div>
-            </div>
-            <div className="chart-wrapper">{renderChart()}</div>
-          </div>
-        </div>
+              </motion.div>
+            </motion.div>
+            <motion.div className="chart-wrapper" variants={itemVariants}>
+              {renderChart()}
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
     </>
   );
