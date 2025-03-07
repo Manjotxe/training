@@ -26,6 +26,7 @@ import FaceLogin from "./component/FaceLogin.jsx";
 import Attendance from "./component/Attendance.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
 import CourseDetails from "./component/CourseDetails.jsx";
+import GoogleSheetsData from "./component/GoogleSheetsData.jsx";
 import AttendanceChart from "./component/Dashboard/Attendance.jsx";
 
 function App() {
@@ -60,6 +61,14 @@ function App() {
           element={
             <PrivateRoute>
               <AdminChat />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <PrivateRoute>
+              <GoogleSheetsData />
             </PrivateRoute>
           }
         />

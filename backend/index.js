@@ -21,6 +21,7 @@ const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const axios = require("axios");
+const { readData, updateRemark } = require("./googleSheets");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
 const { sendBillEmail } = require("./emailTemplates/SendBill");
 const {
@@ -48,26 +49,28 @@ const transporter = nodemailer.createTransport({
 // Inquiry
 app.use("/api/inquiry", inquiryRoute);
 
-// Fetch lectures for a specific date
-app.get("/api/lectures", (req, res) => {
-  const { date } = req.query; // Get the date from the query string
+// Fetch Google Sheets Data
+app.get("/api/data", async (req, res) => {
+  try {
+    const data = await readData("'Ravinder'!A1:G100");
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-  if (date) {
-    // If date is provided, fetch lectures by date
-    getLecturesByDate(date, (err, lectures) => {
-      if (err) {
-        return res.status(500).json({ message: "Error fetching lectures" });
-      }
-      res.status(200).json(lectures);
-    });
-  } else {
-    // If no date is provided, fetch all lectures
-    getAllLectures((err, lectures) => {
-      if (err) {
-        return res.status(500).json({ message: "Error fetching lectures" });
-      }
-      res.status(200).json(lectures);
-    });
+// ✅ Update Remark in Google Sheets
+app.post("/api/update-remark", async (req, res) => {
+  try {
+    const { date, remark } = req.body;
+    if (!date || !remark) {
+      return res.status(400).json({ error: "Date and remark are required" });
+    }
+
+    await updateRemark(date, remark);
+    res.json({ message: "Remark updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
