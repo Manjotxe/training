@@ -57,5 +57,17 @@ async function updateRemark(date, remark) {
     throw error;
   }
 }
+async function getSheetNames() {
+  try {
+    const response = await sheets.spreadsheets.get({
+      spreadsheetId: SPREADSHEET_ID,
+    });
 
-module.exports = { readData, updateRemark };
+    return response.data.sheets.map((sheet) => sheet.properties.title); // Returns an array of sheet names
+  } catch (error) {
+    console.error("Error fetching sheet names:", error.message);
+    throw error;
+  }
+}
+
+module.exports = { readData, updateRemark, getSheetNames };

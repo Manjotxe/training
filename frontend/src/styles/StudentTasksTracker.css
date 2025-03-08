@@ -358,3 +358,163 @@
     background: rgba(0, 109, 126, 0.1);
     transform: translateY(-1px);
   }
+  /* Add these styles to your existing CSS file (StudentTasksTracker.css) */
+
+/* Header layout adjustments */
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+/* Sheet selector styles */
+.sheet-selector-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sheet-selector-container label {
+  font-weight: 500;
+  color: #555;
+}
+
+.sheet-selector {
+  padding: 8px 15px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: white;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  min-width: 180px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sheet-selector:hover {
+  border-color: #006d7e;
+}
+
+.sheet-selector:focus {
+  outline: none;
+  border-color: #006d7e;
+  box-shadow: 0 0 0 2px rgba(0, 109, 126, 0.2);
+}
+
+.sheet-selector:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Loading overlay for when data is being fetched */
+.loading-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  min-height: 200px;
+}
+
+/* No data message */
+.no-data-message {
+  text-align: center;
+  padding: 30px;
+  background-color: rgba(0, 109, 126, 0.05);
+  border-radius: 10px;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .sheet-selector-container {
+    width: 100%;
+  }
+  
+  .sheet-selector {
+    width: 100%;
+  }
+}
+/* Add these styles to your existing StudentTasksTracker.css file */
+
+/* Pagination styling */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 25px;
+  gap: 10px;
+}
+
+.pagination-button {
+  background: white;
+  border: 1px solid #e0e0e0;
+  color: #006d7e;
+  height: 40px;
+  width: 40px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #006d7e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-button:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+  border-color: #eee;
+  background-color: #f9f9f9;
+}
+
+.pagination-info {
+  font-size: 0.9rem;
+  color: #666;
+  padding: 0 10px;
+  min-width: 100px;
+  text-align: center;
+}
+
+/* Add this to the stat-pill styling for better alignment */
+.stat-pill .stat-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  background: linear-gradient(to right, #ff69b4, #006d7e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+}
+
+/* Responsive styles for pagination */
+@media (max-width: 576px) {
+  .pagination-container {
+    flex-wrap: wrap;
+  }
+
+  .pagination-button {
+    height: 36px;
+    width: 36px;
+    font-size: 1rem;
+  }
+}

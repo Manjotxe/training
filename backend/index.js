@@ -21,7 +21,7 @@ const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const axios = require("axios");
-const { readData, updateRemark } = require("./googleSheets");
+const { readData, updateRemark, getSheetNames } = require("./googleSheets");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
 const { sendBillEmail } = require("./emailTemplates/SendBill");
 const {
@@ -52,8 +52,22 @@ app.use("/api/inquiry", inquiryRoute);
 // Fetch Google Sheets Data
 app.get("/api/data", async (req, res) => {
   try {
-    const data = await readData("'Ravinder'!A1:G100");
+    const { sheetName } = req.query;
+    if (!sheetName) {
+      return res.status(400).json({ error: "Sheet name is required" });
+    }
+
+    const data = await readData(`'${sheetName}'!A1:G100`); // Dynamically read sheet data
     res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/sheets", async (req, res) => {
+  try {
+    const sheetNames = await getSheetNames(); // Function to fetch sheet names
+    res.json(sheetNames);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
