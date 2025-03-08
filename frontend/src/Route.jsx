@@ -27,7 +27,7 @@ import Attendance from "./component/Attendance.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
 import CourseDetails from "./component/CourseDetails.jsx";
 import AttendanceChart from "./component/Dashboard/Attendance.jsx";
-import StudentLogs from "./component/Logs/StudentLogTable.jsx";
+import StudentLogs from "./component/Log/StudentLogTable.jsx";
 
 function App() {
   return (
