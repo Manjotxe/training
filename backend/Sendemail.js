@@ -9,41 +9,32 @@ const transporter = nodemailer.createTransport({
     user: process.env.ADMIN_EMAIL,
     pass: process.env.EMAIL_PASS,
   },
-  tls: {
-    rejectUnauthorized: false,
-  },
 });
 
-
 // Function to send inquiry confirmation email
-const sendInquiryConfirmationEmail = async (name, email, canvasData) => {
-  try {
-    const imageData = canvasData ? canvasData.split(",")[1] : null;
-    const htmlContent = inquiryTemplate(name);
+const sendInquiryConfirmationEmail = (name, email, canvasData) => {
+  const imageData = canvasData ? canvasData.split(",")[1] : null;
 
-    const mailOptions = {
-      from: process.env.ADMIN_EMAIL,
-      to: email,
-      subject: "Inquiry Received - Thank You!",
-      html: htmlContent,
-      attachments: imageData
-        ? [
-            {
-              filename: "canvas.png",
-              content: Buffer.from(imageData, "base64"),
-              cid: "canvasImage",
-            },
-          ]
-        : [],
-    };
+  const htmlContent = inquiryTemplate(name);
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully: ", info.response);
-  } catch (error) {
-    console.error("Error sending email:", error);
-  }
+  const mailOptions = {
+    from: process.env.ADMIN_EMAIL,
+    to: email,
+    subject: "Inquiry Received - Thank You!",
+    html: htmlContent,
+    attachments: imageData
+      ? [
+          {
+            filename: "canvas.png",
+            content: Buffer.from(imageData, "base64"),
+            cid: "canvasImage", // Content-ID for inline image reference
+          },
+        ]
+      : [],
+  };
+
+  return transporter.sendMail(mailOptions);
 };
-
 
 //Mail to user after admission
 const sendAdmissionConfirmationEmail = (name, email, courseName, password) => {

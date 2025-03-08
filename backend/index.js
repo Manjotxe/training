@@ -1,4 +1,6 @@
 require("dotenv").config();
+const { google } = require('googleapis');
+
 const {
   getAllLectures,
   getLecturesByDate,
@@ -6,12 +8,14 @@ const {
   updateLecture,
   deleteLecture,
 } = require("./lectures"); // Import the functions
+const { format, eachDayOfInterval, parseISO } = require("date-fns");
 const inquiryRoute = require("./inquiry");
 require("./chat");
 const express = require("express");
+const credentials = require('./credentials.json'); // Your Google JSON File
+
 const app = express();
 const cors = require("cors");
-const axios = require("axios");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
@@ -19,6 +23,8 @@ const multer = require("multer");
 const path = require("path");
 const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
+const moment = require("moment");
+const axios = require("axios");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
 const { sendBillEmail } = require("./emailTemplates/SendBill");
 const {
@@ -43,6 +49,13 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+const auth = new google.auth.GoogleAuth({
+  credentials: credentials,
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+});
+
+const sheets = google.sheets({ version: 'v4', auth });
+const SPREADSHEET_ID = '1eP4lRLqtbCjYEuHWDt14cZemRXA20VUNXsYHQHjMSew'; // Your Sheet ID
 // Inquiry
 app.use("/api/inquiry", inquiryRoute);
 
@@ -222,7 +235,7 @@ app.post("/api/admissions", (req, res) => {
     profession,
     nationality,
     maritalStatus,
-    sex,
+    sex, // Gender from admission_form
     address,
     city,
     pinCode,
@@ -230,7 +243,7 @@ app.post("/api/admissions", (req, res) => {
     email,
     schoolX,
     schoolXII,
-    courseName,
+    courseName, // Course Name instead of ID
     admissionDate,
     signature,
     photo,
@@ -238,93 +251,100 @@ app.post("/api/admissions", (req, res) => {
 
   const randomPassword = crypto.randomBytes(4).toString("hex").slice(0, 8);
 
-  const getCourseIdQuery = `SELECT course_id FROM course WHERE courseName = ?`;
+  const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, courseName, admissionDate, signature, photo) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  pool.query(getCourseIdQuery, [courseName], (err, result) => {
+  const values = [
+    name,
+    dob,
+    fatherName,
+    motherName,
+    profession,
+    nationality,
+    maritalStatus,
+    sex,
+    address,
+    city,
+    pinCode,
+    phoneNumber,
+    email,
+    randomPassword,
+    schoolX,
+    schoolXII,
+    courseName, // Storing Course Name instead of Course ID
+    admissionDate,
+    signature,
+    photo,
+  ];
+
+  pool.query(query, values, (err, result) => {
     if (err) {
-      console.error("Error fetching course_id:", err);
-      return res.status(500).json({ error: "Failed to fetch course_id" });
+      console.error("Error inserting data:", err);
+      return res.status(500).json({ error: "Failed to save admission data" });
     }
 
-    if (result.length === 0) {
-      return res.status(404).json({ error: "Course not found" });
-    }
+    const studentId = result.insertId;
 
-    const courseId = result[0].course_id;
+    axios
+      .get(`https://api.postalpincode.in/pincode/${pinCode}`)
+      .then((response) => {
+        const postOffices = response.data[0]?.PostOffice;
+        if (!postOffices || postOffices.length === 0) {
+          return res
+            .status(400)
+            .json({ error: "Invalid Pincode or No Data Found" });
+        }
 
-    const query = `INSERT INTO admission_form (name, dob, fatherName, motherName, profession, nationality, maritalStatus, sex, address, city, pinCode, phoneNumber, email, password, schoolX, schoolXII, course_id, courseName, admissionDate, signature, photo) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        // Find the post office that matches any word in the provided address
+        let selectedPostOffice = postOffices.find((postOffice) =>
+          address.toLowerCase().includes(postOffice.Name.toLowerCase())
+        );
 
-    const values = [
-      name,
-      dob,
-      fatherName,
-      motherName,
-      profession,
-      nationality,
-      maritalStatus,
-      sex,
-      address,
-      city,
-      pinCode,
-      phoneNumber,
-      email,
-      randomPassword,
-      schoolX,
-      schoolXII,
-      courseId,
-      courseName,
-      admissionDate,
-      signature,
-      photo,
-    ];
+        // If no match found, use the first post office as a fallback
+        if (!selectedPostOffice) {
+          selectedPostOffice = postOffices[0];
+        }
 
-    pool.query(query, values, (err, result) => {
-      if (err) {
-        console.error("Error inserting data:", err);
-        return res.status(500).json({ error: "Failed to save admission data" });
-      }
+        const realAddress = selectedPostOffice.Name;
+        const district = selectedPostOffice.District;
+        const location = `${realAddress}, ${district}`;
 
-      const studentId = result.insertId; // Get the last inserted student_id
+        const addressQuery = `INSERT INTO student_data (student_id, location, course, gender) VALUES (?, ?, ?, ?)`;
 
-      // Fetch real address details from API
-      axios
-        .get(`https://api.postalpincode.in/pincode/${pinCode}`)
-        .then((response) => {
-          const postOfficeData = response.data[0]?.PostOffice?.[0];
-          if (!postOfficeData) {
-            return res.status(400).json({ error: "Invalid Pincode" });
-          }
-
-          const realAddress = postOfficeData.Name;
-          const district = postOfficeData.District;
-
-          const location = `${realAddress}, ${district}`;
-
-          // Insert address details into student_address table
-          const addressQuery = `INSERT INTO student_data (student_id, location) VALUES (?, ?)`;
-
-          pool.query(addressQuery, [studentId, location], (err) => {
+        pool.query(
+          addressQuery,
+          [studentId, location, courseName, sex],
+          (err) => {
             if (err) {
-              console.error("Error inserting address:", err);
-              return res.status(500).json({ error: "Failed to save address data" });
+              console.error("Error inserting student data:", err);
+              return res
+                .status(500)
+                .json({ error: "Failed to save student data" });
             }
-          
-            // Send email and respond with success message
-            sendAdmissionConfirmationEmail(name, email, courseName, randomPassword);
+
+            sendAdmissionConfirmationEmail(
+              name,
+              email,
+              courseName,
+              randomPassword
+            );
+
             res.status(201).json({
               message: "Admission Successful",
               password: randomPassword,
             });
-          });
-        })
-        .catch((error) => {
-          console.error("Error fetching address:", error);
-          return res.status(500).json({ error: "Failed to fetch address details" });
-        });
-    });
+          }
+        );
+      })
+      .catch((error) => {
+        console.error("Error fetching address:", error);
+        return res
+          .status(500)
+          .json({ error: "Failed to fetch address details" });
+      });
   });
 });
+
 //for display the users
 app.get("/users", (req, res) => {
   const search = req.query.search || ""; // Default to an empty string if search is not provided
@@ -665,6 +685,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
       pool.query(
         notificationSql,
         [
+          null,
           fileData?.file_name || null,
           fileData?.file_path || null,
           fileData?.file_type || null,
@@ -723,6 +744,414 @@ app.get("/coursebyid/:course_id", (req, res) => {
     }
     res.json(result[0]); // Send first course object
   });
+});
+
+// API to get student count by location
+app.get("/students/location", async (req, res) => {
+  try {
+    const query = `
+          SELECT location, COUNT(*) as student_count 
+          FROM student_data 
+          GROUP BY location
+          ORDER BY student_count DESC
+      `;
+    const [rows] = await pool.promise().query(query); // Use .promise() here
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching student locations:", error.message);
+    res.status(500).json({ error: error.message }); // Send actual error message
+  }
+});
+app.get("/students/courses", async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+          course,
+          COUNT(*) as total_students,
+          SUM(CASE WHEN gender = 'Male' THEN 1 ELSE 0 END) as male_students,
+          SUM(CASE WHEN gender = 'Female' THEN 1 ELSE 0 END) as female_students,
+          SUM(CASE WHEN gender NOT IN ('Male', 'Female') THEN 1 ELSE 0 END) as other_students
+      FROM student_data
+      GROUP BY course
+      ORDER BY total_students DESC;
+    `;
+
+    const [rows] = await pool.promise().query(query);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching student courses:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// for charts data
+
+// Fetch Attendance Data API
+app.get("/api/attendance", (req, res) => {
+  const studentQuery = "SELECT id FROM admission_form";
+  const attendanceQuery = "SELECT attendance_data FROM student_attendance";
+  const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+  const currentYear = new Date().getFullYear();
+  const lastFiveYears = Array.from({ length: 5 }, (_, i) => currentYear - i); // Generate last 5 years
+
+  // First, get the total number of students
+  pool.query(studentQuery, (err, studentResults) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    const totalStudents = studentResults.length; // Total number of students
+
+    // Next, get the attendance data
+    pool.query(attendanceQuery, (err, attendanceResults) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      let monthlyAttendance = {};
+      let currentYearAttendance = { present: 0, totalDays: 0 };
+
+      attendanceResults.forEach((row) => {
+        const attendanceData = JSON.parse(row.attendance_data);
+
+        for (const [date, status] of Object.entries(attendanceData)) {
+          if (date > today) continue; // Skip future dates
+
+          const dateObj = new Date(date);
+          const monthName = dateObj.toLocaleString("en-US", { month: "short" });
+          const yearMonth = `${dateObj.getFullYear()}-${
+            dateObj.getMonth() + 1
+          }`;
+          const year = dateObj.getFullYear(); // YYYY format
+
+          // Calculate total days in the month excluding weekends (Saturday & Sunday)
+          const totalDaysInMonth = Array.from({
+            length: new Date(
+              dateObj.getFullYear(),
+              dateObj.getMonth() + 1,
+              0
+            ).getDate(),
+          })
+            .map((_, i) =>
+              new Date(
+                dateObj.getFullYear(),
+                dateObj.getMonth(),
+                i + 1
+              ).getDay()
+            )
+            .filter((day) => day !== 0 && day !== 6).length; // Excluding Sunday (0) and Saturday (6)
+
+          // Process Monthly Data
+          if (!monthlyAttendance[yearMonth]) {
+            monthlyAttendance[yearMonth] = {
+              name: monthName,
+              year: year,
+              month: dateObj.getMonth() + 1,
+              present: 0,
+              totalDays: totalDaysInMonth,
+            };
+          }
+          if (status === "Present") {
+            monthlyAttendance[yearMonth].present += 1;
+          }
+
+          // Process Current Year Attendance
+          if (year === currentYear) {
+            currentYearAttendance.totalDays += 1;
+            if (status === "Present") {
+              currentYearAttendance.present += 1;
+            }
+          }
+        }
+      });
+
+      // Format Monthly Attendance Response
+      const monthlyResponse = Object.values(monthlyAttendance).map((month) => {
+        const avgPresent =
+          totalStudents > 0
+            ? (month.present / totalStudents).toFixed(2)
+            : "0.00";
+        const avgAbsent =
+          totalStudents > 0
+            ? (
+                (month.totalDays * totalStudents - month.present) /
+                totalStudents
+              ).toFixed(2)
+            : "0.00";
+
+        return {
+          name: month.name,
+          year: month.year,
+          month: month.month,
+          present: avgPresent,
+          absent: avgAbsent,
+        };
+      });
+
+      // Group monthly data by year for calculation
+      const yearData = {};
+
+      // Initialize year data structure for all five years
+      lastFiveYears.forEach((year) => {
+        yearData[year] = {
+          present: [],
+          absent: [],
+        };
+      });
+
+      // Collect monthly values by year
+      monthlyResponse.forEach((month) => {
+        if (yearData[month.year]) {
+          yearData[month.year].present.push(parseFloat(month.present));
+          yearData[month.year].absent.push(parseFloat(month.absent));
+        }
+      });
+
+      // Calculate yearly averages based on monthly data
+      const yearlyResponse = lastFiveYears.map((year) => {
+        const presentValues = yearData[year].present;
+        const absentValues = yearData[year].absent;
+
+        // Calculate average: sum of values / number of months
+        const avgPresent =
+          presentValues.length > 0
+            ? (
+                presentValues.reduce((sum, val) => sum + val, 0) /
+                presentValues.length
+              ).toFixed(2)
+            : "0.00";
+
+        const avgAbsent =
+          absentValues.length > 0
+            ? (
+                absentValues.reduce((sum, val) => sum + val, 0) /
+                absentValues.length
+              ).toFixed(2)
+            : "0.00";
+
+        return {
+          name: year.toString(),
+          present: avgPresent,
+          absent: avgAbsent,
+        };
+      });
+
+      // Calculate Current Year Attendance Percentage
+      const totalPresent = monthlyResponse
+        .filter((month) => month.year === currentYear)
+        .reduce((sum, month) => sum + parseFloat(month.present), 0);
+      const totalAbsent = monthlyResponse
+        .filter((month) => month.year === currentYear)
+        .reduce((sum, month) => sum + parseFloat(month.absent), 0);
+
+      const currentYearResponse = {
+        name: currentYear.toString(),
+        presentPercent:
+          totalPresent + totalAbsent > 0
+            ? ((totalPresent / (totalPresent + totalAbsent)) * 100).toFixed(2)
+            : "0.00",
+        absentPercent:
+          totalPresent + totalAbsent > 0
+            ? ((totalAbsent / (totalPresent + totalAbsent)) * 100).toFixed(2)
+            : "0.00",
+      };
+
+      res.json({
+        monthlyData: monthlyResponse,
+        yearlyData: yearlyResponse,
+        currentYearData: currentYearResponse,
+      });
+    });
+  });
+});
+
+// Fetch Course Names API
+app.get("/api/courses", (req, res) => {
+  const query = "SELECT courseName FROM course"; // Assuming 'course_name' is the column name
+  pool.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(results);
+  });
+});
+
+app.get("/api/studentcourses", (req, res) => {
+  const query = "SELECT id, courseName, created_at FROM admission_form"; // Assuming 'course_name' is the column name
+  pool.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(results);
+  });
+});
+
+app.get("/total-students", async (req, res) => {
+  try {
+    const [rows] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS total FROM admission_form");
+    res.json({ totalStudents: rows[0].total });
+  } catch (error) {
+    console.error("Error fetching total students:", error.message); // Log the error
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/total-courses", async (req, res) => {
+  try {
+    const [rows] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS total FROM course");
+    res.json({ totalCourses: rows[0].total });
+  } catch (error) {
+    console.error("Error fetching total courses:", error.message); // Log the error
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/new-admissions", async (req, res) => {
+  try {
+    const lastMonth = moment().subtract(1, "months").format("YYYY-MM");
+    const query = `
+          SELECT COUNT(*) AS newAdmissions
+          FROM admission_form
+          WHERE DATE_FORMAT(created_at, '%Y-%m') = ?;
+      `;
+    const [rows] = await pool.promise().query(query, [lastMonth]);
+
+    res.json({ newAdmissions: rows[0].newAdmissions });
+  } catch (error) {
+    console.error("Error fetching new admissions:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/attendance", (req, res) => {
+  const sql = "SELECT student_id, attendance_data FROM student_attendance";
+
+  pool.query(sql, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    const formattedData = {};
+    const months = new Set();
+
+    results.forEach((row) => {
+      const attendanceData = JSON.parse(row.attendance_data);
+
+      Object.keys(attendanceData).forEach((date) => {
+        const month = date.substring(0, 7); // Extracts 'YYYY-MM'
+        months.add(month);
+
+        if (!formattedData[month]) {
+          formattedData[month] = { name: month, present: 0, absent: 0 };
+        }
+
+        if (attendanceData[date].toLowerCase().trim() === "present") {
+          formattedData[month].present += 1;
+        } else {
+          formattedData[month].absent += 1;
+        }
+      });
+    });
+
+    // Fill in missing dates as "Absent", skipping weekends
+    months.forEach((month) => {
+      const startDate = new Date(`${month}-01`);
+      const endDate = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        0
+      );
+      const allDates = eachDayOfInterval({
+        start: startDate,
+        end: endDate,
+      }).map((d) => format(d, "yyyy-MM-dd"));
+
+      allDates.forEach((date) => {
+        const dayOfWeek = parseISO(date).getDay(); // 0 = Sunday, 6 = Saturday
+
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+          return; // Skip Saturdays and Sundays
+        }
+
+        const monthKey = date.substring(0, 7);
+        if (!results.some((row) => JSON.parse(row.attendance_data)[date])) {
+          formattedData[monthKey].absent += 1; // Mark missing weekday dates as absent
+        }
+      });
+    });
+
+    res.json(Object.values(formattedData));
+  });
+});
+//chart data end
+//Student log table data
+app.route('/logs')
+.get(async (req, res) => {
+  const { student_id } = req.query; // Receive student_id from query params
+  try {
+    // Fetch student name from admission_form table
+    const [students] = await pool.promise().query('SELECT name FROM admission_form WHERE id = ?', [student_id]);
+    const student = students[0];
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    const sheetName = `${student.name}`; // Use student name as sheet name
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${sheetName}!A:G`,
+    });
+
+    if (response.data.values) {
+      const rows = response.data.values.slice(1).reverse();
+      res.json(rows);
+    } else {
+      res.json({ message: 'No logs found' });
+    }
+  } catch (error) {
+    console.error('Google Sheets API Error:', error.message);
+    res.status(500).json({ message: 'Failed to fetch logs', error: error.message });
+  }
+})
+
+.post(async (req, res) => {
+  const { student_id, date, projectName, taskName, taskDescription, status, timeTaken, remarks } = req.body;
+  try {
+    // Fetch student name from admission_form table
+    const [students] = await pool.promise().query('SELECT name FROM admission_form WHERE id = ?', [student_id]);
+    const student = students[0];
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    const sheetName = `${student.name}`; // Use student name as sheet name
+    const values = [[date, projectName, taskName, status, timeTaken, remarks, taskDescription]];
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${sheetName}!A:G`,
+      valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: { values: values },
+    });
+
+    // Fetch updated logs
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${sheetName}!A:G`,
+    });
+
+    if (response.data.values) {
+      res.status(200).json(response.data.values);
+    } else {
+      res.json({ message: 'Log added successfully, but no logs found' });
+    }
+  } catch (error) {
+    console.error('Google Sheets API Error:', error.message);
+    res.status(500).json({ message: 'Failed to add log', error: error.message });
+  }
 });
 
 // Start the server

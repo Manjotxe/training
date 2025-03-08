@@ -121,7 +121,14 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
               <a href={`/assignments/${userId}`} className="nav-item">
                 Assignments
               </a>
+              
             )}
+            {role === "user" && (
+             <a href="/studentlogs"  className="nav-item">Student Logs</a>
+              
+            )}
+                              
+
 
             {isLoggedIn ? (
               <a href="/lectures" className="nav-item">
@@ -152,6 +159,7 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
                 >
                   <a href="/canvas">Inquiry Form</a>
                   <a href="/data">All Students</a>
+                  <a href="/dashboard">Records</a>
                   <a href="/add-lecture">Add Lecture</a>
                   <a href="/assignment">Assignments</a>
                 </div>

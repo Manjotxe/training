@@ -31,6 +31,7 @@ router.post("/submit", async (req, res) => {
       "INSERT INTO inquiry (name, email, canvas_data) VALUES (?, ?, ?)",
       [name, email, canvasData]
     );
+
     // Send email confirmation
     await sendInquiryConfirmationEmail(name, email, canvasData);
 
