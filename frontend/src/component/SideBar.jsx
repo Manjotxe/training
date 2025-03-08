@@ -96,7 +96,7 @@ const Sidebar = () => {
               <span className="section-line"></span>
             </h6>
             <nav className="nav-group">
-              <SidebarLink to="#" icon={FileText}>
+              <SidebarLink to="/reports" icon={FileText}>
                 Reports
               </SidebarLink>
               <SidebarLink to="/data" icon={Users}>

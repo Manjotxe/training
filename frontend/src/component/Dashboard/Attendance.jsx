@@ -71,6 +71,12 @@ const Dashboard = () => {
     absentPercent: 0,
     name: 0,
   });
+  useEffect(() => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        setIsLoggedIn(true);
+      }
+    }, []);
 
   useEffect(() => {
     const storedData = localStorage.getItem("currentYearData");
