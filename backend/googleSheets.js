@@ -3,7 +3,7 @@ const fs = require("fs");
 
 // Load service account key
 const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(fs.readFileSync("training-453008-6f71eafab851.json")), // Your JSON file
+  credentials: JSON.parse(fs.readFileSync("credentials.json")), // Your JSON file
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
 
