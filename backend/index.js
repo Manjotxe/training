@@ -24,13 +24,14 @@ const path = require("path");
 const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
+const { readData, updateRemark } = require("./googleSheets");
 const axios = require("axios");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
 const { sendBillEmail } = require("./emailTemplates/SendBill");
 const {
   sendAdmissionConfirmationEmail,
   sendAdmissionDetailsToAdmin,
-} = require("./Sendemail"); // Import the email service module
+} = require("./Sendemail");
 
 // Middleware setup
 app.use(bodyParser.json({ limit: "100mb" }));
@@ -58,6 +59,15 @@ const sheets = google.sheets({ version: 'v4', auth });
 const SPREADSHEET_ID = '1eP4lRLqtbCjYEuHWDt14cZemRXA20VUNXsYHQHjMSew'; // Your Sheet ID
 // Inquiry
 app.use("/api/inquiry", inquiryRoute);
+
+app.get("/api/data", async (req, res) => {
+  try {
+    const data = await readData("'Ravinder'!A1:G100");
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Fetch lectures for a specific date
 app.get("/api/lectures", (req, res) => {
