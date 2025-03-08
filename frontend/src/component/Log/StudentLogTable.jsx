@@ -57,9 +57,10 @@ const TaskLogManager = () => {
         date: row[0],
         projectName: row[1],
         taskName: row[2],
-        status: row[3],
-        timeTaken: row[4],
-        remarks: row[5]
+        taskDescription: row[3],
+        status: row[4],
+        timeTaken: row[5],
+        remarks: row[6]
       }));
       setLogs(formattedData);
     } catch (error) {
@@ -161,6 +162,7 @@ const TaskLogManager = () => {
                 <th>Date</th>
                 <th>Project</th>
                 <th>Task</th>
+                <th>Task Description</th>
                 <th>Status</th>
                 <th>Time</th>
               </tr>
@@ -171,12 +173,14 @@ const TaskLogManager = () => {
                   <td style={{ whiteSpace: 'nowrap' }}>{log.date}</td>
                   <td>{log.projectName}</td>
                   <td>{log.taskName}</td>
+                  <td>{log.taskDescription}</td>
                   <td>{log.status}</td>
                   <td>{log.timeTaken}</td>
                 </tr>
               ))}
               {emptyRows.map((_, index) => (
                 <tr key={`empty-${index}`} style={{ height: '50px' }}>
+                  <td>&nbsp;</td>
                   <td>&nbsp;</td>
                   <td>&nbsp;</td>
                   <td>&nbsp;</td>
