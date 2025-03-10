@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Header from '../Header';
-import '../../styles/StudentLogsManage.css';
-import axios from 'axios';
-import TaskLogForm from './StudentLogForm';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import Header from "../Header";
+import "../../styles/StudentLogsManage.css";
+import axios from "axios";
+import TaskLogForm from "./StudentLogForm";
+import { motion, AnimatePresence } from "framer-motion";
 
-const API_URL = 'http://localhost:5000/logs';
+const API_URL = "http://localhost:5000/logs";
 
-const TaskLogManager = () => {
+const StudentLogTable = () => {
   const [showForm, setShowForm] = useState(false);
   const [showRemarks, setShowRemarks] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const navigate = useNavigate();
-
   const [logs, setLogs] = useState([]);
   const [remarks, setRemarks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,17 +20,23 @@ const TaskLogManager = () => {
   const remarksPerPage = 10;
   const [tableHeight, setTableHeight] = useState(0);
   const tableContainerRef = useRef(null);
-  const today = new Date().toISOString().split('T')[0];
+  const navigate = useNavigate();
+
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+  };
+
   const [formData, setFormData] = useState({
-    date: today,
-    projectName: '',
-    taskName: '',
-    taskDescription: '',
-    status: '',
-    timeTaken: '',
-    remark: '',
+    date: getTodayDate(), // Set today's date as default
+    projectName: "",
+    taskName: "",
+    taskDescription: "",
+    status: "",
+    timeTaken: "",
+    remarks: "",
   });
-  
 
   useEffect(() => {
     fetchLogs();
@@ -54,10 +58,9 @@ const TaskLogManager = () => {
   }, []);
 
   const fetchLogs = async () => {
-    const studentId = localStorage.getItem('ID'); 
-
+    const studentId = localStorage.getItem("ID");
     if (!studentId) {
-      console.error('Student ID not found in localStorage');
+      console.error("Student ID not found in localStorage");
       return;
     }
 
@@ -74,30 +77,32 @@ const TaskLogManager = () => {
       }));
       setLogs(formattedData);
     } catch (error) {
-      console.error('Failed to fetch logs', error);
+      console.error("Failed to fetch logs", error);
     }
   };
 
   const fetchRemarks = async () => {
-    const studentId = localStorage.getItem('ID');
+    const studentId = localStorage.getItem("ID");
 
     if (!studentId) {
-      console.error('Student ID not found in localStorage');
+      console.error("Student ID not found in localStorage");
       return;
     }
 
     try {
       const response = await axios.get(`${API_URL}?student_id=${studentId}`);
-      // Only extract date and remark fields
+      // Only extract date and remarks fields
       const formattedData = response.data.map((row) => ({
         date: row[0],
-        remark: row[6]
+        remarks: row[6],
       }));
       // Filter out entries with empty remarks
-      const filteredData = formattedData.filter(item => item.remark && item.remark.trim() !== '');
+      const filteredData = formattedData.filter(
+        (item) => item.remarks && item.remarks.trim() !== ""
+      );
       setRemarks(filteredData);
     } catch (error) {
-      console.error('Failed to fetch remarks', error);
+      console.error("Failed to fetch remarks", error);
     }
   };
 
@@ -115,16 +120,17 @@ const TaskLogManager = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const studentId = localStorage.getItem('ID');
+    const studentId = localStorage.getItem("ID");
 
     if (!studentId) {
-      console.error('Student ID not found in localStorage');
+      console.error("Student ID not found in localStorage");
       return;
     }
 
     const finalFormData = {
       ...formData,
-      student_id: studentId 
+      date: formData.date || getTodayDate(), // Ensure date is set
+      student_id: studentId,
     };
 
     try {
@@ -132,17 +138,17 @@ const TaskLogManager = () => {
       fetchLogs();
       fetchRemarks();
       setFormData({
-        date: '',
-        projectName: '',
-        taskName: '',
-        taskDescription: '',
-        status: '',
-        timeTaken: '',
-        remark: '',
+        date: getTodayDate(), // Reset form with today's date
+        projectName: "",
+        taskName: "",
+        taskDescription: "",
+        status: "",
+        timeTaken: "",
+        remarks: "",
       });
       setShowForm(false);
     } catch (error) {
-      console.error('Failed to add log', error);
+      console.error("Failed to add log", error);
     }
   };
 
@@ -176,15 +182,18 @@ const TaskLogManager = () => {
   return (
     <>
       <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} />
-      <div className="theme-container" style={{ maxWidth: '100%', width: '100%' }}>
+      <div
+        className="theme-container"
+        style={{ maxWidth: "100%", width: "100%" }}
+      >
         <div className="header-container">
           <h1 className="gradient-text">Task Manager</h1>
           <div className="buttons-container">
             <button onClick={toggleRemarks} className="add-button">
-              {showRemarks ? 'Cancel' : 'Show Remarks'}
+              {showRemarks ? "Cancel" : "Show Remarks"}
             </button>
             <button onClick={toggleForm} className="add-button">
-              {showForm ? 'Cancel' : '+ Add Task Log'}
+              {showForm ? "Cancel" : "+ Add Task Log"}
             </button>
           </div>
         </div>
@@ -195,10 +204,15 @@ const TaskLogManager = () => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: 'easeInOut' }}
-              style={{ maxWidth: '100%', width: '100%' }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              style={{ maxWidth: "100%", width: "100%" }}
             >
-              <TaskLogForm formData={formData} handleChange={handleChange} handleSubmit={handleSubmit} setShowForm={setShowForm} />
+              <TaskLogForm
+                formData={formData}
+                handleChange={handleChange}
+                handleSubmit={handleSubmit}
+                setShowForm={setShowForm}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -209,8 +223,8 @@ const TaskLogManager = () => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: 'easeInOut' }}
-              style={{ maxWidth: '100%', width: '100%' }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              style={{ maxWidth: "100%", width: "100%" }}
               className="remarks-container"
             >
               <div className="remarks-header">
@@ -228,13 +242,15 @@ const TaskLogManager = () => {
                     {currentRemarks.length > 0 ? (
                       currentRemarks.map((item, index) => (
                         <tr key={index}>
-                          <td style={{ whiteSpace: 'nowrap' }}>{item.date}</td>
-                          <td>{item.remark}</td>
+                          <td style={{ whiteSpace: "nowrap" }}>{item.date}</td>
+                          <td>{item.remarks}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="2" style={{ textAlign: 'center' }}>No remarks found</td>
+                        <td colSpan="2" style={{ textAlign: "center" }}>
+                          No remarks found
+                        </td>
                       </tr>
                     )}
                   </tbody>
@@ -246,7 +262,9 @@ const TaskLogManager = () => {
                       <button
                         key={number + 1}
                         onClick={() => paginateRemarks(number + 1)}
-                        className={remarksCurrentPage === number + 1 ? 'active' : ''}
+                        className={
+                          remarksCurrentPage === number + 1 ? "active" : ""
+                        }
                       >
                         {number + 1}
                       </button>
@@ -258,12 +276,12 @@ const TaskLogManager = () => {
           )}
         </AnimatePresence>
 
-        <div 
+        <div
           ref={tableContainerRef}
-          className="table-container" 
-          style={{ 
-            height: tableHeight > 0 ? `${tableHeight}px` : 'auto',
-            minHeight: '350px' 
+          className="table-container"
+          style={{
+            height: tableHeight > 0 ? `${tableHeight}px` : "auto",
+            minHeight: "350px",
           }}
         >
           <table className="task-table">
@@ -274,23 +292,20 @@ const TaskLogManager = () => {
                 <th>Task</th>
                 <th>Status</th>
                 <th>Time</th>
-                <th>Remarks</th>
               </tr>
             </thead>
             <tbody>
               {currentLogs.map((log, index) => (
                 <tr key={index}>
-                  <td style={{ whiteSpace: 'nowrap' }}>{log.date}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>{log.date}</td>
                   <td>{log.projectName}</td>
                   <td>{log.taskName}</td>
                   <td>{log.status}</td>
                   <td>{log.timeTaken}</td>
-                  <td>{log.remark}</td>
                 </tr>
               ))}
               {emptyRows.map((_, index) => (
-                <tr key={`empty-${index}`} style={{ height: '50px' }}>
-                  <td>&nbsp;</td>
+                <tr key={`empty-${index}`} style={{ height: "50px" }}>
                   <td>&nbsp;</td>
                   <td>&nbsp;</td>
                   <td>&nbsp;</td>
@@ -307,7 +322,7 @@ const TaskLogManager = () => {
             <button
               key={number + 1}
               onClick={() => paginate(number + 1)}
-              className={currentPage === number + 1 ? 'active' : ''}
+              className={currentPage === number + 1 ? "active" : ""}
             >
               {number + 1}
             </button>
@@ -318,4 +333,4 @@ const TaskLogManager = () => {
   );
 };
 
-export default TaskLogManager;
+export default StudentLogTable;
