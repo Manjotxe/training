@@ -19,7 +19,6 @@ const CourseManagement = () => {
     image: "",
     languages: "",
     price: "", // Added price field
-    description: "", // Added description field
   });
 
   useEffect(() => {
@@ -39,7 +38,7 @@ const CourseManagement = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/courses");
+        const response = await axios.get("http://localhost:5000/api/courses/main");
         setCourses(response.data);
       } catch (err) {
         console.error("Error fetching courses:", err);
@@ -71,7 +70,6 @@ const CourseManagement = () => {
         image: "",
         languages: "",
         price: "",
-        description: "",
       }); // Reset form
       setShowModal(false); // Hide modal
     } catch (err) {
@@ -130,11 +128,7 @@ const CourseManagement = () => {
                         <span>Price:</span> ${course.price}
                       </p>
                     </div>
-                    <div className={styles.cardDetails}>
-                      <p>
-                        <span>Description:</span> {course.description}
-                      </p>
-                    </div>
+                   
                   </div>
                 </div>
               </div>
@@ -205,16 +199,7 @@ const CourseManagement = () => {
                   required
                 />
               </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="description">Description</label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={newCourse.description}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
+              
               <div className={styles.modalActions}>
                 <button
                   type="button"
