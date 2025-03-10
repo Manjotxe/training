@@ -8,17 +8,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = 'http://localhost:5000/logs';
 
-const TaskLogManager = () => {
+const StudentLogTable = () => {
   const [showForm, setShowForm] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [logs, setLogs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const logsPerPage = 5;
   const [tableHeight, setTableHeight] = useState(0);
   const tableContainerRef = useRef(null);
+
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  };
+
   const [formData, setFormData] = useState({
-    date: '',
+    date: getTodayDate(), // Set today's date as default
     projectName: '',
     taskName: '',
     taskDescription: '',
@@ -37,22 +43,23 @@ const TaskLogManager = () => {
       setTableHeight(height);
     }
   }, [logs, currentPage]);
+
   useEffect(() => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        setIsLoggedIn(true);
-      }
-    }, []);
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   const fetchLogs = async () => {
-    const studentId = localStorage.getItem('ID'); // Get student ID from localStorage
-  
+    const studentId = localStorage.getItem('ID');
     if (!studentId) {
       console.error('Student ID not found in localStorage');
       return;
     }
   
     try {
-      const response = await axios.get(`${API_URL}?student_id=${studentId}`); // Pass student_id as query parameter
+      const response = await axios.get(`${API_URL}?student_id=${studentId}`);
       const formattedData = response.data.map((row) => ({
         date: row[0],
         projectName: row[1],
@@ -66,22 +73,22 @@ const TaskLogManager = () => {
       console.error('Failed to fetch logs', error);
     }
   };
-  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
     setIsLoggedIn(false);
-    navigate("/");
+    navigate('/');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const studentId = localStorage.getItem('ID'); // Get student ID from localStorage
+    const studentId = localStorage.getItem('ID');
   
     if (!studentId) {
       console.error('Student ID not found in localStorage');
@@ -90,14 +97,15 @@ const TaskLogManager = () => {
   
     const finalFormData = {
       ...formData,
-      student_id: studentId // Add student_id to formData
+      date: formData.date || getTodayDate(), // Ensure date is set
+      student_id: studentId
     };
   
     try {
       await axios.post(API_URL, finalFormData);
       fetchLogs();
       setFormData({
-        date: '',
+        date: getTodayDate(), // Reset form with today's date
         projectName: '',
         taskName: '',
         taskDescription: '',
@@ -110,7 +118,6 @@ const TaskLogManager = () => {
       console.error('Failed to add log', error);
     }
   };
-  
 
   const indexOfLastLog = currentPage * logsPerPage;
   const indexOfFirstLog = indexOfLastLog - logsPerPage;
@@ -204,4 +211,4 @@ const TaskLogManager = () => {
   );
 };
 
-export default TaskLogManager;
+export default StudentLogTable;
