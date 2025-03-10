@@ -24,6 +24,7 @@ const path = require("path");
 const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
+const CreateGooglesheet = require("./CreateGoogleSheet");
 const axios = require("axios");
 const { readData, updateRemark, getSheetNames } = require("./googleSheets");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
@@ -57,6 +58,7 @@ const auth = new google.auth.GoogleAuth({
 
 const sheets = google.sheets({ version: "v4", auth });
 const SPREADSHEET_ID = "1eP4lRLqtbCjYEuHWDt14cZemRXA20VUNXsYHQHjMSew"; // Your Sheet ID
+app.use("/googlesheets", CreateGooglesheet);
 // Inquiry
 app.use("/api/inquiry", inquiryRoute);
 // Fetch Google Sheets Data
