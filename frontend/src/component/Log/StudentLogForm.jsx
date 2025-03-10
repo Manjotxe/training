@@ -1,6 +1,8 @@
 import React from 'react';
 
 const TaskLogForm = ({ formData, handleChange, handleSubmit, setShowForm }) => {
+  const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
   return (
     <div className="form-container form-open">
       <div className="form-card">
@@ -12,7 +14,7 @@ const TaskLogForm = ({ formData, handleChange, handleSubmit, setShowForm }) => {
               <input
                 type="date"
                 name="date"
-                value={formData.date}
+                value={formData.date || today} // Set today's date if no value is present
                 onChange={handleChange}
                 required
               /> 
@@ -69,7 +71,6 @@ const TaskLogForm = ({ formData, handleChange, handleSubmit, setShowForm }) => {
                 required
               />
             </div>
-
 
             <div className="form-group full-width">
               <label>Task Description</label>

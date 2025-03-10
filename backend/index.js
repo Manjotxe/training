@@ -69,6 +69,7 @@ app.get("/api/data", async (req, res) => {
   }
 });
 
+
 // Fetch lectures for a specific date
 app.get("/api/lectures", (req, res) => {
   const { date } = req.query; // Get the date from the query string
@@ -1126,8 +1127,9 @@ app.route('/logs')
   }
 })
 
+
 .post(async (req, res) => {
-  const { student_id, date, projectName, taskName, taskDescription, status, timeTaken, remarks } = req.body;
+  const { student_id, date, projectName, taskName, taskDescription, status, timeTaken } = req.body;
   try {
     // Fetch student name from admission_form table
     const [students] = await pool.promise().query('SELECT name FROM admission_form WHERE id = ?', [student_id]);
@@ -1137,7 +1139,7 @@ app.route('/logs')
     }
 
     const sheetName = `${student.name}`; // Use student name as sheet name
-    const values = [[date, projectName, taskName, status, timeTaken, remarks, taskDescription]];
+    const values = [[date, projectName, taskName, taskDescription,status, timeTaken]];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
@@ -1163,6 +1165,9 @@ app.route('/logs')
     res.status(500).json({ message: 'Failed to add log', error: error.message });
   }
 });
+
+
+
 
 // Start the server
 const PORT = process.env.PORT || 3000;
