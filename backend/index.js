@@ -24,13 +24,14 @@ const path = require("path");
 const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
+const { readData, updateRemark } = require("./googleSheets");
 const axios = require("axios");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
 const { sendBillEmail } = require("./emailTemplates/SendBill");
 const {
   sendAdmissionConfirmationEmail,
   sendAdmissionDetailsToAdmin,
-} = require("./Sendemail"); // Import the email service module
+} = require("./Sendemail");
 
 // Middleware setup
 app.use(bodyParser.json({ limit: "100mb" }));
@@ -58,6 +59,16 @@ const sheets = google.sheets({ version: 'v4', auth });
 const SPREADSHEET_ID = '1eP4lRLqtbCjYEuHWDt14cZemRXA20VUNXsYHQHjMSew'; // Your Sheet ID
 // Inquiry
 app.use("/api/inquiry", inquiryRoute);
+
+app.get("/api/data", async (req, res) => {
+  try {
+    const data = await readData("'Ravinder'!A1:G100");
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 // Fetch lectures for a specific date
 app.get("/api/lectures", (req, res) => {
@@ -1116,8 +1127,9 @@ app.route('/logs')
   }
 })
 
+
 .post(async (req, res) => {
-  const { student_id, date, projectName, taskName, taskDescription, status, timeTaken, remarks } = req.body;
+  const { student_id, date, projectName, taskName, taskDescription, status, timeTaken } = req.body;
   try {
     // Fetch student name from admission_form table
     const [students] = await pool.promise().query('SELECT name FROM admission_form WHERE id = ?', [student_id]);
@@ -1127,7 +1139,7 @@ app.route('/logs')
     }
 
     const sheetName = `${student.name}`; // Use student name as sheet name
-    const values = [[date, projectName, taskName, status, timeTaken, remarks, taskDescription]];
+    const values = [[date, projectName, taskName, taskDescription,status, timeTaken]];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
@@ -1153,6 +1165,9 @@ app.route('/logs')
     res.status(500).json({ message: 'Failed to add log', error: error.message });
   }
 });
+
+
+
 
 // Start the server
 const PORT = process.env.PORT || 3000;

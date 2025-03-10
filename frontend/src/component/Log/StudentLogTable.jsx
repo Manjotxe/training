@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import Header from '../Header';
 import '../../styles/StudentLogsManage.css';
 import axios from 'axios';
@@ -8,30 +8,26 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = 'http://localhost:5000/logs';
 
-const StudentLogTable = () => {
+const TaskLogManager = () => {
   const [showForm, setShowForm] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate(); // Initialize navigate function
+
   const [logs, setLogs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const logsPerPage = 5;
   const [tableHeight, setTableHeight] = useState(0);
   const tableContainerRef = useRef(null);
-
-  // Get today's date in YYYY-MM-DD format
-  const getTodayDate = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-  };
-
+  const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
   const [formData, setFormData] = useState({
-    date: getTodayDate(), // Set today's date as default
+    date: today, // Set default date
     projectName: '',
     taskName: '',
     taskDescription: '',
     status: '',
     timeTaken: '',
-    remarks: ''
   });
+  
 
   useEffect(() => {
     fetchLogs();
@@ -45,28 +41,29 @@ const StudentLogTable = () => {
   }, [logs, currentPage]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       setIsLoggedIn(true);
     }
   }, []);
 
   const fetchLogs = async () => {
-    const studentId = localStorage.getItem('ID');
+    const studentId = localStorage.getItem('ID'); 
+
     if (!studentId) {
       console.error('Student ID not found in localStorage');
       return;
     }
-  
+
     try {
       const response = await axios.get(`${API_URL}?student_id=${studentId}`);
       const formattedData = response.data.map((row) => ({
         date: row[0],
         projectName: row[1],
         taskName: row[2],
-        status: row[3],
-        timeTaken: row[4],
-        remarks: row[5]
+        taskDescription: row[3],
+        status: row[4],
+        timeTaken: row[5],
       }));
       setLogs(formattedData);
     } catch (error) {
@@ -80,38 +77,36 @@ const StudentLogTable = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
     setIsLoggedIn(false);
-    navigate('/');
+    navigate("/"); // Redirect to login page after logout
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const studentId = localStorage.getItem('ID');
-  
+
     if (!studentId) {
       console.error('Student ID not found in localStorage');
       return;
     }
-  
+
     const finalFormData = {
       ...formData,
-      date: formData.date || getTodayDate(), // Ensure date is set
-      student_id: studentId
+      student_id: studentId 
     };
-  
+
     try {
       await axios.post(API_URL, finalFormData);
       fetchLogs();
       setFormData({
-        date: getTodayDate(), // Reset form with today's date
+        date: '',
         projectName: '',
         taskName: '',
         taskDescription: '',
         status: '',
         timeTaken: '',
-        remarks: ''
       });
       setShowForm(false);
     } catch (error) {
@@ -211,4 +206,4 @@ const StudentLogTable = () => {
   );
 };
 
-export default StudentLogTable;
+export default TaskLogManager;
