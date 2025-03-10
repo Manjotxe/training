@@ -27,7 +27,6 @@ import FaceLogin from "./component/FaceLogin.jsx";
 import Attendance from "./component/Attendance.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
 import CourseDetails from "./component/CourseDetails.jsx";
-import GoogleSheetsData from "./component/GoogleSheetsData.jsx";
 import AttendanceChart from "./component/Dashboard/Attendance.jsx";
 import StudentLogs from "./component/Log/StudentLogTable.jsx";
 
@@ -37,7 +36,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/reports" element={<GoogleSheetsData />} />
         <Route path="/facelogin" element={<FaceLogin />} />
         <Route
           path="/assignments/:id"

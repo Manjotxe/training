@@ -24,7 +24,6 @@ const path = require("path");
 const pool = require("./Connection");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
-const { readData, updateRemark } = require("./googleSheets");
 const axios = require("axios");
 const { readData, updateRemark, getSheetNames } = require("./googleSheets");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
@@ -32,7 +31,7 @@ const { sendBillEmail } = require("./emailTemplates/SendBill");
 const {
   sendAdmissionConfirmationEmail,
   sendAdmissionDetailsToAdmin,
-} = require("./Sendemail");
+} = require("./Sendemail"); // Import the email service module
 
 // Middleware setup
 app.use(bodyParser.json({ limit: "100mb" }));
@@ -96,15 +95,6 @@ app.post("/api/update-remark", async (req, res) => {
 
     await updateRemark(sheetName, date, remark);
     res.json({ message: "Remark updated successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get("/api/data", async (req, res) => {
-  try {
-    const data = await readData("'Ravinder'!A1:G100");
-    res.json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
