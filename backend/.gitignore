@@ -15,7 +15,7 @@ dist
 dist-ssr
 *.local
 credentials.json
-training-453008-6f71eafab851.json
+training-453008-6f71eafab851
 
 # Editor directories and files
 .vscode/*
