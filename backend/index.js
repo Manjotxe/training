@@ -86,17 +86,20 @@ app.get("/api/sheets", async (req, res) => {
 // ✅ Update Remark in Google Sheets
 app.post("/api/update-remark", async (req, res) => {
   try {
-    const { date, remark } = req.body;
-    if (!date || !remark) {
-      return res.status(400).json({ error: "Date and remark are required" });
+    const { sheetName, date, remark } = req.body;
+    if (!sheetName || !date || !remark) {
+      return res
+        .status(400)
+        .json({ error: "Sheet name, date, and remark are required" });
     }
 
-    await updateRemark(date, remark);
+    await updateRemark(sheetName, date, remark);
     res.json({ message: "Remark updated successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Fetch lectures for a specific date
 app.get("/api/lectures", (req, res) => {
   const { date } = req.query; // Get the date from the query string
@@ -1168,7 +1171,6 @@ app
       taskDescription,
       status,
       timeTaken,
-      remarks,
     } = req.body;
     try {
       // Fetch student name from admission_form table
@@ -1182,15 +1184,7 @@ app
 
       const sheetName = `${student.name}`; // Use student name as sheet name
       const values = [
-        [
-          date,
-          projectName,
-          taskName,
-          status,
-          timeTaken,
-          remarks,
-          taskDescription,
-        ],
+        [date, projectName, taskName, taskDescription, status, timeTaken],
       ];
 
       await sheets.spreadsheets.values.append({
