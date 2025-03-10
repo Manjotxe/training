@@ -7,6 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Ignore credentials file (Google credentials)
+
+# Node.js dependencies
+backend/node_modules
 node_modules
 dist
 dist-ssr

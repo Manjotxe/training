@@ -1,4 +1,6 @@
 require("dotenv").config();
+const { google } = require("googleapis");
+
 const {
   getAllLectures,
   getLecturesByDate,
@@ -10,6 +12,8 @@ const { format, eachDayOfInterval, parseISO } = require("date-fns");
 const inquiryRoute = require("./inquiry");
 require("./chat");
 const express = require("express");
+const credentials = require("./credentials.json"); // Your Google JSON File
+
 const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -46,9 +50,15 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+const auth = new google.auth.GoogleAuth({
+  credentials: credentials,
+  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+});
+
+const sheets = google.sheets({ version: "v4", auth });
+const SPREADSHEET_ID = "1eP4lRLqtbCjYEuHWDt14cZemRXA20VUNXsYHQHjMSew"; // Your Sheet ID
 // Inquiry
 app.use("/api/inquiry", inquiryRoute);
-
 // Fetch Google Sheets Data
 app.get("/api/data", async (req, res) => {
   try {
@@ -85,6 +95,28 @@ app.post("/api/update-remark", async (req, res) => {
     res.json({ message: "Remark updated successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+// Fetch lectures for a specific date
+app.get("/api/lectures", (req, res) => {
+  const { date } = req.query; // Get the date from the query string
+
+  if (date) {
+    // If date is provided, fetch lectures by date
+    getLecturesByDate(date, (err, lectures) => {
+      if (err) {
+        return res.status(500).json({ message: "Error fetching lectures" });
+      }
+      res.status(200).json(lectures);
+    });
+  } else {
+    // If no date is provided, fetch all lectures
+    getAllLectures((err, lectures) => {
+      if (err) {
+        return res.status(500).json({ message: "Error fetching lectures" });
+      }
+      res.status(200).json(lectures);
+    });
   }
 });
 
@@ -1092,6 +1124,101 @@ app.get("/api/attendance", (req, res) => {
   });
 });
 //chart data end
+//Student log table data
+app
+  .route("/logs")
+  .get(async (req, res) => {
+    const { student_id } = req.query; // Receive student_id from query params
+    try {
+      // Fetch student name from admission_form table
+      const [students] = await pool
+        .promise()
+        .query("SELECT name FROM admission_form WHERE id = ?", [student_id]);
+      const student = students[0];
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      const sheetName = `${student.name}`; // Use student name as sheet name
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${sheetName}!A:G`,
+      });
+
+      if (response.data.values) {
+        const rows = response.data.values.slice(1).reverse();
+        res.json(rows);
+      } else {
+        res.json({ message: "No logs found" });
+      }
+    } catch (error) {
+      console.error("Google Sheets API Error:", error.message);
+      res
+        .status(500)
+        .json({ message: "Failed to fetch logs", error: error.message });
+    }
+  })
+
+  .post(async (req, res) => {
+    const {
+      student_id,
+      date,
+      projectName,
+      taskName,
+      taskDescription,
+      status,
+      timeTaken,
+      remarks,
+    } = req.body;
+    try {
+      // Fetch student name from admission_form table
+      const [students] = await pool
+        .promise()
+        .query("SELECT name FROM admission_form WHERE id = ?", [student_id]);
+      const student = students[0];
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      const sheetName = `${student.name}`; // Use student name as sheet name
+      const values = [
+        [
+          date,
+          projectName,
+          taskName,
+          status,
+          timeTaken,
+          remarks,
+          taskDescription,
+        ],
+      ];
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${sheetName}!A:G`,
+        valueInputOption: "RAW",
+        insertDataOption: "INSERT_ROWS",
+        requestBody: { values: values },
+      });
+
+      // Fetch updated logs
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${sheetName}!A:G`,
+      });
+
+      if (response.data.values) {
+        res.status(200).json(response.data.values);
+      } else {
+        res.json({ message: "Log added successfully, but no logs found" });
+      }
+    } catch (error) {
+      console.error("Google Sheets API Error:", error.message);
+      res
+        .status(500)
+        .json({ message: "Failed to add log", error: error.message });
+    }
+  });
 
 // Start the server
 const PORT = process.env.PORT || 3000;
