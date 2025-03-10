@@ -21,6 +21,7 @@ import StudentLocationChart from "./component/StudentLocationChart.jsx";
 import Dashboard from "./component/Dashboard/Dashboard.jsx";
 import AdminChat from "./component/AdminChatApp.jsx";
 import AttendanceDetail from "./component/AttendanceDetail.jsx";
+import StudentTasksTracker from "./component/GoogleSheetsData.jsx";
 import StudentCourseGenderChart from "./component/StudentCourseGenderChart.jsx";
 import FaceLogin from "./component/FaceLogin.jsx";
 import Attendance from "./component/Attendance.jsx";
@@ -61,6 +62,14 @@ function App() {
           element={
             <PrivateRoute>
               <AdminChat />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <PrivateRoute>
+              <StudentTasksTracker />
             </PrivateRoute>
           }
         />
@@ -170,12 +179,7 @@ function App() {
             </PrivateRoute>
           }
         />
-         <Route
-          path="/studentlogs"
-          element={
-              <StudentLogs />
-          }
-        />
+        <Route path="/studentlogs" element={<StudentLogs />} />
         <Route
           path="/lectures"
           element={

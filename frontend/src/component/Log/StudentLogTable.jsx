@@ -1,34 +1,46 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import Header from '../Header';
-import '../../styles/StudentLogsManage.css';
-import axios from 'axios';
-import TaskLogForm from './StudentLogForm';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import Header from "../Header";
+import "../../styles/StudentLogsManage.css";
+import axios from "axios";
+import TaskLogForm from "./StudentLogForm";
+import { motion, AnimatePresence } from "framer-motion";
 
-const API_URL = 'http://localhost:5000/logs';
+const API_URL = "http://localhost:5000/logs";
 
-const TaskLogManager = () => {
+const StudentLogTable = () => {
   const [showForm, setShowForm] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
+  const [showRemarks, setShowRemarks] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [remarks, setRemarks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [remarksCurrentPage, setRemarksCurrentPage] = useState(1);
   const logsPerPage = 5;
+  const remarksPerPage = 10;
   const [tableHeight, setTableHeight] = useState(0);
   const tableContainerRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+  };
+
   const [formData, setFormData] = useState({
-    date: '',
-    projectName: '',
-    taskName: '',
-    taskDescription: '',
-    status: '',
-    timeTaken: '',
-    remarks: ''
+    date: getTodayDate(), // Set today's date as default
+    projectName: "",
+    taskName: "",
+    taskDescription: "",
+    status: "",
+    timeTaken: "",
+    remarks: "",
   });
 
   useEffect(() => {
     fetchLogs();
+    fetchRemarks();
   }, []);
 
   useEffect(() => {
@@ -37,41 +49,68 @@ const TaskLogManager = () => {
       setTableHeight(height);
     }
   }, [logs, currentPage]);
+
   useEffect(() => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        setIsLoggedIn(true);
-      }
-    }, []);
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   const fetchLogs = async () => {
-    const studentId = localStorage.getItem('ID'); // Get student ID from localStorage
-  
+    const studentId = localStorage.getItem("ID");
     if (!studentId) {
-      console.error('Student ID not found in localStorage');
+      console.error("Student ID not found in localStorage");
       return;
     }
-  
+
     try {
-      const response = await axios.get(`${API_URL}?student_id=${studentId}`); // Pass student_id as query parameter
+      const response = await axios.get(`${API_URL}?student_id=${studentId}`);
       const formattedData = response.data.map((row) => ({
         date: row[0],
         projectName: row[1],
         taskName: row[2],
-        status: row[3],
-        timeTaken: row[4],
-        remarks: row[5]
+        taskDescription: row[3],
+        status: row[4],
+        timeTaken: row[5],
+        remark: row[6],
       }));
       setLogs(formattedData);
     } catch (error) {
-      console.error('Failed to fetch logs', error);
+      console.error("Failed to fetch logs", error);
     }
   };
-  
+
+  const fetchRemarks = async () => {
+    const studentId = localStorage.getItem("ID");
+
+    if (!studentId) {
+      console.error("Student ID not found in localStorage");
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${API_URL}?student_id=${studentId}`);
+      // Only extract date and remarks fields
+      const formattedData = response.data.map((row) => ({
+        date: row[0],
+        remarks: row[6],
+      }));
+      // Filter out entries with empty remarks
+      const filteredData = formattedData.filter(
+        (item) => item.remarks && item.remarks.trim() !== ""
+      );
+      setRemarks(filteredData);
+    } catch (error) {
+      console.error("Failed to fetch remarks", error);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
@@ -81,56 +120,82 @@ const TaskLogManager = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const studentId = localStorage.getItem('ID'); // Get student ID from localStorage
-  
+    const studentId = localStorage.getItem("ID");
+
     if (!studentId) {
-      console.error('Student ID not found in localStorage');
+      console.error("Student ID not found in localStorage");
       return;
     }
-  
+
     const finalFormData = {
       ...formData,
-      student_id: studentId // Add student_id to formData
+      date: formData.date || getTodayDate(), // Ensure date is set
+      student_id: studentId,
     };
-  
+
     try {
       await axios.post(API_URL, finalFormData);
       fetchLogs();
+      fetchRemarks();
       setFormData({
-        date: '',
-        projectName: '',
-        taskName: '',
-        taskDescription: '',
-        status: '',
-        timeTaken: '',
-        remarks: ''
+        date: getTodayDate(), // Reset form with today's date
+        projectName: "",
+        taskName: "",
+        taskDescription: "",
+        status: "",
+        timeTaken: "",
+        remarks: "",
       });
       setShowForm(false);
     } catch (error) {
-      console.error('Failed to add log', error);
+      console.error("Failed to add log", error);
     }
   };
-  
+
+  // Toggle functions to ensure only one popup is visible at a time
+  const toggleForm = () => {
+    setShowForm(!showForm);
+    if (showRemarks) setShowRemarks(false);
+  };
+
+  const toggleRemarks = () => {
+    setShowRemarks(!showRemarks);
+    if (showForm) setShowForm(false);
+  };
 
   const indexOfLastLog = currentPage * logsPerPage;
   const indexOfFirstLog = indexOfLastLog - logsPerPage;
   const currentLogs = logs.slice(indexOfFirstLog, indexOfLastLog);
   const totalPages = Math.ceil(logs.length / logsPerPage);
 
+  const indexOfLastRemark = remarksCurrentPage * remarksPerPage;
+  const indexOfFirstRemark = indexOfLastRemark - remarksPerPage;
+  const currentRemarks = remarks.slice(indexOfFirstRemark, indexOfLastRemark);
+  const totalRemarksPages = Math.ceil(remarks.length / remarksPerPage);
+
   const emptyRowsCount = logsPerPage - currentLogs.length;
   const emptyRows = Array(emptyRowsCount > 0 ? emptyRowsCount : 0).fill(null);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const paginateRemarks = (pageNumber) => setRemarksCurrentPage(pageNumber);
 
   return (
     <>
       <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} />
-      <div className="theme-container" style={{ maxWidth: '100%', width: '100%' }}>
+      <div
+        className="theme-container"
+        style={{ maxWidth: "100%", width: "100%" }}
+      >
         <div className="header-container">
           <h1 className="gradient-text">Task Manager</h1>
-          <button onClick={() => setShowForm(!showForm)} className="add-button">
-            {showForm ? 'Cancel' : '+ Add Task Log'}
-          </button>
+          <div className="buttons-container">
+            <button onClick={toggleRemarks} className="add-button">
+              {showRemarks ? "Cancel" : "Show Remarks"}
+            </button>
+            <button onClick={toggleForm} className="add-button">
+              {showForm ? "Cancel" : "+ Add Task Log"}
+            </button>
+          </div>
         </div>
 
         <AnimatePresence>
@@ -139,20 +204,84 @@ const TaskLogManager = () => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: 'easeInOut' }}
-              style={{ maxWidth: '100%', width: '100%' }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              style={{ maxWidth: "100%", width: "100%" }}
             >
-              <TaskLogForm formData={formData} handleChange={handleChange} handleSubmit={handleSubmit} setShowForm={setShowForm} />
+              <TaskLogForm
+                formData={formData}
+                handleChange={handleChange}
+                handleSubmit={handleSubmit}
+                setShowForm={setShowForm}
+              />
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div 
+        <AnimatePresence>
+          {showRemarks && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              style={{ maxWidth: "100%", width: "100%" }}
+              className="remarks-container"
+            >
+              <div className="remarks-header">
+                <h2>Remarks Log</h2>
+              </div>
+              <div className="remarks-content">
+                <table className="task-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentRemarks.length > 0 ? (
+                      currentRemarks.map((item, index) => (
+                        <tr key={index}>
+                          <td style={{ whiteSpace: "nowrap" }}>{item.date}</td>
+                          <td>{item.remarks}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="2" style={{ textAlign: "center" }}>
+                          No remarks found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+
+                {totalRemarksPages > 1 && (
+                  <div className="pagination">
+                    {[...Array(totalRemarksPages).keys()].map((number) => (
+                      <button
+                        key={number + 1}
+                        onClick={() => paginateRemarks(number + 1)}
+                        className={
+                          remarksCurrentPage === number + 1 ? "active" : ""
+                        }
+                      >
+                        {number + 1}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div
           ref={tableContainerRef}
-          className="table-container" 
-          style={{ 
-            height: tableHeight > 0 ? `${tableHeight}px` : 'auto',
-            minHeight: '350px' 
+          className="table-container"
+          style={{
+            height: tableHeight > 0 ? `${tableHeight}px` : "auto",
+            minHeight: "350px",
           }}
         >
           <table className="task-table">
@@ -168,7 +297,7 @@ const TaskLogManager = () => {
             <tbody>
               {currentLogs.map((log, index) => (
                 <tr key={index}>
-                  <td style={{ whiteSpace: 'nowrap' }}>{log.date}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>{log.date}</td>
                   <td>{log.projectName}</td>
                   <td>{log.taskName}</td>
                   <td>{log.status}</td>
@@ -176,7 +305,7 @@ const TaskLogManager = () => {
                 </tr>
               ))}
               {emptyRows.map((_, index) => (
-                <tr key={`empty-${index}`} style={{ height: '50px' }}>
+                <tr key={`empty-${index}`} style={{ height: "50px" }}>
                   <td>&nbsp;</td>
                   <td>&nbsp;</td>
                   <td>&nbsp;</td>
@@ -193,7 +322,7 @@ const TaskLogManager = () => {
             <button
               key={number + 1}
               onClick={() => paginate(number + 1)}
-              className={currentPage === number + 1 ? 'active' : ''}
+              className={currentPage === number + 1 ? "active" : ""}
             >
               {number + 1}
             </button>
@@ -204,4 +333,4 @@ const TaskLogManager = () => {
   );
 };
 
-export default TaskLogManager;
+export default StudentLogTable;
