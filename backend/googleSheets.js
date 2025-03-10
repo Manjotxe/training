@@ -13,7 +13,7 @@ const sheets = google.sheets({ version: "v4", auth });
 // Your Google Sheet ID (from URL)
 const SPREADSHEET_ID = "1eP4lRLqtbCjYEuHWDt14cZemRXA20VUNXsYHQHjMSew"; // Get it from the sheet URL
 
-// Read Data
+//  Read Data
 async function readData(range = "'Ravinder'!A1:G100") {
   // ✅ Corrected sheet name
   const response = await sheets.spreadsheets.values.get({
@@ -24,9 +24,9 @@ async function readData(range = "'Ravinder'!A1:G100") {
 }
 
 // ✅ Function to update remark based on date
-async function updateRemark(date, remark) {
+async function updateRemark(sheetName, date, remark) {
   try {
-    const range = "'Ravinder'!A1:G100"; // Adjust range if needed
+    const range = `'${sheetName}'!A1:G100`; // Adjust range if needed
     const data = await readData(range);
 
     let rowIndex = -1;
@@ -41,7 +41,7 @@ async function updateRemark(date, remark) {
       throw new Error(`No row found for date: ${date}`);
     }
 
-    const updateRange = `'Ravinder'!G${rowIndex}`; // Column G (Remark Column)
+    const updateRange = `'${sheetName}'!G${rowIndex}`; // Column G (Remark Column)
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
@@ -57,5 +57,17 @@ async function updateRemark(date, remark) {
     throw error;
   }
 }
+async function getSheetNames() {
+  try {
+    const response = await sheets.spreadsheets.get({
+      spreadsheetId: SPREADSHEET_ID,
+    });
 
-module.exports = { readData, updateRemark };
+    return response.data.sheets.map((sheet) => sheet.properties.title); // Returns an array of sheet names
+  } catch (error) {
+    console.error("Error fetching sheet names:", error.message);
+    throw error;
+  }
+}
+
+module.exports = { readData, updateRemark, getSheetNames };
