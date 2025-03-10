@@ -27,6 +27,7 @@ import Attendance from "./component/Attendance.jsx";
 import CanvasComponent from "./component/CanvasComponent.jsx";
 import CourseDetails from "./component/CourseDetails.jsx";
 import AttendanceChart from "./component/Dashboard/Attendance.jsx";
+import StudentLogs from "./component/Log/StudentLogTable.jsx";
 
 function App() {
   return (
@@ -167,6 +168,12 @@ function App() {
             <PrivateRoute>
               <Assignment />
             </PrivateRoute>
+          }
+        />
+         <Route
+          path="/studentlogs"
+          element={
+              <StudentLogs />
           }
         />
         <Route
