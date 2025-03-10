@@ -29,6 +29,7 @@ import CourseDetails from "./component/CourseDetails.jsx";
 import GoogleSheetsData from "./component/GoogleSheetsData.jsx";
 import AttendanceChart from "./component/Dashboard/Attendance.jsx";
 import StudentLogs from "./component/Log/StudentLogTable.jsx";
+import Remarks from "./component/Log/Remarks.jsx";
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/reports" element={<GoogleSheetsData />} />
         <Route path="/facelogin" element={<FaceLogin />} />
+        <Route path="/remarks" element={<Remarks />} />
         <Route
           path="/assignments/:id"
           element={
