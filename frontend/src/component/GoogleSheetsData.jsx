@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import SideBar from "./SideBar";
 import Header from "./Header";
@@ -20,6 +20,16 @@ const StudentTasksTracker = () => {
   const recordsPerPage = 5;
   const navigate = useNavigate();
 
+  // New state for searchable dropdown
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Filter sheet names based on search query
+  const filteredSheetNames = sheetNames.filter((name) =>
+    name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Fetch sheet names when component mounts
   useEffect(() => {
     const fetchSheetNames = async () => {
@@ -34,6 +44,7 @@ const StudentTasksTracker = () => {
         // Set first sheet as default if available
         if (data && data.length > 0) {
           setSelectedSheet(data[0]);
+          setSearchQuery(data[0]); // Set search query to match selected sheet
         }
       } catch (err) {
         setError("Failed to fetch sheet names");
@@ -42,6 +53,20 @@ const StudentTasksTracker = () => {
     };
 
     fetchSheetNames();
+  }, []);
+
+  // Handle clicks outside dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   // Fetch data when selected sheet changes
@@ -92,8 +117,16 @@ const StudentTasksTracker = () => {
     navigate("/");
   };
 
-  const handleSheetChange = (e) => {
-    setSelectedSheet(e.target.value);
+  // New handlers for searchable dropdown
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setIsDropdownOpen(true);
+  };
+
+  const handleSheetSelect = (name) => {
+    setSelectedSheet(name);
+    setSearchQuery(name);
+    setIsDropdownOpen(false);
   };
 
   const openRemarkModal = (rowIndex) => {
@@ -258,23 +291,51 @@ const StudentTasksTracker = () => {
               <div className="header-top">
                 <h2>Student Tasks Tracker</h2>
                 <div className="sheet-selector-container">
-                  <label htmlFor="sheetSelector">Select Student:</label>
-                  <select
-                    id="sheetSelector"
-                    className="sheet-selector"
-                    value={selectedSheet}
-                    onChange={handleSheetChange}
-                    disabled={loading || sheetNames.length === 0}
-                  >
-                    {sheetNames.length === 0 && (
-                      <option value="">No students available</option>
+                  <label htmlFor="studentSearch">Select Student:</label>
+
+                  {/* Searchable dropdown component */}
+                  <div className="searchable-dropdown" ref={dropdownRef}>
+                    <div className="search-input-container">
+                      <input
+                        id="studentSearch"
+                        type="text"
+                        className="student-search-input"
+                        placeholder="Search students..."
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        onClick={() => setIsDropdownOpen(true)}
+                        autoComplete="off"
+                      />
+                      <span
+                        className="dropdown-toggle-icon"
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      >
+                        ▼
+                      </span>
+                    </div>
+
+                    {isDropdownOpen && (
+                      <ul className="dropdown-options">
+                        {filteredSheetNames.length > 0 ? (
+                          filteredSheetNames.map((name, index) => (
+                            <li
+                              key={index}
+                              className={`dropdown-option ${
+                                selectedSheet === name ? "selected" : ""
+                              }`}
+                              onClick={() => handleSheetSelect(name)}
+                            >
+                              {name}
+                            </li>
+                          ))
+                        ) : (
+                          <li className="dropdown-option no-results">
+                            No students found
+                          </li>
+                        )}
+                      </ul>
                     )}
-                    {sheetNames.map((name, index) => (
-                      <option key={index} value={name}>
-                        {name}
-                      </option>
-                    ))}
-                  </select>
+                  </div>
                 </div>
               </div>
 

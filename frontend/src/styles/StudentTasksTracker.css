@@ -518,3 +518,77 @@
     font-size: 1rem;
   }
 }
+/* Add these styles to your StudentTasksTracker.css file */
+
+/* Searchable dropdown styles */
+.searchable-dropdown {
+  position: relative;
+  width: 100%;
+  min-width: 250px;
+}
+
+.search-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.student-search-input {
+  width: 100%;
+  padding: 8px 30px 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  height: 38px;
+}
+
+.dropdown-toggle-icon {
+  position: absolute;
+  right: 10px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 2px;
+  padding: 0;
+  list-style: none;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.dropdown-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.dropdown-option:last-child {
+  border-bottom: none;
+}
+
+.dropdown-option:hover {
+  background-color: #f5f5f5;
+}
+
+.dropdown-option.selected {
+  background-color: #e6f7ff;
+  font-weight: 500;
+}
+
+.dropdown-option.no-results {
+  color: #999;
+  font-style: italic;
+  cursor: default;
+}
