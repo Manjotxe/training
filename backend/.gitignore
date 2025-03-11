@@ -8,9 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Ignore credentials file (Google credentials)
-# Ignore credentials file (Google credentials)
-
-
+credentials.json
+training-453008-6f71eafab851.json
 
 # Node.js dependencies
 node_modules
@@ -28,5 +27,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-
