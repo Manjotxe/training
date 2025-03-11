@@ -3,7 +3,7 @@ const fs = require("fs");
 
 // Load service account key
 const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(fs.readFileSync("training-453008-6f71eafab851.json")), // Your JSON file
+  credentials: JSON.parse(fs.readFileSync("credentials.json")),
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
 
@@ -11,11 +11,10 @@ const auth = new google.auth.GoogleAuth({
 const sheets = google.sheets({ version: "v4", auth });
 
 // Your Google Sheet ID (from URL)
-const SPREADSHEET_ID = "1eP4lRLqtbCjYEuHWDt14cZemRXA20VUNXsYHQHjMSew"; // Get it from the sheet URL
+const SPREADSHEET_ID = "1eP4lRLqtbCjYEuHWDt14cZemRXA20VUNXsYHQHjMSew";
 
 //  Read Data
 async function readData(range = "'Ravinder'!A1:G100") {
-  // ✅ Corrected sheet name
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
     range,
@@ -26,13 +25,13 @@ async function readData(range = "'Ravinder'!A1:G100") {
 // ✅ Function to update remark based on date
 async function updateRemark(sheetName, date, remark) {
   try {
-    const range = `'${sheetName}'!A1:G100`; // Adjust range if needed
+    const range = `'${sheetName}'!A1:G100`;
     const data = await readData(range);
 
     let rowIndex = -1;
     for (let i = 0; i < data.length; i++) {
       if (data[i][0] === date) {
-        rowIndex = i + 1; // Google Sheets uses 1-based indexing
+        rowIndex = i + 1;
         break;
       }
     }

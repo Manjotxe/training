@@ -51,10 +51,10 @@ const TaskLogForm = ({ formData, handleChange, handleSubmit, setShowForm }) => {
                 required
               >
                 <option value="">Select Status</option>
-                <option value="Not Started">Not Started</option>
-                <option value="In Progress">In Progress</option>
+                <option value="NotStarted">Not Started</option>
+                <option value="InProgress">In Progress</option>
                 <option value="Completed">Completed</option>
-                <option value="On Hold">On Hold</option>
+                <option value="OnHold">On Hold</option>
               </select>
             </div>
 

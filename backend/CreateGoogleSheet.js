@@ -2,7 +2,7 @@ const express = require("express");
 const { google } = require("googleapis");
 const router = express.Router();
 const auth = new google.auth.GoogleAuth({
-  keyFile: "training-453008-6f71eafab851.json",
+  keyFile: "credentials.json",
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
 
