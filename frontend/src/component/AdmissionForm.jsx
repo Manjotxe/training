@@ -195,19 +195,44 @@ function AdmissionForm() {
 
       const result = await response.json();
       if (response.ok) {
-        // SweetAlert for success
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text:
-            result.message ||
-            "Your application has been submitted successfully!",
-          confirmButtonColor: "var(--pink-primary)",
-        }).then(() => {
-          navigate("/"); // Navigate to dashboard after the alert is closed
-        });
+        // Form submitted successfully, now create a Google Sheet
+        const sheetName = formData.name; // Create a unique sheet name
+
+        try {
+          const sheetResponse = await fetch(
+            "http://localhost:5000/googlesheets/create-sheet",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ sheetName }),
+            }
+          );
+
+          const sheetData = await sheetResponse.json();
+          if (sheetData.success) {
+            Swal.fire({
+              icon: "success",
+              title: "Success!",
+              text: "Your application has been submitted and a new sheet has been created!",
+              confirmButtonColor: "var(--pink-primary)",
+            }).then(() => {
+              navigate("/"); // Navigate after alert closes
+            });
+          } else {
+            Swal.fire("Error", "Failed to create the Google Sheet", "error");
+          }
+        } catch (sheetError) {
+          console.error("Error creating Google Sheet:", sheetError);
+          Swal.fire(
+            "Error",
+            "Something went wrong while creating the sheet!",
+            "error"
+          );
+        }
       } else {
-        // SweetAlert for error
+        // Form submission failed
         Swal.fire({
           icon: "error",
           title: "Error",
@@ -217,7 +242,6 @@ function AdmissionForm() {
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      // SweetAlert for unexpected error
       Swal.fire({
         icon: "error",
         title: "Error",
