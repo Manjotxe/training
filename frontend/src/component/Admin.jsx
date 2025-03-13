@@ -148,16 +148,16 @@ function Data() {
     setIsListening(true);
     const recognitionInstance = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     setRecognition(recognitionInstance);
-    
+
     recognitionInstance.continuous = true;
     recognitionInstance.interimResults = true; // Enable interim results for faster conversion
     recognitionInstance.lang = "en-US";
-    recognitionInstance.maxAlternatives = 1; 
+    recognitionInstance.maxAlternatives = 1;
 
     recognitionInstance.onresult = (event) => {
       let finalTranscript = '';
       let interimTranscript = '';
-      
+
       // Process both interim and final results
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
@@ -167,7 +167,7 @@ function Data() {
           interimTranscript += transcript;
         }
       }
-      
+
       // Update textarea with final results
       if (finalTranscript) {
         setText((prevText) => {
@@ -175,7 +175,7 @@ function Data() {
           return newText;
         });
       }
-      
+
       // Store interim results in state for immediate feedback
       setInterimTranscript(interimTranscript);
     };
@@ -297,14 +297,14 @@ function Data() {
                 placeholder={isListening ? "Microphone is active... Speaking will appear here" : "Enter your message here"}
                 className={styles.formInput}
                 style={{
-                  width: '100%', 
+                  width: '100%',
                   paddingRight: '40px',
                   backgroundColor: isListening ? '#f8f8f8' : 'white' // Visual cue that keyboard is disabled
                 }}
                 readOnly={isListening} // HTML attribute to disable input when mic is on
               />
-              <button 
-                onClick={() => toggleListening(setMessage, message)} 
+              <button
+                onClick={() => toggleListening(setMessage, message)}
                 style={{
                   position: 'absolute',
                   right: '10px',
@@ -343,6 +343,11 @@ function Data() {
                     recognition.stop();
                     setIsListening(false);
                   }
+                  // Reset all form values
+                  setMessage("");
+                  setLink("");
+                  setFile(null);
+                  setInterimTranscript("");
                   setIsModalOpen(false);
                 }}
                 className={styles.cancelButton}
