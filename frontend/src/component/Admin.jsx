@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import styles from "../styles/Admin.module.css"; // Import the CSS module
 import Footer from "../component/Footer";
 import Header from "../component/Header";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMicrophone, faMicrophoneSlash } from "@fortawesome/free-solid-svg-icons";
 
 function Data() {
   const navigate = useNavigate(); // UseNavigate hook to navigate between routes
@@ -14,6 +16,9 @@ function Data() {
   const [totalPages, setTotalPages] = useState(1);
   const [yearFilter, setYearFilter] = useState("");
   const [selectedStudents, setSelectedStudents] = useState([]);
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+  const [interimTranscript, setInterimTranscript] = useState("");
 
   const [message, setMessage] = useState("");
   const [link, setLink] = useState("");
@@ -110,6 +115,90 @@ function Data() {
       });
   };
 
+  // Custom handler for textarea input that only works when mic is off
+  const handleMessageChange = (e) => {
+    if (!isListening) {
+      setMessage(e.target.value);
+    }
+  };
+
+  // Prevent keyboard events when mic is active
+  const handleKeyDown = (e) => {
+    if (isListening) {
+      e.preventDefault();
+    }
+  };
+
+  const toggleListening = (setText, currentText = "") => {
+    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    // If already listening, stop the recognition
+    if (isListening && recognition) {
+      recognition.stop();
+      setIsListening(false);
+      setRecognition(null);
+      setInterimTranscript("");
+      return;
+    }
+
+    // Otherwise, start a new recognition instance
+    setIsListening(true);
+    const recognitionInstance = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    setRecognition(recognitionInstance);
+    
+    recognitionInstance.continuous = true;
+    recognitionInstance.interimResults = true; // Enable interim results for faster conversion
+    recognitionInstance.lang = "en-US";
+    recognitionInstance.maxAlternatives = 1; 
+
+    recognitionInstance.onresult = (event) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+      
+      // Process both interim and final results
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+      
+      // Update textarea with final results
+      if (finalTranscript) {
+        setText((prevText) => {
+          const newText = prevText ? prevText + ' ' + finalTranscript.trim() : finalTranscript.trim();
+          return newText;
+        });
+      }
+      
+      // Store interim results in state for immediate feedback
+      setInterimTranscript(interimTranscript);
+    };
+
+    recognitionInstance.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setIsListening(false);
+      setRecognition(null);
+      setInterimTranscript("");
+    };
+
+    recognitionInstance.onend = () => {
+      // Only set isListening to false if it wasn't manually stopped
+      // This prevents the recognition from stopping unexpectedly
+      if (isListening) {
+        // If it was running and ended on its own, restart it
+        recognitionInstance.start();
+      }
+    };
+
+    recognitionInstance.start();
+  };
+
   return (
     <>
       <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} />
@@ -200,12 +289,40 @@ function Data() {
         <div className={styles.modal}>
           <div className={styles.modalContent}>
             <h2>Send Assignment</h2>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Enter your message here"
-              className={styles.formInput}
-            />
+            <div className={styles.textareaContainer} style={{ position: 'relative', width: '100%' }}>
+              <textarea
+                value={isListening ? message + ' ' + interimTranscript : message}
+                onChange={handleMessageChange}
+                onKeyDown={handleKeyDown}
+                placeholder={isListening ? "Microphone is active... Speaking will appear here" : "Enter your message here"}
+                className={styles.formInput}
+                style={{
+                  width: '100%', 
+                  paddingRight: '40px',
+                  backgroundColor: isListening ? '#f8f8f8' : 'white' // Visual cue that keyboard is disabled
+                }}
+                readOnly={isListening} // HTML attribute to disable input when mic is on
+              />
+              <button 
+                onClick={() => toggleListening(setMessage, message)} 
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '30%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <FontAwesomeIcon
+                  icon={isListening ? faMicrophoneSlash : faMicrophone}
+                  size="lg"
+                  className={styles.micIcon}
+                  style={{ color: isListening ? '#ff4b4b' : '#4b4b4b' }}
+                />
+              </button>
+            </div>
             <input
               type="url"
               value={link}
@@ -220,7 +337,14 @@ function Data() {
             />
             <div className={styles.modalActions}>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  // Make sure to stop speech recognition when closing the modal
+                  if (isListening && recognition) {
+                    recognition.stop();
+                    setIsListening(false);
+                  }
+                  setIsModalOpen(false);
+                }}
                 className={styles.cancelButton}
               >
                 Cancel

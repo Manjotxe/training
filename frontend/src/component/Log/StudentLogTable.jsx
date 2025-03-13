@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../Header";
+import { Download } from "lucide-react"; // Import the Download icon
+
 import "../../styles/StudentLogsManage.css";
 import axios from "axios";
 import TaskLogForm from "./StudentLogForm";
 import { motion, AnimatePresence } from "framer-motion";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable"; // Import autoTable separately
+
+
+
 
 const API_URL = "http://localhost:5000/logs";
 
@@ -163,6 +170,34 @@ const StudentLogTable = () => {
     if (showForm) setShowForm(false);
   };
 
+  
+  const generatePDF = () => {
+    const doc = new jsPDF();
+
+    doc.text("Student Task Logs", 14, 15);
+
+    const tableColumn = ["Date", "Project", "Task", "Status", "Time Taken"];
+    const tableRows = logs.map(log => [
+        log.date, log.projectName, log.taskName, log.status, log.timeTaken
+    ]);
+
+    autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 20,
+        theme: "grid",
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [44, 62, 80] }
+    });
+
+    // Open PDF in new tab instead of downloading
+    const pdfBlob = doc.output("blob");
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    window.open(pdfUrl, "_blank");
+};
+
+
+  
   const indexOfLastLog = currentPage * logsPerPage;
   const indexOfFirstLog = indexOfLastLog - logsPerPage;
   const currentLogs = logs.slice(indexOfFirstLog, indexOfLastLog);
@@ -186,17 +221,39 @@ const StudentLogTable = () => {
         className="theme-container"
         style={{ maxWidth: "100%", width: "100%" }}
       >
-        <div className="header-container">
-          <h1 className="gradient-text">Task Manager</h1>
-          <div className="buttons-container">
-            <button onClick={toggleRemarks} className="add-button">
-              {showRemarks ? "Cancel" : "Show Remarks"}
-            </button>
-            <button onClick={toggleForm} className="add-button">
-              {showForm ? "Cancel" : "+ Add Task Log"}
-            </button>
-          </div>
-        </div>
+       <div className="header-container">
+  <h1 className="gradient-text">Task Manager</h1>
+  
+  <div 
+    className="buttons-container" 
+    style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "10px",
+      flexWrap: "wrap",
+    }}
+  >
+    <button onClick={toggleRemarks} className="add-button">
+      {showRemarks ? "Cancel" : "Show Remarks"}
+    </button>
+    
+    <button onClick={toggleForm} className="add-button">
+      {showForm ? "Cancel" : "+ Add Task Log"}
+    </button>
+    
+    <button 
+      onClick={generatePDF} 
+      className="add-button" 
+      style={{
+        alignSelf: "center", // Ensures alignment in case of flex issues
+      }}
+    >
+      <Download />
+    </button>
+  </div>
+</div>
+
 
         <AnimatePresence>
           {showForm && (
@@ -283,7 +340,13 @@ const StudentLogTable = () => {
             height: tableHeight > 0 ? `${tableHeight}px` : "auto",
             minHeight: "350px",
           }}
+
         >
+
+
+
+
+
           <table className="task-table">
             <thead>
               <tr>
