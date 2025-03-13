@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const TaskLogForm = ({ formData, handleChange, handleSubmit, setShowForm }) => {
   return (
@@ -15,8 +15,8 @@ const TaskLogForm = ({ formData, handleChange, handleSubmit, setShowForm }) => {
                 value={formData.date}
                 onChange={handleChange}
                 required
-              /> 
-            </div>  
+              />
+            </div>
 
             <div className="form-group">
               <label>Project Name</label>
@@ -51,10 +51,10 @@ const TaskLogForm = ({ formData, handleChange, handleSubmit, setShowForm }) => {
                 required
               >
                 <option value="">Select Status</option>
-                <option value="Not Started">Not Started</option>
-                <option value="In Progress">In Progress</option>
+                <option value="NotStarted">Not Started</option>
+                <option value="InProgress">In Progress</option>
                 <option value="Completed">Completed</option>
-                <option value="On Hold">On Hold</option>
+                <option value="OnHold">On Hold</option>
               </select>
             </div>
 
@@ -69,7 +69,6 @@ const TaskLogForm = ({ formData, handleChange, handleSubmit, setShowForm }) => {
                 required
               />
             </div>
-
 
             <div className="form-group full-width">
               <label>Task Description</label>

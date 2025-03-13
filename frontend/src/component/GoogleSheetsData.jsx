@@ -4,7 +4,10 @@ import SideBar from "./SideBar";
 import Header from "./Header";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { Download } from "lucide-react"; // Import the Download icon
 import "../styles/StudentTasksTracker.css";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable"; // Import autoTable
 
 const StudentTasksTracker = () => {
   const [tasksData, setTasksData] = useState([]);
@@ -183,6 +186,84 @@ const StudentTasksTracker = () => {
     }
   };
 
+  // PDF Generation function
+  const generatePDF = () => {
+    if (!tasksData || tasksData.length <= 1) {
+      alert("No data available to generate PDF");
+      return;
+    }
+
+    const doc = new jsPDF();
+
+    // Add title
+    doc.text(`${selectedSheet} - Tasks Tracker`, 14, 15);
+
+    // Get headers (first row) - exclude the remarks column
+    const headers = tasksData[0].slice(0, 6);
+
+    // Process each row of data
+    const rows = tasksData.slice(1).map((row) => {
+      if (!row) return [];
+
+      // Format date
+      const formattedDate = row[0] ? formatDate(row[0]) : "—";
+
+      // Return formatted row data (exclude remarks column)
+      return [
+        formattedDate,
+        row[1] || "—",
+        row[2] || "—",
+        row[3] || "—",
+        row[4] || "—",
+        row[5] || "—",
+      ];
+    });
+
+    // Generate the table
+    autoTable(doc, {
+      head: [headers],
+      body: rows,
+      startY: 20,
+      theme: "grid",
+      styles: { fontSize: 10, cellPadding: 2 },
+      headStyles: { fillColor: [44, 62, 80] },
+      // Set column widths (date, project, task, description, status, time)
+      columnStyles: {
+        0: { cellWidth: 25 }, // Date
+        1: { cellWidth: 30 }, // Project
+        2: { cellWidth: 30 }, // Task
+        3: { cellWidth: 60 }, // Description
+        4: { cellWidth: 25 }, // Status
+        5: { cellWidth: 20 }, // Time
+      },
+    });
+
+    // Add statistics
+    const completedTasksCount = tasksData
+      .slice(1)
+      .filter((row) => row && row[4] && row[4] === "Completed").length;
+    const totalTasks = tasksData.length - 1;
+
+    const finalY = doc.lastAutoTable.finalY || 40;
+    doc.text(`Statistics:`, 14, finalY + 10);
+    doc.text(`Total Tasks: ${totalTasks}`, 14, finalY + 18);
+    doc.text(`Completed Tasks: ${completedTasksCount}`, 14, finalY + 26);
+    doc.text(
+      `Completion Rate: ${
+        totalTasks > 0
+          ? Math.round((completedTasksCount / totalTasks) * 100)
+          : 0
+      }%`,
+      14,
+      finalY + 34
+    );
+
+    // Open PDF in new tab
+    const pdfBlob = doc.output("blob");
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    window.open(pdfUrl, "_blank");
+  };
+
   // Pagination functions
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
@@ -357,6 +438,14 @@ const StudentTasksTracker = () => {
                   <span className="stat-value">{`${currentPage} / ${
                     totalPages || 1
                   }`}</span>
+                </div>
+                {/* Add Download Button */}
+                <div
+                  className="stat-pill download-button"
+                  onClick={generatePDF}
+                >
+                  <Download size={16} />
+                  <span className="stat-label">Export</span>
                 </div>
               </div>
             </motion.div>
