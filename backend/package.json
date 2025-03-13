@@ -34,6 +34,7 @@
     "node-static": "^0.7.11",
     "nodemailer": "^6.9.16",
     "path": "^0.12.7",
+    "razorpay": "^2.9.6",
     "socket.io": "^4.8.1",
     "sweetalert2": "^11.15.10"
   }

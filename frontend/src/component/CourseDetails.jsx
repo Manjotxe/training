@@ -5,7 +5,7 @@ import "../styles/CourseDetails.css";
 import Header from "./Header";
 
 function CourseDetails() {
-  const { course_id } = useParams(); // Get course_id from URL
+  const { course_id } = useParams();
   const [courseData, setCourseData] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -22,6 +22,7 @@ function CourseDetails() {
         setLoading(false);
       });
   }, [course_id]);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -29,12 +30,46 @@ function CourseDetails() {
     }
   }, []);
 
-  //logout
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    setIsLoggedIn(false);
-    navigate("/");
+  const loadRazorpay = () => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+  };
+
+  useEffect(() => {
+    loadRazorpay();
+  }, []);
+
+  const handlePayment = async () => {
+    const orderResponse = await axios.post("http://localhost:5000/create-order", {
+      amount: courseData.price * 100, // Convert to paise
+      currency: "INR",
+      receipt: `receipt_${course_id}`,
+    });
+
+    const options = {
+      key: "rzp_test_436Xrd0WJ9JdbN", // Replace with your Razorpay Test Key
+      amount: orderResponse.data.amount,
+      currency: orderResponse.data.currency,
+      name: courseData.courseName,
+      description: "Course Enrollment Payment",
+      order_id: orderResponse.data.id,
+      handler: function (response) {
+        alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+      },
+      prefill: {
+        name: "Anuj",
+        email: "mtmanjot@example.com",
+        contact: "9999999999",
+      },
+      theme: {
+        color: "#3399cc",
+      },
+    };
+
+    const paymentObject = new window.Razorpay(options);
+    paymentObject.open();
   };
 
   if (loading) return <p>Loading course details...</p>;
@@ -42,7 +77,7 @@ function CourseDetails() {
 
   return (
     <>
-      <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} />
+      <Header isLoggedIn={isLoggedIn} />
       <div className="course-container">
         <div className="course-header">
           <h1>{courseData.courseName}</h1>
@@ -54,7 +89,7 @@ function CourseDetails() {
             <h2>Course Overview</h2>
             <p>{courseData.description || "No description available."}</p>
           </div>
-
+          
           <div className="course-details-card">
             <div className="detail-item">
               <span className="label">Duration:</span>
@@ -63,7 +98,7 @@ function CourseDetails() {
             <div className="detail-item">
               <span className="label">Price:</span>
               <span className="value">
-                {courseData.price ? `$${courseData.price}` : "Free"}
+                {courseData.price ? `${courseData.price}` : "Free"}
               </span>
             </div>
             <div className="detail-item">
@@ -95,11 +130,15 @@ function CourseDetails() {
             </ul>
           </div>
 
+
+
           <div className="enroll-card">
-            <div className="price-tag">
-              {courseData.price ? `$${courseData.price}` : "Free"}
-            </div>
-            <button className="enroll-button">Enroll Now</button>
+            <div className="price-tag">{courseData.price ? `$${courseData.price}` : "Free"}</div>
+            {courseData.price ? (
+              <button className="enroll-button" onClick={handlePayment}>Pay Now</button>
+            ) : (
+              <button className="enroll-button">Enroll Now</button>
+            )}
             <p className="guarantee">30-day money-back guarantee</p>
           </div>
         </div>

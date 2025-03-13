@@ -17,6 +17,7 @@ const credentials = require("./credentials.json"); // Your Google JSON File
 const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
+require("dotenv").config();
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const multer = require("multer");
@@ -26,6 +27,7 @@ const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const CreateGooglesheet = require("./CreateGoogleSheet");
 const axios = require("axios");
+const Razorpay = require("razorpay");
 const { readData, updateRemark, getSheetNames } = require("./googleSheets");
 const { scheduleBirthdayEmails, checkBirthdays } = require("./Birthday");
 const { sendBillEmail } = require("./emailTemplates/SendBill");
@@ -61,6 +63,50 @@ const SPREADSHEET_ID = "1eP4lRLqtbCjYEuHWDt14cZemRXA20VUNXsYHQHjMSew"; // Your S
 app.use("/googlesheets", CreateGooglesheet);
 // Inquiry
 app.use("/api/inquiry", inquiryRoute);
+
+//Razorpay payment 
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID, 
+  key_secret: process.env.RAZORPAY_KEY_SECRET, 
+});
+
+// API to create an order
+app.post("/create-order", async (req, res) => {
+  try {
+    const { amount, currency, receipt } = req.body;
+    
+    const options = {
+      amount,
+      currency,
+      receipt,
+    };
+
+    const order = await razorpay.orders.create(options);
+    res.json(order);
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(500).json({ error: "Failed to create order" });
+  }
+});
+
+// API to verify payment signature (optional)
+app.post("/verify-payment", (req, res) => {
+  const { order_id, payment_id, signature } = req.body;
+
+  const generatedSignature = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(order_id + "|" + payment_id)
+    .digest("hex");
+
+  if (generatedSignature === signature) {
+    res.json({ success: true, message: "Payment verified successfully" });
+  } else {
+    res.status(400).json({ success: false, message: "Payment verification failed" });
+  }
+});
+
+
+
 // Fetch Google Sheets Data
 app.get("/api/data", async (req, res) => {
   try {
