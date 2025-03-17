@@ -194,3 +194,7 @@
         transform: scale(1);
     }
 }
+.listeningInput {
+    background-color: #f8f9fa;
+    border-color: #dc3545;
+  }

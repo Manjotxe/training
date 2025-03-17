@@ -75,7 +75,6 @@ io.on("connection", (socket) => {
 
   // Handle sending messages
   socket.on("send-message", (message) => {
-    console.log("Message received:", message);
 
     const { sender_id, receiver_id, message: msgText } = message;
 

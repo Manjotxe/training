@@ -7,6 +7,8 @@ import {
   Mail,
   MessageSquare,
   Search,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -23,19 +25,92 @@ export default function AdminChat() {
   const [unreadCounts, setUnreadCounts] = useState({});
   const [isGroupChat, setIsGroupChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [speechRecognition, setSpeechRecognition] = useState(null);
   const adminId = 3;
 
   // Use refs to access latest state in socket callbacks
   const selectedStudentRef = useRef(selectedStudent);
   const isGroupChatRef = useRef(isGroupChat);
   const messagesRef = useRef(messages);
+  const inputRef = useRef(input);
 
   // Update refs when state changes
   useEffect(() => {
     selectedStudentRef.current = selectedStudent;
     isGroupChatRef.current = isGroupChat;
     messagesRef.current = messages;
-  }, [selectedStudent, isGroupChat, messages]);
+    inputRef.current = input;
+  }, [selectedStudent, isGroupChat, messages, input]);
+
+  useEffect(() => {
+    // Check if browser supports speech recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true; // Set to true for continuous listening
+      recognition.interimResults = false; // Only get final results
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onend = () => {
+        // Only restart if we're still in listening mode (not manually turned off)
+        if (isListening) {
+          try {
+            recognition.start();
+          } catch (error) {
+            console.error('Error restarting speech recognition:', error);
+          }
+        } else {
+          setIsListening(false);
+        }
+      };
+
+      recognition.onresult = (event) => {
+        // Get the last result (most recent speech)
+        const lastResultIndex = event.results.length - 1;
+        const transcript = event.results[lastResultIndex][0].transcript;
+
+        // Append to existing text with a space
+        setInput(prev => {
+          return prev + (prev.length > 0 ? ' ' : '') + transcript;
+        });
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+
+        // Only stop completely on fatal errors
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          setIsListening(false);
+        }
+      };
+
+      setSpeechRecognition(recognition);
+    }
+  }, []);
+
+  // Modify the toggle function to handle the listening state correctly
+  const toggleListening = () => {
+    if (!speechRecognition) return;
+
+    if (isListening) {
+      speechRecognition.stop();
+      setIsListening(false);
+    } else {
+      // Clear previous input when starting fresh (optional)
+      // setInput('');
+
+      try {
+        speechRecognition.start();
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
+      }
+    }
+  };
 
   // Initial setup - fetch students and register socket
   useEffect(() => {
@@ -119,16 +194,30 @@ export default function AdminChat() {
     }
   }, [selectedStudent, isGroupChat]);
 
+  // Stop speech recognition when component unmounts
+  useEffect(() => {
+    return () => {
+      if (speechRecognition && isListening) {
+        speechRecognition.stop();
+      }
+    };
+  }, [speechRecognition, isListening]);
+
   const sendMessage = async () => {
     if (!input.trim()) return;
+
+    // Stop speech recognition if active
+    if (isListening && speechRecognition) {
+      speechRecognition.stop();
+    }
 
     const messageData = isGroupChat
       ? { sender_id: adminId, message: input }
       : {
-          sender_id: adminId,
-          receiver_id: selectedStudent === 0 ? null : selectedStudent,
-          message: input,
-        };
+        sender_id: adminId,
+        receiver_id: selectedStudent === 0 ? null : selectedStudent,
+        message: input,
+      };
 
     // Add message to UI immediately
     const optimisticMessage = {
@@ -166,9 +255,8 @@ export default function AdminChat() {
 
         <div className={`${styles.sidebarContent} p-3`}>
           <button
-            className={`${styles.studentButton} ${
-              selectedStudent === 0 ? styles.selected : ""
-            } w-100 mb-2`}
+            className={`${styles.studentButton} ${selectedStudent === 0 ? styles.selected : ""
+              } w-100 mb-2`}
             onClick={() => {
               setSelectedStudent(0);
               setIsGroupChat(false);
@@ -180,9 +268,8 @@ export default function AdminChat() {
           </button>
 
           <button
-            className={`${styles.studentButton} ${
-              isGroupChat ? styles.selected : ""
-            } w-100 mb-2`}
+            className={`${styles.studentButton} ${isGroupChat ? styles.selected : ""
+              } w-100 mb-2`}
             onClick={() => {
               setIsGroupChat(true);
               setSelectedStudent(null);
@@ -203,9 +290,8 @@ export default function AdminChat() {
             .map((student) => (
               <button
                 key={student.id}
-                className={`${styles.studentButton} ${
-                  selectedStudent === student.id ? styles.selected : ""
-                } w-100 mb-2`}
+                className={`${styles.studentButton} ${selectedStudent === student.id ? styles.selected : ""
+                  } w-100 mb-2`}
                 onClick={() => {
                   setSelectedStudent(student.id);
                   setIsGroupChat(false);
@@ -245,15 +331,15 @@ export default function AdminChat() {
                   {isGroupChat
                     ? "Group Chat"
                     : selectedStudent === 0
-                    ? "All Students"
-                    : students.find((s) => s.id === selectedStudent)?.name}
+                      ? "All Students"
+                      : students.find((s) => s.id === selectedStudent)?.name}
                 </h5>
                 <small className="text-muted">
                   {isGroupChat
                     ? `${students.length} participants`
                     : selectedStudent === 0
-                    ? `${students.length} students`
-                    : "Direct Message"}
+                      ? `${students.length} students`
+                      : "Direct Message"}
                 </small>
               </div>
             </div>
@@ -271,15 +357,15 @@ export default function AdminChat() {
                   {isGroupChat
                     ? "Group Chat"
                     : selectedStudent === 0
-                    ? "Message Everyone Personally"
-                    : students.find((s) => s.id === selectedStudent)?.name}
+                      ? "Message Everyone Personally"
+                      : students.find((s) => s.id === selectedStudent)?.name}
                 </h5>
                 <small className="text-muted">
                   {isGroupChat
                     ? `${students.length} participants`
                     : selectedStudent === 0
-                    ? `${students.length} students`
-                    : "Direct Message"}
+                      ? `${students.length} students`
+                      : "Direct Message"}
                 </small>
               </div>
             </div>
@@ -291,14 +377,12 @@ export default function AdminChat() {
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`${styles.messageWrapper} ${
-                msg.sender_id === adminId ? styles.sent : styles.received
-              }`}
+              className={`${styles.messageWrapper} ${msg.sender_id === adminId ? styles.sent : styles.received
+                }`}
             >
               <div
-                className={`${styles.message} ${
-                  msg.sender_id === adminId ? styles.userMessage : ""
-                }`}
+                className={`${styles.message} ${msg.sender_id === adminId ? styles.userMessage : ""
+                  }`}
               >
                 {isGroupChat && msg.sender_id !== adminId && (
                   <div className={styles.senderName}>{msg.sender_name}</div>
@@ -313,22 +397,31 @@ export default function AdminChat() {
         <div className={`${styles.inputContainer} bg-white border-top`}>
           <input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+            onChange={(e) => !isListening && setInput(e.target.value)}
+            onKeyPress={(e) => !isListening && e.key === "Enter" && sendMessage()}
             placeholder={
-              isGroupChat
-                ? "Message the group"
-                : selectedStudent !== null
-                ? selectedStudent === 0
-                  ? "Message All Students"
-                  : `Message ${
-                      students.find((s) => s.id === selectedStudent)?.name || ""
-                    }`
-                : "Select a student to message"
+              isListening
+                ? "Listening... (Keyboard disabled)"
+                : isGroupChat
+                  ? "Message the group"
+                  : selectedStudent !== null
+                    ? selectedStudent === 0
+                      ? "Message All Students"
+                      : `Message ${students.find((s) => s.id === selectedStudent)?.name || ""
+                      }`
+                    : "Select a student to message"
             }
-            className="form-control"
-            disabled={selectedStudent === null && !isGroupChat}
+            className={`form-control ${isListening ? styles.listeningInput : ""}`}
+            disabled={(selectedStudent === null && !isGroupChat) || isListening}
           />
+          <button
+            onClick={toggleListening}
+            className={`btn ${isListening ? 'btn-danger' : 'btn-outline-secondary'} me-2`}
+            disabled={selectedStudent === null && !isGroupChat}
+            title={isListening ? "Stop recording" : "Start voice input"}
+          >
+            {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+          </button>
           <button
             onClick={sendMessage}
             className={`${styles.sendButton} btn btn-primary`}
