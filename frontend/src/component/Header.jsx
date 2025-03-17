@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -7,6 +7,8 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
   const role = localStorage.getItem("role");
   const userId = localStorage.getItem("ID");
   const dropdownRef = useRef(null);
+  const location = useLocation();
+  const [previousPath, setPreviousPath] = useState(location.pathname);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -16,6 +18,23 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
     e.preventDefault();
     setIsAdminDropdownOpen(!isAdminDropdownOpen);
   };
+
+  // Check if the current path matches the link and apply appropriate classes
+  const isActive = (path) => {
+    // Check if active
+    const active = (path === "/" && location.pathname === "/") || 
+                   (path !== "/" && location.pathname.startsWith(path));
+    
+    // Check if newly active (path just changed)
+    const isNewActive = active && previousPath !== location.pathname;
+    
+    return active ? (isNewActive ? "active new-active" : "active") : "";
+  };
+
+  // Update previous path when location changes
+  useEffect(() => {
+    setPreviousPath(location.pathname);
+  }, [location.pathname]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -90,60 +109,68 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
             <span className="hamburger-line"></span>
           </button>
           <div className={`nav-links ${isMenuOpen ? "show" : ""}`}>
-            <a href="/" className="nav-item">
+            <Link to="/" className={`nav-item ${isActive("/")}`}>
               Home
-            </a>
+            </Link>
             {role === "admin" ? (
-              <a href="/chatadmin" className="nav-item">
+              <Link to="/chatadmin" className={`nav-item ${isActive("/chatadmin")}`}>
                 Chat
-              </a>
+              </Link>
             ) : role === "user" ? (
-              <a href={`/chat`} className="nav-item">
+              <Link to="/chat" className={`nav-item ${isActive("/chat")}`}>
                 Chat
-              </a>
+              </Link>
             ) : null}
             {role === "admin" && (
-              <a href="/admission" className="nav-item">
+              <Link to="/admission" className={`nav-item ${isActive("/admission")}`}>
                 Admissions
-              </a>
+              </Link>
             )}
             {role === "admin" && (
-              <a href="/attendance" className="nav-item">
+              <Link to="/attendance" className={`nav-item ${isActive("/attendance")}`}>
                 Mark Attendance
-              </a>
+              </Link>
             )}
 
-            <a href="/course" onClick={handleCoursesClick} className="nav-item">
+            <Link to="/course" onClick={handleCoursesClick} className={`nav-item ${isActive("/course")}`}>
               Courses
-            </a>
+            </Link>
 
             {role === "user" && (
-              <a href={`/assignments/${userId}`} className="nav-item">
+              <Link to={`/assignments/${userId}`} className={`nav-item ${isActive("/assignments")}`}>
                 Assignments
-              </a>
-              
+              </Link>
             )}
             {role === "user" && (
-             <a href="/studentlogs"  className="nav-item">Student Logs</a>
-              
+              <Link to="/studentlogs" className={`nav-item ${isActive("/studentlogs")}`}>
+                Student Logs
+              </Link>
             )}
-                              
-
 
             {isLoggedIn ? (
-              <a href="/lectures" className="nav-item">
+              <Link to="/lectures" className={`nav-item ${isActive("/lectures")}`}>
                 TimeTable
-              </a>
+              </Link>
             ) : (
-              <a href="/login" className="nav-item">
+              <Link to="/login" className={`nav-item ${isActive("/login")}`}>
                 TimeTable
-              </a>
+              </Link>
             )}
 
             {/* Admin dropdown menu */}
             {role === "admin" && (
               <div className="custom-dropdown" ref={dropdownRef}>
-                <a href="#" className="nav-item" onClick={toggleAdminDropdown}>
+                <a 
+                  href="#" 
+                  className={`nav-item ${
+                    isActive("/canvas") || 
+                    isActive("/data") || 
+                    isActive("/dashboard") || 
+                    isActive("/add-lecture") || 
+                    isActive("/assignment") ? "active" : ""
+                  }`} 
+                  onClick={toggleAdminDropdown}
+                >
                   Admin Tools{" "}
                   <span
                     className={`dropdown-arrow ${
@@ -157,27 +184,37 @@ function Header({ isLoggedIn, onLogout, handleCoursesClick }) {
                   className="dropdown-content"
                   style={{ display: isAdminDropdownOpen ? "block" : "none" }}
                 >
-                  <a href="/canvas">Inquiry Form</a>
-                  <a href="/data">All Students</a>
-                  <a href="/dashboard">Records</a>
-                  <a href="/add-lecture">Add Lecture</a>
-                  <a href="/assignment">Assignments</a>
+                  <Link to="/canvas" className={isActive("/canvas")}>
+                    Inquiry Form
+                  </Link>
+                  <Link to="/data" className={isActive("/data")}>
+                    All Students
+                  </Link>
+                  <Link to="/dashboard" className={isActive("/dashboard")}>
+                    Records
+                  </Link>
+                  <Link to="/add-lecture" className={isActive("/add-lecture")}>
+                    Add Lecture
+                  </Link>
+                  <Link to="/assignment" className={isActive("/assignment")}>
+                    Assignments
+                  </Link>
                 </div>
               </div>
             )}
 
             {isLoggedIn ? (
-              <a href={`/profile/${userId}`} className="nav-item">
+              <Link to={`/profile/${userId}`} className={`nav-item ${isActive("/profile")}`}>
                 MyProfile
-              </a>
+              </Link>
             ) : (
-              <a href="/login" className="nav-item">
+              <Link to="/login" className={`nav-item ${isActive("/login")}`}>
                 MyProfile
-              </a>
+              </Link>
             )}
 
             {!isLoggedIn ? (
-              <Link to="/login" className="apply-now">
+              <Link to="/login" className={`apply-now ${isActive("/login")}`}>
                 Login
               </Link>
             ) : (
