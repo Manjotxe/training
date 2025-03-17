@@ -592,3 +592,44 @@
   font-style: italic;
   cursor: default;
 }
+
+.download-button {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.download-button:hover {
+  background-color: #118294;
+}
+
+.download-button svg {
+  margin-top: 10px;
+  stroke: #024a55;
+}
+
+/* Make sure the stat-pills have consistent styling */
+.stat-pill {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  background-color: #f1f5f9;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  margin-right: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Media query for responsive layout */
+@media (max-width: 768px) {
+  .tasks-stats {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .stat-pill {
+    margin-bottom: 8px;
+  }
+}

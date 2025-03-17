@@ -7,6 +7,7 @@ import {
   Mail,
   MessageSquare,
   Search,
+  Mic,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -23,6 +24,8 @@ export default function AdminChat() {
   const [unreadCounts, setUnreadCounts] = useState({});
   const [isGroupChat, setIsGroupChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
   const adminId = 3;
 
   // Use refs to access latest state in socket callbacks
@@ -87,10 +90,15 @@ export default function AdminChat() {
     socket.on("receive-message", handleReceiveMessage);
     socket.on("receive-group-message", handleGroupMessage);
 
-    // Cleanup socket listeners
+    // Cleanup socket listeners and speech recognition
     return () => {
       socket.off("receive-message", handleReceiveMessage);
       socket.off("receive-group-message", handleGroupMessage);
+
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
     };
   }, []); // Empty dependency array - only run once
 
@@ -117,6 +125,12 @@ export default function AdminChat() {
         })
         .catch((err) => console.error("Error marking messages as read:", err));
     }
+
+    // Stop listening when switching chats
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
   }, [selectedStudent, isGroupChat]);
 
   const sendMessage = async () => {
@@ -142,6 +156,58 @@ export default function AdminChat() {
       socket.emit("send-message", messageData);
     }
     setInput("");
+  };
+
+  const toggleListening = () => {
+    if (
+      !("webkitSpeechRecognition" in window) &&
+      !("SpeechRecognition" in window)
+    ) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (isListening) {
+      // Stop listening if already active
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+    } else {
+      // Start listening
+      setIsListening(true);
+      recognitionRef.current = new (window.SpeechRecognition ||
+        window.webkitSpeechRecognition)();
+
+      const recognition = recognitionRef.current;
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            transcript += event.results[i][0].transcript;
+          }
+        }
+
+        // Append to existing input instead of replacing
+        setInput((prev) => prev + " " + transcript.trim());
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    }
   };
 
   return (
@@ -311,24 +377,49 @@ export default function AdminChat() {
 
         {/* Input Area */}
         <div className={`${styles.inputContainer} bg-white border-top`}>
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-            placeholder={
-              isGroupChat
-                ? "Message the group"
-                : selectedStudent !== null
-                ? selectedStudent === 0
-                  ? "Message All Students"
-                  : `Message ${
-                      students.find((s) => s.id === selectedStudent)?.name || ""
-                    }`
-                : "Select a student to message"
-            }
-            className="form-control"
-            disabled={selectedStudent === null && !isGroupChat}
-          />
+          <div style={{ position: "relative", width: "100%" }}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+              placeholder={
+                isGroupChat
+                  ? "Message the group"
+                  : selectedStudent !== null
+                  ? selectedStudent === 0
+                    ? "Message All Students"
+                    : `Message ${
+                        students.find((s) => s.id === selectedStudent)?.name ||
+                        ""
+                      }`
+                  : "Select a student to message"
+              }
+              className="form-control"
+              disabled={selectedStudent === null && !isGroupChat}
+              style={{ paddingRight: "40px" }}
+            />
+            <button
+              onClick={toggleListening}
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: isListening ? "red" : "#555",
+                zIndex: 2,
+                opacity: selectedStudent === null && !isGroupChat ? 0.5 : 1,
+                pointerEvents:
+                  selectedStudent === null && !isGroupChat ? "none" : "auto",
+              }}
+              disabled={selectedStudent === null && !isGroupChat}
+              title={isListening ? "Stop listening" : "Start voice input"}
+            >
+              <Mic size={18} />
+            </button>
+          </div>
           <button
             onClick={sendMessage}
             className={`${styles.sendButton} btn btn-primary`}
